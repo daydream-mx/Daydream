@@ -8,13 +8,14 @@ module.exports = (env, argv) => {
     devServer: {
       contentBase: distPath,
       compress: argv.mode === 'production',
-      port: 8000
+      port: 8000,
+      historyApiFallback: true
     },
     entry: './bootstrap.js',
     output: {
       path: distPath,
-      filename: "todomvc.js",
-      webassemblyModuleFilename: "todomvc.wasm"
+      filename: "daydream.js",
+      webassemblyModuleFilename: "daydream.wasm"
     },
     module: {
       rules: [
