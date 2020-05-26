@@ -34,6 +34,14 @@ module.exports = (env, argv) => {
                 patterns: [
                     {
                         from: './static', to: distPath
+                    },
+                    {
+                        from: './node_modules/uikit/dist/js/uikit.min.js',
+                        to: path.join(distPath, '/js/uikit.min.js')
+                    },
+                    {
+                        from: './node_modules/uikit/dist/js/uikit-icons.min.js',
+                        to: path.join(distPath, '/js/uikit-icons.min.js')
                     }
                 ]
             }),

@@ -16,8 +16,8 @@ console_error_panic_hook = { version = "0.1", optional = true }
 log = "0.4"
 strum = "0.17"
 strum_macros = "0.17"
-serde = "1"
-serde_derive = "1"
+serde = { version = "1.0", features = ["rc", "derive"] }
+serde_json = "1.0.53"
 wasm-bindgen = "0.2"
 wasm-bindgen-futures = "0.4.12"
 wasm-logger = "0.2"
@@ -29,6 +29,7 @@ matrix-sdk = { version = "0.1.0", git = "https://github.com/matrix-org/matrix-ru
 url = "2.1.1"
 yew_styles = "0.3.1"
 thiserror = "1.0"
+futures-locks = { git = "https://github.com/asomers/futures-locks", default-features = false }
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3"

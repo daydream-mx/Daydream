@@ -70,46 +70,54 @@ impl Component for Login {
 
     fn view(&self) -> Html {
         html! {
-            <div class="container h-100">
-                <div class="row align-items-center h-100">
-                    <h1>{"Login"}</h1>
-                    <form class="col-6 mx-auto" onsubmit=self.link.callback(|e: Event| {e.prevent_default();  Msg::Login})>
-                        <div class="form-group">
-                            <label for="homeserver">{"Homeserver URL"}</label>
-                            <input
-                                class="form-control"
-                                type="url"
-                                id="homeserver"
-                                placeholder="Homeserver URL"
-                                value=&self.homeserver
-                                oninput=self.link.callback(|e: InputData| Msg::SetHomeserver(e.value))
-                            />
+            <div class="container">
+                <div class="uk-position-center uk-padding">
+                    <h1 class="title">{"Login"}</h1>
+                    <form class="uk-form-stacked uk-margin" onsubmit=self.link.callback(|e: Event| {e.prevent_default();  Msg::Login})>
+                        <div class="uk-margin">
+                            <label class="uk-form-label">{"Homeserver URL"}</label>
+                            <div class="uk-form-controls">
+                                <input
+                                    class="uk-input"
+                                    type="url"
+                                    id="homeserver"
+                                    placeholder="Homeserver URL"
+                                    value=&self.homeserver
+                                    oninput=self.link.callback(|e: InputData| Msg::SetHomeserver(e.value))
+                                />
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label for="username">{"MXID/Username"}</label>
-                            <input
-                                class="form-control"
-                                id="username"
-                                placeholder="MXID/Username"
-                                value=&self.username
-                                oninput=self.link.callback(|e: InputData| Msg::SetUsername(e.value))
-                            />
+                        <div class="uk-margin">
+                            <label class="uk-form-label">{"MXID/Username"}</label>
+                            <div class="uk-form-controls">
+                                <input
+                                    class="uk-input"
+                                    id="username"
+                                    placeholder="MXID/Username"
+                                    value=&self.username
+                                    oninput=self.link.callback(|e: InputData| Msg::SetUsername(e.value))
+                                />
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label for="password">{"Password"}</label>
-                            <input
-                                class="form-control"
-                                type="password"
-                                id="password"
-                                placeholder="Password"
-                                value=&self.password
-                                oninput=self.link.callback(|e: InputData| Msg::SetPassword(e.value))
-                            />
+                        <div class="uk-margin">
+                            <label class="uk-form-label">{"Password"}</label>
+                            <div class="uk-form-controls">
+                                <input
+                                    class="uk-input"
+                                    type="password"
+                                    id="password"
+                                    placeholder="Password"
+                                    value=&self.password
+                                    oninput=self.link.callback(|e: InputData| Msg::SetPassword(e.value))
+                                />
+                            </div>
                         </div>
 
-                        <button type="submit" class="btn btn-primary">
-                            { "Login" }
-                        </button>
+                        <div class="uk-margin">
+                            <div class="uk-form-controls">
+                                <button class="uk-button uk-button-primary">{ "Login" }</button>
+                            </div>
+                        </div>
                     </form>
                 </div>
             </div>

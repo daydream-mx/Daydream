@@ -1,10 +1,11 @@
-use std::collections::HashSet;
+use std::collections::{HashSet, HashMap};
 use std::convert::TryFrom;
 use std::sync::{Arc, Mutex};
+use std::sync::RwLock as SyncRwLock;
 
 use log::*;
-use matrix_sdk::{Client, ClientConfig, Session, SyncSettings};
-use serde_derive::{Deserialize, Serialize};
+use matrix_sdk::{Client, ClientConfig, Session, SyncSettings, Room, identifiers::RoomId};
+use serde::{Deserialize, Serialize};
 use url::Url;
 use wasm_bindgen_futures::spawn_local;
 use yew::format::Json;
@@ -13,8 +14,12 @@ use yew::worker::*;
 
 use crate::constants::AUTH_KEY;
 use crate::errors::MatrixError;
+use futures_locks::RwLock;
+use crate::app::matrix::types::{SmallRoom, MessageWrapper};
+use yew_styles::button::Size::Small;
 
 mod sync;
+pub mod types;
 
 #[derive(Serialize, Deserialize, Default, Clone, Debug)]
 pub struct MatrixClient {
@@ -25,10 +30,10 @@ pub struct MatrixClient {
 
 #[derive(Serialize, Deserialize, Default, Clone, Debug)]
 pub struct SessionStore {
-    access_token: String,
-    user_id: String,
-    device_id: String,
-    homeserver_url: String,
+    pub(crate) access_token: String,
+    pub(crate) user_id: String,
+    pub(crate) device_id: String,
+    pub(crate) homeserver_url: String,
 }
 
 #[derive(Clone, Debug)]
@@ -50,6 +55,7 @@ pub enum Request {
     Login(),
     GetLoggedIn,
     StartSync,
+    GetJoinedRooms,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -57,7 +63,9 @@ pub enum Response {
     Error(MatrixError),
     LoggedIn(bool),
     // TODO properly handle sync events
-    Sync(String),
+    Sync(MessageWrapper),
+    FinishedFirstSync,
+    JoinedRoomList(HashMap<RoomId, SmallRoom>),
 }
 
 impl Agent for MatrixAgent {
@@ -106,9 +114,9 @@ impl Agent for MatrixAgent {
             Request::Login() => {
                 let login_client = self.login();
                 if login_client.is_none() {
-                    let resp = Response::Error(MatrixError::MissingClient);
                     for sub in self.subscribers.iter() {
-                        self.link.respond(*sub, resp.clone());
+                        let resp = Response::Error(MatrixError::MissingClient);
+                        self.link.respond(*sub, resp);
                     }
                     return;
                 }
@@ -129,7 +137,7 @@ impl Agent for MatrixAgent {
                             user_id: matrix_sdk::identifiers::UserId::try_from(
                                 stored_session.user_id.as_str(),
                             )
-                            .unwrap(),
+                                .unwrap(),
                             device_id: stored_session.device_id,
                         };
                         client.restore_login(session).await;
@@ -153,9 +161,9 @@ impl Agent for MatrixAgent {
                         storage.store(AUTH_KEY, Json(&session_store));
                     }
 
-                    let resp = Response::LoggedIn(true);
                     for sub in subscribers.iter() {
-                        agent.link.respond(*sub, resp.clone());
+                        let resp = Response::LoggedIn(true);
+                        agent.link.respond(*sub, resp);
                     }
                 });
             }
@@ -163,9 +171,9 @@ impl Agent for MatrixAgent {
                 let subscribers = self.subscribers.clone();
                 let login_client = self.login();
                 if login_client.is_none() {
-                    let resp = Response::Error(MatrixError::MissingClient);
                     for sub in self.subscribers.iter() {
-                        self.link.respond(*sub, resp.clone());
+                        let resp = Response::Error(MatrixError::MissingClient);
+                        self.link.respond(*sub, resp);
                     }
                     return;
                 }
@@ -179,9 +187,9 @@ impl Agent for MatrixAgent {
                     if !logged_in && agent.session.is_some() {
                         error!("Not logged in but got session");
                     } else {
-                        let resp = Response::LoggedIn(logged_in.clone());
                         for sub in subscribers.iter() {
-                            agent.link.respond(*sub, resp.clone());
+                            let resp = Response::LoggedIn(logged_in.clone());
+                            agent.link.respond(*sub, resp);
                         }
                     }
                 });
@@ -193,6 +201,26 @@ impl Agent for MatrixAgent {
                     agent.start_sync().await;
                 });
             }
+            Request::GetJoinedRooms => {
+                let agent = self.clone();
+                let client = agent.matrix_client.clone().unwrap();
+                spawn_local(async move {
+                    for sub in agent.subscribers.iter() {
+                        let rooms: Arc<RwLock<HashMap<RoomId, Arc<RwLock<Room>>>>> = client.clone().joined_rooms();
+                        let mut rooms_list_hack = HashMap::new();
+                        for (id, room) in rooms.read().await.iter() {
+                            let small_room = SmallRoom {
+                                name: room.read().await.display_name(),
+                                id: id.clone()
+                            };
+                            rooms_list_hack.insert(id.clone(),small_room);
+                        }
+
+                        let resp = Response::JoinedRoomList(rooms_list_hack);
+                        agent.link.respond(*sub, resp);
+                    }
+                });
+            }
         }
     }
 
@@ -202,6 +230,7 @@ impl Agent for MatrixAgent {
 }
 
 unsafe impl Send for MatrixAgent {}
+
 unsafe impl std::marker::Sync for MatrixAgent {}
 
 impl MatrixAgent {
@@ -231,9 +260,9 @@ impl MatrixAgent {
             || self.matrix_client.is_some())
             && self.session.is_none()
         {
-            let resp = Response::Error(MatrixError::MissingFields);
             for sub in self.subscribers.iter() {
-                self.link.respond(*sub, resp.clone());
+                let resp = Response::Error(MatrixError::MissingFields);
+                self.link.respond(*sub, resp);
             }
             None
         } else if self.session.is_some() {

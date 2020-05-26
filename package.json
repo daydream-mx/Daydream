@@ -19,6 +19,6 @@
     "webpack-dev-server": "^3.11.0"
   },
   "dependencies": {
-    "bootstrap": "^4.5.0"
+    "uikit": "^3.4.6"
   }
 }
