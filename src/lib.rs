@@ -4,6 +4,8 @@
 extern crate cfg_if;
 
 mod app;
+mod errors;
+mod constants;
 
 use wasm_bindgen::prelude::*;
 

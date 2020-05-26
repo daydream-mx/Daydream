@@ -1,7 +1,6 @@
 use log::*;
 use yew::agent::{Dispatched, Dispatcher};
 use yew::prelude::*;
-use yew::services::storage::{Area, StorageService};
 
 use crate::app::matrix::{MatrixAgent, Request};
 
@@ -10,7 +9,6 @@ pub struct Login {
     homeserver: String,
     username: String,
     password: String,
-    storage: StorageService,
     matrix_agent: Dispatcher<MatrixAgent>,
 }
 
@@ -28,7 +26,6 @@ impl Component for Login {
     type Properties = ();
 
     fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
-        let storage = StorageService::new(Area::Local).unwrap();
         let matrix_agent = MatrixAgent::dispatcher();
         Login {
             link,
@@ -36,7 +33,6 @@ impl Component for Login {
             homeserver: "".to_string(),
             username: "".to_string(),
             password: "".to_string(),
-            storage,
             matrix_agent,
         }
     }

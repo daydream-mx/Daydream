@@ -64,23 +64,26 @@ impl Component for App {
             }
             Msg::NewMessage(response) => {
                 info!("NewMessage: {:#?}", response);
-                if response.message == "client_logged_in"{
-                    info!("client_logged_in");
-                    info!("{}", response.content);
-                    let route: Route = if response.content == "true" {
-                        //self.state.logged_in = true;
+                match response {
+                    Response::Error(_) => {},
+                    Response::LoggedIn(logged_in) => {
+                        info!("client_logged_in");
+                        info!("{}",logged_in);
+                        let route: Route = if logged_in {
+                            //self.state.logged_in = true;
 
-                        // replace with sync routeagent message once its possible
-                        // https://github.com/yewstack/yew/issues/1127
-                        //RouteService::new().get_route();
-                        AppRoute::MainView.into()
-                    } else {
-                        AppRoute::Start.into()
-                    };
+                            // replace with sync routeagent message once its possible
+                            // https://github.com/yewstack/yew/issues/1127
+                            //RouteService::new().get_route();
+                            AppRoute::MainView.into()
+                        } else {
+                            AppRoute::Start.into()
+                        };
 
-                    info!("{:#?}", route.clone());
-                    self.route = Some(route.clone());
-                    self.route_agent.send(ChangeRoute(route));
+                        info!("{:#?}", route.clone());
+                        self.route = Some(route.clone());
+                        self.route_agent.send(ChangeRoute(route));
+                    },
                 }
             }
         }
