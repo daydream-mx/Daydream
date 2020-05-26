@@ -1,7 +1,13 @@
+use crate::app::matrix::types::MessageWrapper;
 use crate::app::matrix::Response;
 use log::*;
-use matrix_sdk::{api::r0::sync::sync_events::Response as SyncResponse, events::collections::all::RoomEvent, events::room::message::{MessageEvent, MessageEventContent, TextMessageEventContent}, identifiers::RoomId, Client, SyncSettings, Error};
-use crate::app::matrix::types::MessageWrapper;
+use matrix_sdk::{
+    api::r0::sync::sync_events::Response as SyncResponse,
+    events::collections::all::RoomEvent,
+    events::room::message::{MessageEvent, MessageEventContent, TextMessageEventContent},
+    identifiers::RoomId,
+    Client, SyncSettings,
+};
 
 pub struct Sync<F>
 where
@@ -22,8 +28,8 @@ where
             Ok(_) => {
                 let resp = Response::FinishedFirstSync;
                 (self.callback)(resp);
-            },
-            _ => {},
+            }
+            _ => {}
         }
 
         let settings = SyncSettings::default().token(client.clone().sync_token().await.unwrap());
@@ -34,7 +40,6 @@ where
     }
 
     async fn on_sync_response(&self, response: SyncResponse) {
-
         for (room_id, room) in response.rooms.join {
             for event in room.timeline.events {
                 if let Ok(event) = event.deserialize() {
@@ -58,7 +63,7 @@ where
 
         let wrapper = MessageWrapper {
             room_id: room_id.clone(),
-            content: msg_body
+            content: msg_body,
         };
 
         let resp = Response::Sync(wrapper);

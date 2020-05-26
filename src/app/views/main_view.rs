@@ -1,16 +1,15 @@
+use std::collections::{HashMap, HashSet};
+use std::convert::TryFrom;
+
+use js_int::UInt;
 use log::*;
+use matrix_sdk::identifiers::RoomId;
 use serde::{Deserialize, Serialize};
 use yew::prelude::*;
 use yew::ComponentLink;
 
+use crate::app::matrix::types::{MessageWrapper, SmallRoom};
 use crate::app::matrix::{MatrixAgent, Request, Response};
-use std::collections::{HashSet, HashMap};
-use matrix_sdk::{Client, ClientConfig, Session};
-use url::Url;
-use std::convert::TryFrom;
-use wasm_bindgen_futures::spawn_local;
-use crate::app::matrix::types::{SmallRoom, MessageWrapper};
-use matrix_sdk::identifiers::RoomId;
 
 pub struct MainView {
     link: ComponentLink<Self>,
@@ -20,7 +19,7 @@ pub struct MainView {
 
 pub enum Msg {
     NewMessage(Response),
-    ChangeRoom(String)
+    ChangeRoom(String),
 }
 
 #[derive(Serialize, Deserialize, Default)]
@@ -28,7 +27,7 @@ pub struct State {
     // TODO handle all events
     pub events: HashSet<MessageWrapper>,
     pub rooms: HashMap<RoomId, SmallRoom>,
-    pub current_room: Option<RoomId>
+    pub current_room: Option<RoomId>,
 }
 
 impl Component for MainView {
@@ -42,7 +41,7 @@ impl Component for MainView {
         let state = State {
             events: Default::default(),
             rooms: Default::default(),
-            current_room: None
+            current_room: None,
         };
 
         MainView {
@@ -63,15 +62,12 @@ impl Component for MainView {
                         // TODO handle all events
                         self.state.events.insert(msg);
                     }
-                    Response::JoinedRoomList(rooms) => {
-                        self.state.rooms = rooms
-                    }
+                    Response::JoinedRoomList(rooms) => self.state.rooms = rooms,
                     _ => {}
                 }
             }
             Msg::ChangeRoom(room) => {
                 self.state.current_room = Some(RoomId::try_from(room).unwrap());
-
             }
         }
         true
@@ -99,7 +95,7 @@ impl Component for MainView {
                             </div>
                         </div>
                     </div>
-                }
+                };
             } else {
                 return html! {
                     <div class="uk-flex uk-height-1-1 non-scrollable-container">
@@ -117,9 +113,8 @@ impl Component for MainView {
                             </div>
                         </div>
                     </div>
-                }
+                };
             }
-
         } else {
             return html! {
                 <div class="container">
@@ -127,7 +122,7 @@ impl Component for MainView {
                         <span uk-spinner="ratio: 4.5"></span>
                     </div>
                 </div>
-            }
+            };
         }
     }
 }
@@ -144,7 +139,25 @@ impl MainView {
 
         let room_id = room.clone().id.to_string();
         html! {
-            <li><a href="#" onclick=self.link.callback(move |e: MouseEvent| Msg::ChangeRoom(room_id.clone()))>{room.name.clone()}</a></li>
+            <li>
+                <a href="#" onclick=self.link.callback(move |e: MouseEvent| Msg::ChangeRoom(room_id.clone()))>
+                    {room.name.clone()}
+                    {
+                        if room.unread_notifications.is_some() && room.unread_notifications.unwrap() != UInt::from(0u32) {
+                            html! { <span class="uk-badge uk-margin-small-left">{room.unread_notifications.unwrap()}</span> }
+                        } else {
+                            html! {}
+                        }
+                    }
+                    {
+                        if room.unread_highlight.is_some() && room.unread_highlight.unwrap() != UInt::from(0u32) {
+                            html! { <span class="uk-badge red uk-margin-small-left">{room.unread_highlight.unwrap()}</span> }
+                        } else {
+                            html! {}
+                        }
+                    }
+                </a>
+            </li>
         }
     }
 }

@@ -1,10 +1,13 @@
+use js_int::UInt;
 use matrix_sdk::identifiers::RoomId;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct SmallRoom {
     pub(crate) name: String,
-    pub(crate) id: RoomId
+    pub(crate) unread_notifications: Option<UInt>,
+    pub(crate) unread_highlight: Option<UInt>,
+    pub(crate) id: RoomId,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Hash, Eq, PartialEq)]

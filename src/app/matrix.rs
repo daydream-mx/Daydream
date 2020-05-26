@@ -1,10 +1,9 @@
-use std::collections::{HashSet, HashMap};
+use std::collections::{HashMap, HashSet};
 use std::convert::TryFrom;
 use std::sync::{Arc, Mutex};
-use std::sync::RwLock as SyncRwLock;
 
 use log::*;
-use matrix_sdk::{Client, ClientConfig, Session, SyncSettings, Room, identifiers::RoomId};
+use matrix_sdk::{identifiers::RoomId, Client, ClientConfig, Room, Session};
 use serde::{Deserialize, Serialize};
 use url::Url;
 use wasm_bindgen_futures::spawn_local;
@@ -12,11 +11,10 @@ use yew::format::Json;
 use yew::services::{storage::Area, StorageService};
 use yew::worker::*;
 
+use crate::app::matrix::types::{MessageWrapper, SmallRoom};
 use crate::constants::AUTH_KEY;
 use crate::errors::MatrixError;
 use futures_locks::RwLock;
-use crate::app::matrix::types::{SmallRoom, MessageWrapper};
-use yew_styles::button::Size::Small;
 
 mod sync;
 pub mod types;
@@ -137,7 +135,7 @@ impl Agent for MatrixAgent {
                             user_id: matrix_sdk::identifiers::UserId::try_from(
                                 stored_session.user_id.as_str(),
                             )
-                                .unwrap(),
+                            .unwrap(),
                             device_id: stored_session.device_id,
                         };
                         client.restore_login(session).await;
@@ -206,14 +204,21 @@ impl Agent for MatrixAgent {
                 let client = agent.matrix_client.clone().unwrap();
                 spawn_local(async move {
                     for sub in agent.subscribers.iter() {
-                        let rooms: Arc<RwLock<HashMap<RoomId, Arc<RwLock<Room>>>>> = client.clone().joined_rooms();
+                        let rooms: Arc<RwLock<HashMap<RoomId, Arc<RwLock<Room>>>>> =
+                            client.clone().joined_rooms();
                         let mut rooms_list_hack = HashMap::new();
                         for (id, room) in rooms.read().await.iter() {
                             let small_room = SmallRoom {
                                 name: room.read().await.display_name(),
-                                id: id.clone()
+                                unread_notifications: room
+                                    .read()
+                                    .await
+                                    .unread_notifications
+                                    .clone(),
+                                unread_highlight: room.read().await.unread_highlight.clone(),
+                                id: id.clone(),
                             };
-                            rooms_list_hack.insert(id.clone(),small_room);
+                            rooms_list_hack.insert(id.clone(), small_room);
                         }
 
                         let resp = Response::JoinedRoomList(rooms_list_hack);
