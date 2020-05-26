@@ -104,7 +104,7 @@ impl Component for MainView {
                 return html! {
                     <div class="uk-flex uk-height-1-1 non-scrollable-container">
                         <div class="container uk-height-1-1 uk-width-1-6">
-                            <ul class="scrollable h-100 uk-padding uk-nav-default uk-nav-parent-icon" uk-nav="">
+                            <ul class="scrollable uk-height-1-1 uk-padding uk-nav-default uk-nav-parent-icon" uk-nav="">
                                 <li class="uk-nav-header">{"Rooms"}</li>
                                 { self.state.rooms.iter().map(|(_, room)| self.get_room(room.clone())).collect::<Html>() }
                             </ul>
