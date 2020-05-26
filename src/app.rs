@@ -11,10 +11,10 @@ mod views;
 
 #[derive(Switch, Clone)]
 pub enum AppRoute {
-    #[to = "/app"]
-    MainView,
+    #[to = "/login"]
+    Login,
     #[to = "/"]
-    Start,
+    MainView,
 }
 pub enum Msg {
     RouteChanged(Route<()>),
@@ -77,7 +77,7 @@ impl Component for App {
                             //RouteService::new().get_route();
                             AppRoute::MainView.into()
                         } else {
-                            AppRoute::Start.into()
+                            AppRoute::Login.into()
                         };
 
                         info!("{:#?}", route.clone());
@@ -109,7 +109,7 @@ impl Component for App {
                                 <MainView />
                             }
                         },
-                        Some(AppRoute::Start) => {
+                        Some(AppRoute::Login) => {
                             info!("StartRoute");
                             html! {
                                 <Login />

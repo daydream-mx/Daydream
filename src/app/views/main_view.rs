@@ -67,8 +67,16 @@ impl Component for MainView {
     fn view(&self) -> Html {
         info!("rendered MainView!");
         html! {
-            <div class="container h-100">
-            { self.state.events.iter().map(|event| self.get_event(event)).collect::<Html>() }
+            <div class="container-fluid h-100">
+                <div class="row">
+                    <div class="col-md-2">
+                        <p>{"BLUB"}</p>
+                    </div>
+                    <div class="col">
+                        { self.state.events.iter().map(|event| self.get_event(event)).collect::<Html>() }
+                    </div>
+
+                </div>
             </div>
         }
     }
