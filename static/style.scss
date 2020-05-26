@@ -1,4 +1,18 @@
-html { height: 100%; }
-body { height: 100%; }
+html {
+  height: 100%;
+}
+
+body {
+  height: 100%;
+}
+
+.scrollable {
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.non-scrollable-container {
+  overflow: hidden;
+}
 
 @import "../node_modules/bootstrap/scss/bootstrap";

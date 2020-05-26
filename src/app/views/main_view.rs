@@ -62,12 +62,12 @@ impl Component for MainView {
 
     fn view(&self) -> Html {
         html! {
-            <div class="container-fluid h-100">
-                <div class="row">
-                    <div class="col-md-2">
+            <div class="container-fluid h-100 non-scrollable-container">
+                <div class="row h-100">
+                    <div class="col-md-2 scrollable h-100">
                         <p>{"BLUB"}</p>
                     </div>
-                    <div class="col">
+                    <div class="col scrollable h-100">
                         { self.state.events.iter().map(|event| self.get_event(event)).collect::<Html>() }
                     </div>
 
