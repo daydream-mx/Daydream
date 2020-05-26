@@ -1,66 +1,121 @@
 use log::*;
-use serde_derive::{Deserialize, Serialize};
-use yew::prelude::*;
+use yew::{prelude::*, virtual_dom::VNode};
 use yew_router::{prelude::*, Switch};
-use yew_router::switch::Permissive;
-use yew::virtual_dom::VNode;
 
 use crate::app::views::{login::Login, main_view::MainView};
+use crate::app::matrix::{Response, MatrixAgent};
+use yew_router::agent::RouteRequest::ChangeRoute;
 
 mod matrix;
 mod views;
 
 #[derive(Switch, Clone)]
 pub enum AppRoute {
-    #[to = "/"]
-    Start,
-    #[to = "/login"]
-    Login,
     #[to = "/app"]
     MainView,
-    #[to = "/page-not-found"]
-    PageNotFound(Permissive<String>),
+    #[to = "/"]
+    Start,
+}
+pub enum Msg {
+    RouteChanged(Route<()>),
+    ChangeRoute(AppRoute),
+    NewMessage(Response),
+}
+pub struct App {
+    matrix_agent: Box<dyn Bridge<MatrixAgent>>,
+    link: ComponentLink<Self>,
+    route: Option<Route<()>>,
+    route_agent: Box<dyn Bridge<RouteAgent<()>>>,
 }
 
-pub struct App {}
-
-#[derive(Serialize, Deserialize)]
-pub struct State {}
-
+impl App {
+    fn change_route(&self, app_route: AppRoute) -> Callback<MouseEvent> {
+        self.link.callback(move |_| {
+            let route = app_route.clone();
+            Msg::ChangeRoute(route)
+        })
+    }
+}
 impl Component for App {
-    type Message = ();
+    type Message = Msg;
     type Properties = ();
 
-    fn create(_: Self::Properties, _link: ComponentLink<Self>) -> Self {
-        App {}
+    fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
+        let route_agent = RouteAgent::bridge(link.callback(Msg::RouteChanged));
+        let mut matrix_agent = MatrixAgent::bridge(link.callback(Msg::NewMessage));
+        matrix_agent.send(matrix::Request::GetLoggedIn);
+        App {
+            matrix_agent,
+            route_agent,
+            route: None,
+            link,
+        }
     }
 
-    fn update(&mut self, _: Self::Message) -> ShouldRender {
-        false
+    fn update(&mut self, msg: Self::Message) -> ShouldRender {
+        match msg {
+            Msg::RouteChanged(route) => {
+                self.route = Some(route);
+            }
+            Msg::ChangeRoute(route) => {
+                let route: Route = route.into();
+                self.route = Some(route.clone());
+                self.route_agent.send(ChangeRoute(route));
+            }
+            Msg::NewMessage(response) => {
+                info!("NewMessage: {:#?}", response);
+                if response.message == "client_logged_in"{
+                    info!("client_logged_in");
+                    info!("{}", response.content);
+                    let route: Route = if response.content == "true" {
+                        //self.state.logged_in = true;
+
+                        // replace with sync routeagent message once its possible
+                        // https://github.com/yewstack/yew/issues/1127
+                        //RouteService::new().get_route();
+                        AppRoute::MainView.into()
+                    } else {
+                        AppRoute::Start.into()
+                    };
+
+                    info!("{:#?}", route.clone());
+                    self.route = Some(route.clone());
+                    self.route_agent.send(ChangeRoute(route));
+                }
+            }
+        }
+        true
     }
 
     fn change(&mut self, _props: Self::Properties) -> ShouldRender {
         false
     }
 
-    fn view(&self) -> VNode {
+    fn view(&self) -> Html {
         info!("rendered App!");
+        info!("Route: {:#?}", &self.route);
         html! {
             <div>
-                <Router<AppRoute, ()>
-                    render = Router::render(|switch: AppRoute| {
-                        match switch {
-                            AppRoute::Start => html!{<Login />},
-                            AppRoute::Login => html!{<Login />},
-                            AppRoute::MainView => html!{<MainView />},
-                            AppRoute::PageNotFound(Permissive(None)) => html!{"Page not found"},
-                            AppRoute::PageNotFound(Permissive(Some(missed_route))) => html!{format!("Page '{}' not found", missed_route)}
+                {
+                    match &self.route {
+                        None => {info!("NoneRoute"); html! {<Login />}},
+                        Some(route) => match AppRoute::switch(route.clone()) {
+                            Some(AppRoute::MainView) => {
+                                info!("MainViewRoute");
+                                html! {
+                                    <MainView />
+                                }
+                            },
+                            Some(AppRoute::Start) => {
+                                info!("StartRoute");
+                                html! {
+                                    <Login />
+                                }
+                            },
+                            None => VNode::from("404")
                         }
-                    })
-                    redirect = Router::redirect(|route: Route| {
-                        AppRoute::PageNotFound(Permissive(Some(route.route)))
-                    })
-                />
+                    }
+                }
             </div>
         }
     }

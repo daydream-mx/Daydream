@@ -1,23 +1,17 @@
 use log::*;
-use serde_derive::{Deserialize, Serialize};
 use yew::agent::{Dispatched, Dispatcher};
 use yew::prelude::*;
 use yew::services::storage::{Area, StorageService};
-use yew_router::{route::Route};
 
-use crate::app::matrix::{MatrixAgent, Request, Response};
-use yew_router::agent::RouteRequest;
-use yew_router::prelude::*;
+use crate::app::matrix::{MatrixAgent, Request};
 
 pub struct Login {
     link: ComponentLink<Self>,
-    router: Box<dyn Bridge<RouteAgent>>,
     homeserver: String,
     username: String,
     password: String,
     storage: StorageService,
     matrix_agent: Dispatcher<MatrixAgent>,
-    _producer: Box<dyn Bridge<MatrixAgent>>,
 }
 
 pub enum Msg {
@@ -25,32 +19,25 @@ pub enum Msg {
     SetUsername(String),
     SetPassword(String),
     Login,
-    Navigate(String),
-    NewMessage(Response),
     Nope,
 }
+
 
 impl Component for Login {
     type Message = Msg;
     type Properties = ();
 
     fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
-        let callback = link.callback(|_| Msg::Nope); // TODO use a dispatcher instead.
-        let router = RouteAgent::bridge(callback);
-
         let storage = StorageService::new(Area::Local).unwrap();
         let matrix_agent = MatrixAgent::dispatcher();
-        let matrix_callback = link.callback(Msg::NewMessage);
-        let _producer = MatrixAgent::bridge(matrix_callback);
         Login {
             link,
-            router,
+            //TODO use state
             homeserver: "".to_string(),
             username: "".to_string(),
             password: "".to_string(),
             storage,
             matrix_agent,
-            _producer,
         }
     }
 
@@ -77,24 +64,9 @@ impl Component for Login {
             Msg::Login => {
                 info!("Start Login");
                 self.matrix_agent.send(Request::Login());
-                true
-            }
-            Msg::Navigate(route_string) => {
-                let route = Route::from(route_string);
-
-                self.router.send(RouteRequest::ChangeRoute(route));
-                true
+                false
             }
             Msg::Nope => false,
-            Msg::NewMessage(response) => {
-                info!("NewMessage: {:#?}", response);
-                if response.message == "login_logged_in" {
-                    info!("Finished Login");
-                    self.link
-                        .callback(|_: InputData| Msg::Navigate("/app".to_owned()));
-                }
-                true
-            }
         }
     }
 
@@ -103,7 +75,7 @@ impl Component for Login {
     }
 
     fn view(&self) -> Html {
-        info!("rendered App!");
+        info!("rendered Login!");
         html! {
             <div>
                 <input class="server"
@@ -127,11 +99,11 @@ impl Component for Login {
                        type="password"
                        value=&self.password
                        oninput=self.link.callback(|e: InputData| Msg::SetPassword(e.value))
-                       //onkeypress=self.link.callback(|e: KeyboardEvent| {
-                       //    if e.key() == "Enter" { Msg::Add } else { Msg::Nope }
-                       //})
                         />
-                <button onclick=self.link.callback(|_: MouseEvent| Msg::Login)>
+                <button onclick=self.link.callback(|_: MouseEvent| Msg::Login)
+                       onkeypress=self.link.callback(|e: KeyboardEvent| {
+                           if e.key() == "Enter" { Msg::Login } else { Msg::Nope }
+                       })>
                     { "Login" }
                 </button>
             </div>

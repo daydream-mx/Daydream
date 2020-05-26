@@ -30,6 +30,7 @@ pub enum Request {
     GetLoggedIn,
 }
 
+// TODO make enum
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Response {
     pub message: String,
@@ -95,8 +96,8 @@ impl Agent for MatrixAgent {
                         .await;
                     info!("did login");
                     let resp = Response {
-                        message: "login_logged_in".to_string(),
-                        content: "".to_string(),
+                        message: "client_logged_in".to_string(),
+                        content: "true".to_string(),
                     };
                     info!("prepared login response");
                     for sub in subscribers.iter() {
@@ -132,6 +133,9 @@ impl Agent for MatrixAgent {
 
 impl MatrixAgent {
     async fn get_logged_in(&self) -> String {
+        if self.matrix_client.is_none() {
+            return "false".to_string();
+        }
         self.matrix_client
             .clone()
             .unwrap()

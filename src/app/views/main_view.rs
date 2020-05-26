@@ -1,6 +1,5 @@
 use log::*;
 use serde_derive::{Deserialize, Serialize};
-use yew::agent::{Dispatched, Dispatcher};
 use yew::prelude::*;
 use yew::services::storage::Area;
 use yew::services::StorageService;
@@ -11,9 +10,8 @@ use crate::app::matrix::{MatrixAgent, Response};
 pub struct MainView {
     link: ComponentLink<Self>,
     storage: StorageService,
-    matrix_agent: Dispatcher<MatrixAgent>,
     state: State,
-    _producer: Box<dyn Bridge<MatrixAgent>>,
+    matrix_agent: Box<dyn Bridge<MatrixAgent>>,
 }
 
 pub enum Msg {
@@ -29,9 +27,8 @@ impl Component for MainView {
 
     fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
         let storage = StorageService::new(Area::Local).unwrap();
-        let matrix_agent = MatrixAgent::dispatcher();
         let matrix_callback = link.callback(Msg::NewMessage);
-        let _producer = MatrixAgent::bridge(matrix_callback);
+        let matrix_agent = MatrixAgent::bridge(matrix_callback);
         let state = State {};
 
         MainView {
@@ -39,7 +36,6 @@ impl Component for MainView {
             storage,
             matrix_agent,
             state,
-            _producer,
         }
     }
 
