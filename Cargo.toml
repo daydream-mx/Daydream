@@ -3,6 +3,9 @@ name = "yew-wasm-pack-template"
 version = "0.2.0"
 authors = ["Yew Maintainers <maintainers@yew.rs"]
 edition = "2018"
+license = "AGPL-v3.0"
+repository = "https://github.com/MTRNord/Daydream"
+description = "A Matrix Web client written in Rust"
 
 [lib]
 crate-type = ["cdylib", "rlib"]
