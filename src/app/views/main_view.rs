@@ -85,16 +85,16 @@ impl Component for MainView {
         if !self.state.rooms.is_empty() {
             if self.state.current_room.is_none() {
                 return html! {
-                    <div class="uk-flex h-100 non-scrollable-container">
-                        <div class="container h-100 uk-width-1-6">
-                            <ul class="scrollable h-100 uk-padding uk-nav-default uk-nav-parent-icon" uk-nav="">
+                    <div class="uk-flex uk-height-1-1 non-scrollable-container">
+                        <div class="container uk-height-1-1 uk-width-1-6">
+                            <ul class="scrollable uk-height-1-1 uk-padding uk-nav-default uk-nav-parent-icon" uk-nav="">
                                 <li class="uk-nav-header">{"Rooms"}</li>
                                 { self.state.rooms.iter().map(|(_, room)| self.get_room(room.clone())).collect::<Html>() }
                             </ul>
                         </div>
 
-                        <div class="container h-100 uk-width-5-6 uk-padding">
-                            <div class="scrollable h-100">
+                        <div class="container uk-height-1-1 uk-width-5-6 uk-padding">
+                            <div class="scrollable uk-height-1-1">
                                 // TODO add some content to the empty page
                             </div>
                         </div>
@@ -102,17 +102,17 @@ impl Component for MainView {
                 }
             } else {
                 return html! {
-                    <div class="uk-flex h-100 non-scrollable-container">
-                        <div class="container h-100 uk-width-1-6">
+                    <div class="uk-flex uk-height-1-1 non-scrollable-container">
+                        <div class="container uk-height-1-1 uk-width-1-6">
                             <ul class="scrollable h-100 uk-padding uk-nav-default uk-nav-parent-icon" uk-nav="">
                                 <li class="uk-nav-header">{"Rooms"}</li>
                                 { self.state.rooms.iter().map(|(_, room)| self.get_room(room.clone())).collect::<Html>() }
                             </ul>
                         </div>
 
-                        <div class="container h-100 uk-width-5-6 uk-padding">
+                        <div class="container uk-height-1-1 uk-width-5-6 uk-padding">
                             <h1>{ self.state.rooms.iter().filter(|(id, _)| **id == self.state.current_room.clone().unwrap()).map(|(_, room)| room.name.clone()).collect::<String>() }</h1>
-                            <div class="scrollable h-100">
+                            <div class="scrollable uk-height-1-1">
                                 { self.state.events.iter().filter(|x| x.room_id == self.state.current_room.clone().unwrap()).map(|event| self.get_event(event.content.clone())).collect::<Html>() }
                             </div>
                         </div>
