@@ -57,7 +57,6 @@ impl Component for Login {
                 true
             }
             Msg::Login => {
-                info!("Start Login");
                 self.matrix_agent.send(Request::Login());
                 false
             }
@@ -70,7 +69,6 @@ impl Component for Login {
     }
 
     fn view(&self) -> Html {
-        info!("rendered Login!");
         html! {
             <div class="container h-100">
                 <div class="row align-items-center h-100">

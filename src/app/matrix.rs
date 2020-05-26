@@ -77,7 +77,6 @@ impl Agent for MatrixAgent {
                 None
             }
         };
-        info!("session: {:#?}", session);
         MatrixAgent {
             link,
             matrix_state: Default::default(),
@@ -154,13 +153,10 @@ impl Agent for MatrixAgent {
                         storage.store(AUTH_KEY, Json(&session_store));
                     }
 
-                    info!("did login");
                     let resp = Response::LoggedIn(true);
-                    info!("prepared login response");
                     for sub in subscribers.iter() {
                         agent.link.respond(*sub, resp.clone());
                     }
-                    info!("sent login response");
                 });
             }
             Request::GetLoggedIn => {

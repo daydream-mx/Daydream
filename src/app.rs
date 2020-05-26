@@ -67,8 +67,6 @@ impl Component for App {
                 match response {
                     Response::Error(_) => {}
                     Response::LoggedIn(logged_in) => {
-                        info!("client_logged_in");
-                        info!("{}", logged_in);
                         let route: Route = if logged_in {
                             //self.state.logged_in = true;
 
@@ -80,7 +78,6 @@ impl Component for App {
                             AppRoute::Login.into()
                         };
 
-                        info!("{:#?}", route.clone());
                         self.route = Some(route.clone());
                         self.route_agent.send(ChangeRoute(route));
                     }
@@ -96,21 +93,17 @@ impl Component for App {
     }
 
     fn view(&self) -> Html {
-        info!("rendered App!");
-        info!("Route: {:#?}", &self.route);
         html! {
             {
                 match &self.route {
-                    None => {info!("NoneRoute"); html! {<Login />}},
+                    None => html! {<Login />},
                     Some(route) => match AppRoute::switch(route.clone()) {
                         Some(AppRoute::MainView) => {
-                            info!("MainViewRoute");
                             html! {
                                 <MainView />
                             }
                         },
                         Some(AppRoute::Login) => {
-                            info!("StartRoute");
                             html! {
                                 <Login />
                             }

@@ -32,7 +32,6 @@ where
     }
 
     async fn on_sync_response(&self, response: SyncResponse) {
-        info!("Synced");
 
         for (room_id, room) in response.rooms.join {
             for event in room.timeline.events {
@@ -44,7 +43,7 @@ where
     }
 
     async fn on_room_message(&self, room_id: &RoomId, event: RoomEvent) {
-        // TODO handle all messages... (Extra class?)
+        // TODO handle all messages...
         let msg_body = if let RoomEvent::RoomMessage(MessageEvent {
             content: MessageEventContent::Text(TextMessageEventContent { body: msg_body, .. }),
             ..
@@ -55,7 +54,6 @@ where
             return;
         };
 
-        info!("Received message event {:?}", &msg_body);
         let resp = Response::Sync(msg_body);
         (self.callback)(resp);
     }

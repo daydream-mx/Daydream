@@ -44,11 +44,7 @@ impl Component for MainView {
     fn update(&mut self, msg: Self::Message) -> bool {
         match msg {
             Msg::NewMessage(response) => {
-                info!("NewMessage: {:#?}", response);
                 match response {
-                    Response::LoggedIn(v) => {
-                        info!("client_logged_in: {}", v);
-                    }
                     Response::Sync(msg) => {
                         // TODO handle all events
                         self.state.events.insert(msg);
@@ -65,7 +61,6 @@ impl Component for MainView {
     }
 
     fn view(&self) -> Html {
-        info!("rendered MainView!");
         html! {
             <div class="container-fluid h-100">
                 <div class="row">
