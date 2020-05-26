@@ -20,7 +20,6 @@ pub enum Msg {
     Nope,
 }
 
-
 impl Component for Login {
     type Message = Msg;
     type Properties = ();
@@ -73,35 +72,48 @@ impl Component for Login {
     fn view(&self) -> Html {
         info!("rendered Login!");
         html! {
-            <div>
-                <input class="server"
-                   placeholder="Homeserver URL"
-                   value=&self.homeserver
-                   oninput=self.link.callback(|e: InputData| Msg::SetHomeserver(e.value))
-                   //onkeypress=self.link.callback(|e: KeyboardEvent| {
-                   //    if e.key() == "Enter" { Msg::Add } else { Msg::Nope }
-                   //})
-                    />
-                <input class="username"
-                       placeholder="MXID/Username"
-                       value=&self.username
-                       oninput=self.link.callback(|e: InputData| Msg::SetUsername(e.value))
-                       //onkeypress=self.link.callback(|e: KeyboardEvent| {
-                       //    if e.key() == "Enter" { Msg::Add } else { Msg::Nope }
-                       //})
-                        />
-                <input class="password"
-                       placeholder="Password"
-                       type="password"
-                       value=&self.password
-                       oninput=self.link.callback(|e: InputData| Msg::SetPassword(e.value))
-                        />
-                <button onclick=self.link.callback(|_: MouseEvent| Msg::Login)
-                       onkeypress=self.link.callback(|e: KeyboardEvent| {
-                           if e.key() == "Enter" { Msg::Login } else { Msg::Nope }
-                       })>
-                    { "Login" }
-                </button>
+            <div class="container h-100">
+                <div class="row align-items-center h-100">
+                    <h1>{"Login"}</h1>
+                    <form class="col-6 mx-auto" onsubmit=self.link.callback(|e: Event| {e.prevent_default();  Msg::Login})>
+                        <div class="form-group">
+                            <label for="homeserver">{"Homeserver URL"}</label>
+                            <input
+                                class="form-control"
+                                type="url"
+                                id="homeserver"
+                                placeholder="Homeserver URL"
+                                value=&self.homeserver
+                                oninput=self.link.callback(|e: InputData| Msg::SetHomeserver(e.value))
+                            />
+                        </div>
+                        <div class="form-group">
+                            <label for="username">{"MXID/Username"}</label>
+                            <input
+                                class="form-control"
+                                id="username"
+                                placeholder="MXID/Username"
+                                value=&self.username
+                                oninput=self.link.callback(|e: InputData| Msg::SetUsername(e.value))
+                            />
+                        </div>
+                        <div class="form-group">
+                            <label for="password">{"Password"}</label>
+                            <input
+                                class="form-control"
+                                type="password"
+                                id="password"
+                                placeholder="Password"
+                                value=&self.password
+                                oninput=self.link.callback(|e: InputData| Msg::SetPassword(e.value))
+                            />
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">
+                            { "Login" }
+                        </button>
+                    </form>
+                </div>
             </div>
         }
     }

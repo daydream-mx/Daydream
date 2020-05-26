@@ -3,7 +3,7 @@ use std::convert::TryFrom;
 use std::sync::{Arc, Mutex};
 
 use log::*;
-use matrix_sdk::{Client, ClientConfig, Session, Error};
+use matrix_sdk::{Client, ClientConfig, Session, SyncSettings};
 use serde_derive::{Deserialize, Serialize};
 use url::Url;
 use wasm_bindgen_futures::spawn_local;
@@ -13,6 +13,8 @@ use yew::worker::*;
 
 use crate::constants::AUTH_KEY;
 use crate::errors::MatrixError;
+
+mod sync;
 
 #[derive(Serialize, Deserialize, Default, Clone, Debug)]
 pub struct MatrixClient {
@@ -34,6 +36,7 @@ pub struct MatrixAgent {
     link: AgentLink<MatrixAgent>,
     matrix_state: MatrixClient,
     matrix_client: Option<Client>,
+    // TODO make arc mutex :(
     subscribers: HashSet<HandlerId>,
     storage: Arc<Mutex<StorageService>>,
     session: Option<SessionStore>,
@@ -46,12 +49,15 @@ pub enum Request {
     SetPassword(String),
     Login(),
     GetLoggedIn,
+    StartSync,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum Response {
     Error(MatrixError),
     LoggedIn(bool),
+    // TODO properly handle sync events
+    Sync(String),
 }
 
 impl Agent for MatrixAgent {
@@ -61,7 +67,9 @@ impl Agent for MatrixAgent {
     type Output = Response;
 
     fn create(link: AgentLink<Self>) -> Self {
-        let storage = Arc::new(Mutex::new(StorageService::new(Area::Local).expect("storage was disabled by the user")));
+        let storage = Arc::new(Mutex::new(
+            StorageService::new(Area::Local).expect("storage was disabled by the user"),
+        ));
         let session: Option<SessionStore> = {
             if let Json(Ok(restored_model)) = storage.lock().unwrap().restore(AUTH_KEY) {
                 Some(restored_model)
@@ -112,14 +120,17 @@ impl Agent for MatrixAgent {
                 let password = password.clone();
                 let client = client.clone();
                 let subscribers = self.subscribers.clone();
-                let mut agent = self.clone();
+                let agent = self.clone();
                 spawn_local(async move {
                     // TODO handle login error
                     if agent.session.is_some() {
                         let stored_session = agent.session.clone().unwrap();
                         let session = Session {
                             access_token: stored_session.access_token,
-                            user_id: matrix_sdk::identifiers::UserId::try_from(stored_session.user_id.as_str()).unwrap(),
+                            user_id: matrix_sdk::identifiers::UserId::try_from(
+                                stored_session.user_id.as_str(),
+                            )
+                            .unwrap(),
                             device_id: stored_session.device_id,
                         };
                         client.restore_login(session).await;
@@ -131,7 +142,8 @@ impl Agent for MatrixAgent {
                                 None,
                                 Some("Daydream".to_string()),
                             )
-                            .await.unwrap();
+                            .await
+                            .unwrap();
                         let session_store = SessionStore {
                             access_token: login_response.access_token,
                             user_id: login_response.user_id.to_string(),
@@ -178,6 +190,13 @@ impl Agent for MatrixAgent {
                     }
                 });
             }
+            Request::StartSync => {
+                // Always clone agent after having tried to login!
+                let agent = self.clone();
+                spawn_local(async move {
+                    agent.start_sync().await;
+                });
+            }
         }
     }
 
@@ -186,23 +205,35 @@ impl Agent for MatrixAgent {
     }
 }
 
+unsafe impl Send for MatrixAgent {}
+unsafe impl std::marker::Sync for MatrixAgent {}
+
 impl MatrixAgent {
+    async fn start_sync(&self) {
+        let sync = sync::Sync {
+            matrix_client: self.matrix_client.clone().unwrap(),
+            callback: |x: Response| {
+                for sub in self.subscribers.iter() {
+                    self.link.respond(*sub, x.clone());
+                }
+            },
+        };
+        sync.start_sync().await;
+    }
+
     async fn get_logged_in(&self) -> bool {
         if self.matrix_client.is_none() {
             return false;
         }
-        self.matrix_client
-            .clone()
-            .unwrap()
-            .logged_in()
-            .await
+        self.matrix_client.clone().unwrap().logged_in().await
     }
 
     fn login(&mut self) -> Option<Client> {
         return if (self.matrix_state.homeserver.is_none()
             || self.matrix_state.username.is_none()
             || self.matrix_state.password.is_none()
-            || self.matrix_client.is_some()) && self.session.is_none()
+            || self.matrix_client.is_some())
+            && self.session.is_none()
         {
             let resp = Response::Error(MatrixError::MissingFields);
             for sub in self.subscribers.iter() {
@@ -221,7 +252,8 @@ impl MatrixAgent {
             let stored_session = self.session.clone().unwrap();
             let session = Session {
                 access_token: stored_session.access_token,
-                user_id: matrix_sdk::identifiers::UserId::try_from(stored_session.user_id.as_str()).unwrap(),
+                user_id: matrix_sdk::identifiers::UserId::try_from(stored_session.user_id.as_str())
+                    .unwrap(),
                 device_id: stored_session.device_id,
             };
             let client_clone = client.clone();

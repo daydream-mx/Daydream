@@ -3,7 +3,8 @@ use serde_derive::{Deserialize, Serialize};
 use yew::prelude::*;
 use yew::ComponentLink;
 
-use crate::app::matrix::{MatrixAgent, Response};
+use crate::app::matrix::{MatrixAgent, Request, Response};
+use wasm_bindgen::__rt::std::collections::{HashMap, HashSet};
 
 pub struct MainView {
     link: ComponentLink<Self>,
@@ -15,8 +16,11 @@ pub enum Msg {
     NewMessage(Response),
 }
 
-#[derive(Serialize, Deserialize)]
-pub struct State {}
+#[derive(Serialize, Deserialize, Default)]
+pub struct State {
+    // TODO handle all events
+    pub events: HashSet<String>,
+}
 
 impl Component for MainView {
     type Message = Msg;
@@ -24,8 +28,11 @@ impl Component for MainView {
 
     fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
         let matrix_callback = link.callback(Msg::NewMessage);
-        let matrix_agent = MatrixAgent::bridge(matrix_callback);
-        let state = State {};
+        let mut matrix_agent = MatrixAgent::bridge(matrix_callback);
+        matrix_agent.send(Request::StartSync);
+        let state = State {
+            events: Default::default(),
+        };
 
         MainView {
             link,
@@ -41,7 +48,11 @@ impl Component for MainView {
                 match response {
                     Response::LoggedIn(v) => {
                         info!("client_logged_in: {}", v);
-                    },
+                    }
+                    Response::Sync(msg) => {
+                        // TODO handle all events
+                        self.state.events.insert(msg);
+                    }
                     _ => {}
                 }
             }
@@ -56,7 +67,17 @@ impl Component for MainView {
     fn view(&self) -> Html {
         info!("rendered MainView!");
         html! {
-        <p>{"Test"}</p>
+            <div class="container h-100">
+            { self.state.events.iter().map(|event| self.get_event(event)).collect::<Html>() }
+            </div>
+        }
+    }
+}
+
+impl MainView {
+    fn get_event(&self, event: &String) -> Html {
+        html! {
+            <><p>{event}</p><br/></>
         }
     }
 }

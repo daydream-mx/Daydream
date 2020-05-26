@@ -1,11 +1,10 @@
-
 #![recursion_limit = "512"]
 #[macro_use]
 extern crate cfg_if;
 
 mod app;
-mod errors;
 mod constants;
+mod errors;
 
 use wasm_bindgen::prelude::*;
 
@@ -30,7 +29,6 @@ cfg_if! {
         static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
     }
 }
-
 
 // This is the entry point for the web app
 #[wasm_bindgen]

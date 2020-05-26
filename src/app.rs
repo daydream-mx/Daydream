@@ -2,8 +2,8 @@ use log::*;
 use yew::{prelude::*, virtual_dom::VNode};
 use yew_router::{prelude::*, Switch};
 
+use crate::app::matrix::{MatrixAgent, Response};
 use crate::app::views::{login::Login, main_view::MainView};
-use crate::app::matrix::{Response, MatrixAgent};
 use yew_router::agent::RouteRequest::ChangeRoute;
 
 mod matrix;
@@ -65,10 +65,10 @@ impl Component for App {
             Msg::NewMessage(response) => {
                 info!("NewMessage: {:#?}", response);
                 match response {
-                    Response::Error(_) => {},
+                    Response::Error(_) => {}
                     Response::LoggedIn(logged_in) => {
                         info!("client_logged_in");
-                        info!("{}",logged_in);
+                        info!("{}", logged_in);
                         let route: Route = if logged_in {
                             //self.state.logged_in = true;
 
@@ -83,7 +83,8 @@ impl Component for App {
                         info!("{:#?}", route.clone());
                         self.route = Some(route.clone());
                         self.route_agent.send(ChangeRoute(route));
-                    },
+                    }
+                    _ => {}
                 }
             }
         }
@@ -98,28 +99,26 @@ impl Component for App {
         info!("rendered App!");
         info!("Route: {:#?}", &self.route);
         html! {
-            <div>
-                {
-                    match &self.route {
-                        None => {info!("NoneRoute"); html! {<Login />}},
-                        Some(route) => match AppRoute::switch(route.clone()) {
-                            Some(AppRoute::MainView) => {
-                                info!("MainViewRoute");
-                                html! {
-                                    <MainView />
-                                }
-                            },
-                            Some(AppRoute::Start) => {
-                                info!("StartRoute");
-                                html! {
-                                    <Login />
-                                }
-                            },
-                            None => VNode::from("404")
-                        }
+            {
+                match &self.route {
+                    None => {info!("NoneRoute"); html! {<Login />}},
+                    Some(route) => match AppRoute::switch(route.clone()) {
+                        Some(AppRoute::MainView) => {
+                            info!("MainViewRoute");
+                            html! {
+                                <MainView />
+                            }
+                        },
+                        Some(AppRoute::Start) => {
+                            info!("StartRoute");
+                            html! {
+                                <Login />
+                            }
+                        },
+                        None => VNode::from("404")
                     }
                 }
-            </div>
+            }
         }
     }
 }
