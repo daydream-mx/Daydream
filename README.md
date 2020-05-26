@@ -1,4 +1,4 @@
-[![Netlify Status](https://api.netlify.com/api/v1/badges/5ba03ba7-ff8b-4c54-94e7-cd5fd76a6737/deploy-status)](https://app.netlify.com/sites/yew-todomvc/deploys)
+[![Netlify Status](https://api.netlify.com/api/v1/badges/48791884-918f-464f-8126-6a95c093717c/deploy-status)](https://app.netlify.com/sites/daydream-rs/deploys)
 
 ## About
 
