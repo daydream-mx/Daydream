@@ -1,5 +1,6 @@
 use crate::app::matrix::types::MessageWrapper;
 use crate::app::matrix::Response;
+use futures_locks::RwLock;
 use log::*;
 use matrix_sdk::{
     api::r0::sync::sync_events::Response as SyncResponse,
@@ -8,9 +9,7 @@ use matrix_sdk::{
     identifiers::RoomId,
     Client, Room, SyncSettings,
 };
-use futures::AsyncReadExt;
 use std::sync::Arc;
-use futures_locks::RwLock;
 
 pub struct Sync<F>
 where
@@ -61,7 +60,8 @@ where
         }) = event
         {
             let name = {
-                let room: Arc<RwLock<Room>> = self.matrix_client.get_joined_room(room_id).await.unwrap();
+                let room: Arc<RwLock<Room>> =
+                    self.matrix_client.get_joined_room(room_id).await.unwrap();
                 let room = room.read().await;
                 let member = room.members.get(&sender).unwrap();
                 member

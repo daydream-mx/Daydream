@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::{HashMap};
 use std::convert::TryFrom;
 
 use js_int::UInt;
@@ -64,11 +64,27 @@ impl Component for MainView {
                         self.state.events.insert(msg);
                     }
                     Response::JoinedRoomList(rooms) => self.state.rooms = rooms,
+                    Response::OldMessages(messages) => {
+                        // TODO this doesn't seem smart
+                        let mut new_events_map = LinkedHashSet::new();
+                        for event in messages.into_iter() {
+                            new_events_map.insert(event);
+                        }
+                        for event in self.state.events.clone().into_iter() {
+                            new_events_map.insert(event);
+                        }
+                        self.state.events = new_events_map;
+                    }
                     _ => {}
                 }
             }
             Msg::ChangeRoom(room) => {
-                self.state.current_room = Some(RoomId::try_from(room).unwrap());
+                let room_id = RoomId::try_from(room).unwrap();
+                if self.state.events.iter().filter(|x| x.room_id == room_id).collect::<LinkedHashSet<&MessageWrapper>>().is_empty() {
+                    self.matrix_agent
+                        .send(Request::GetOldMessages((room_id.clone(), None)));
+                }
+                self.state.current_room = Some(room_id.clone());
             }
         }
         true
@@ -91,7 +107,7 @@ impl Component for MainView {
                         </div>
 
                         <div class="container uk-height-1-1 uk-width-5-6 uk-padding">
-                            <div class="scrollable uk-height-1-1">
+                            <div class="scrollable" uk-height-viewport="expand: true">
                                 // TODO add some content to the empty page
                             </div>
                         </div>
@@ -109,7 +125,7 @@ impl Component for MainView {
 
                         <div class="container uk-height-1-1 uk-width-5-6 uk-padding">
                             <h1>{ self.state.rooms.iter().filter(|(id, _)| **id == self.state.current_room.clone().unwrap()).map(|(_, room)| room.name.clone()).collect::<String>() }</h1>
-                            <div class="scrollable uk-height-1-1">
+                            <div class="scrollable" uk-height-viewport="expand: true">
                                 { self.state.events.iter().filter(|x| x.room_id == self.state.current_room.clone().unwrap()).map(|event| self.get_event(event.clone())).collect::<Html>() }
                             </div>
                         </div>

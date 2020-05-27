@@ -2,8 +2,17 @@ use std::collections::{HashMap, HashSet};
 use std::convert::TryFrom;
 use std::sync::{Arc, Mutex};
 
+use futures_locks::RwLock;
+use js_int::UInt;
+use linked_hash_set::LinkedHashSet;
 use log::*;
-use matrix_sdk::{identifiers::RoomId, Client, ClientConfig, Room, Session};
+use matrix_sdk::{
+    api::r0::{filter::RoomEventFilter, message::get_message_events::Direction},
+    events::collections::all::RoomEvent,
+    events::room::message::{MessageEvent, MessageEventContent, TextMessageEventContent},
+    identifiers::RoomId,
+    Client, ClientConfig, MessagesRequestBuilder, Room, Session,
+};
 use serde::{Deserialize, Serialize};
 use url::Url;
 use wasm_bindgen_futures::spawn_local;
@@ -14,7 +23,6 @@ use yew::worker::*;
 use crate::app::matrix::types::{MessageWrapper, SmallRoom};
 use crate::constants::AUTH_KEY;
 use crate::errors::MatrixError;
-use futures_locks::RwLock;
 
 mod sync;
 pub mod types;
@@ -52,6 +60,8 @@ pub enum Request {
     SetPassword(String),
     Login(),
     GetLoggedIn,
+    GetUserdata,
+    GetOldMessages((RoomId, Option<String>)),
     StartSync,
     GetJoinedRooms,
 }
@@ -64,6 +74,8 @@ pub enum Response {
     Sync(MessageWrapper),
     FinishedFirstSync,
     JoinedRoomList(HashMap<RoomId, SmallRoom>),
+    Userdata(),
+    OldMessages(LinkedHashSet<MessageWrapper>),
 }
 
 impl Agent for MatrixAgent {
@@ -222,6 +234,78 @@ impl Agent for MatrixAgent {
                         }
 
                         let resp = Response::JoinedRoomList(rooms_list_hack);
+                        agent.link.respond(*sub, resp);
+                    }
+                });
+            }
+            Request::GetUserdata => {
+                // Noop
+            }
+            Request::GetOldMessages((room_id, from)) => {
+                let agent = self.clone();
+                let client = self.matrix_client.clone().unwrap();
+                spawn_local(async move {
+                    let mut builder = &mut MessagesRequestBuilder::new();
+                    builder = builder.room_id(room_id.clone());
+                    if from.is_some() {
+                        builder = builder.from(from.unwrap());
+                    } else {
+                        builder = builder.from(client.clone().sync_token().await.unwrap());
+                    }
+                    let filter = RoomEventFilter {
+                        types: Some(vec!["m.room.message".to_string()]),
+                        ..Default::default()
+                    };
+                    builder = builder
+                        .filter(filter)
+                        .direction(Direction::Backward)
+                        .limit(UInt::new(30).unwrap());
+
+                    let messsages = client.room_messages(builder.clone()).await.unwrap();
+                    // TODO save end point for future loading
+
+                    let mut wrapped_messages: LinkedHashSet<MessageWrapper> = LinkedHashSet::new();
+                    for event in messsages.chunk.iter().rev() {
+                        if let Ok(event) = event.deserialize() {
+                            if let RoomEvent::RoomMessage(MessageEvent {
+                                content:
+                                    MessageEventContent::Text(TextMessageEventContent {
+                                        body: msg_body,
+                                        ..
+                                    }),
+                                sender,
+                                ..
+                            }) = event
+                            {
+                                let name = {
+                                    let room: Arc<RwLock<Room>> = client
+                                        .clone()
+                                        .get_joined_room(&room_id.clone())
+                                        .await
+                                        .unwrap();
+                                    let room = room.read().await;
+                                    let member = room.members.get(&sender).unwrap();
+                                    member
+                                        .display_name
+                                        .as_ref()
+                                        .map(ToString::to_string)
+                                        .unwrap_or(sender.to_string())
+                                };
+
+                                let wrapper = MessageWrapper {
+                                    sender_displayname: name.clone(),
+                                    room_id: room_id.clone(),
+                                    content: msg_body.clone(),
+                                };
+                                wrapped_messages.insert(wrapper);
+                            } else {
+                                continue;
+                            };
+                        }
+                    }
+
+                    for sub in agent.subscribers.iter() {
+                        let resp = Response::OldMessages(wrapped_messages.clone());
                         agent.link.respond(*sub, resp);
                     }
                 });
