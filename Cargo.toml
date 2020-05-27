@@ -22,12 +22,12 @@ wasm-bindgen = "0.2"
 wasm-bindgen-futures = "0.4.12"
 wasm-logger = "0.2"
 wee_alloc = "0.4"
-yew = "0.16"
-yew-router = "0.13"
+yew = { git = "https://github.com/yewstack/yew" }
+yew-router = { git = "https://github.com/yewstack/yew" }
+yewtil = { git = "https://github.com/yewstack/yew" }
 futures = "0.3"
 matrix-sdk = { version = "0.1.0", git = "https://github.com/matrix-org/matrix-rust-sdk.git", default-features = false}
 url = "2.1.1"
-yew_styles = "0.3.1"
 thiserror = "1.0"
 futures-locks = { git = "https://github.com/asomers/futures-locks", default-features = false }
 js_int = "0.1.5"
@@ -41,3 +41,7 @@ version = "0.3"
 features = [
   'KeyboardEvent',
 ]
+
+[profile.release]
+# Tell `rustc` to optimize for small code size.
+opt-level = "s"

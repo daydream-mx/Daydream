@@ -1,11 +1,25 @@
+$scrollbar-color: hsla(0,0%,100%,.2);
+$scrollbar-bg-color: #181b21;
+
 .scrollable {
   overflow-y: auto !important;
   overflow-x: hidden !important;
   height: 100% !important;
+  scrollbar-width: thin;
+  scrollbar-color: $scrollbar-bg-color $scrollbar-color;
+}
+
+.scrollable::-webkit-scrollbar {
+  width: 11px;
 }
 
 .non-scrollable-container {
   overflow: hidden;
+}
+
+
+.auto-scrollable-container {
+  overflow: auto;
 }
 
 .uk-badge.red {

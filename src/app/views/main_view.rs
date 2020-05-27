@@ -1,16 +1,15 @@
-use std::collections::{HashMap};
 use std::convert::TryFrom;
 
-use js_int::UInt;
+use linked_hash_set::LinkedHashSet;
 use log::*;
 use matrix_sdk::identifiers::RoomId;
 use serde::{Deserialize, Serialize};
 use yew::prelude::*;
 use yew::ComponentLink;
 
-use crate::app::matrix::types::{MessageWrapper, SmallRoom};
+use crate::app::components::{room_list::RoomList, event_list::EventList};
+use crate::app::matrix::types::MessageWrapper;
 use crate::app::matrix::{MatrixAgent, Request, Response};
-use linked_hash_set::LinkedHashSet;
 
 pub struct MainView {
     link: ComponentLink<Self>,
@@ -20,15 +19,15 @@ pub struct MainView {
 
 pub enum Msg {
     NewMessage(Response),
-    ChangeRoom(String),
+    ChangeRoom((String, String)),
 }
 
 #[derive(Serialize, Deserialize, Default)]
 pub struct State {
     // TODO handle all events
     pub events: LinkedHashSet<MessageWrapper>,
-    pub rooms: HashMap<RoomId, SmallRoom>,
     pub current_room: Option<RoomId>,
+    pub current_room_displayname: String,
 }
 
 impl Component for MainView {
@@ -41,8 +40,8 @@ impl Component for MainView {
         matrix_agent.send(Request::StartSync);
         let state = State {
             events: Default::default(),
-            rooms: Default::default(),
             current_room: None,
+            current_room_displayname: Default::default()
         };
 
         MainView {
@@ -59,32 +58,24 @@ impl Component for MainView {
                     Response::FinishedFirstSync => {
                         self.matrix_agent.send(Request::GetJoinedRooms);
                     }
-                    Response::Sync(msg) => {
-                        // TODO handle all events
-                        self.state.events.insert(msg);
-                    }
-                    Response::JoinedRoomList(rooms) => self.state.rooms = rooms,
-                    Response::OldMessages(messages) => {
-                        // TODO this doesn't seem smart
-                        let mut new_events_map = LinkedHashSet::new();
-                        for event in messages.into_iter() {
-                            new_events_map.insert(event);
-                        }
-                        for event in self.state.events.clone().into_iter() {
-                            new_events_map.insert(event);
-                        }
-                        self.state.events = new_events_map;
-                    }
                     _ => {}
                 }
             }
-            Msg::ChangeRoom(room) => {
+            Msg::ChangeRoom((displayname, room)) => {
                 let room_id = RoomId::try_from(room).unwrap();
-                if self.state.events.iter().filter(|x| x.room_id == room_id).collect::<LinkedHashSet<&MessageWrapper>>().is_empty() {
+                if self
+                    .state
+                    .events
+                    .iter()
+                    .filter(|x| x.room_id == room_id)
+                    .collect::<LinkedHashSet<&MessageWrapper>>()
+                    .is_empty()
+                {
                     self.matrix_agent
                         .send(Request::GetOldMessages((room_id.clone(), None)));
                 }
                 self.state.current_room = Some(room_id.clone());
+                self.state.current_room_displayname = displayname;
             }
         }
         true
@@ -95,86 +86,25 @@ impl Component for MainView {
     }
 
     fn view(&self) -> Html {
-        if !self.state.rooms.is_empty() {
-            if self.state.current_room.is_none() {
-                return html! {
-                    <div class="uk-flex uk-height-1-1 non-scrollable-container">
-                        <div class="container uk-height-1-1 uk-width-1-6">
-                            <ul class="scrollable uk-height-1-1 uk-padding uk-nav-default uk-nav-parent-icon" uk-nav="">
-                                <li class="uk-nav-header">{"Rooms"}</li>
-                                { self.state.rooms.iter().map(|(_, room)| self.get_room(room.clone())).collect::<Html>() }
-                            </ul>
-                        </div>
-
-                        <div class="container uk-height-1-1 uk-width-5-6 uk-padding">
-                            <div class="scrollable" uk-height-viewport="expand: true">
-                                // TODO add some content to the empty page
-                            </div>
-                        </div>
-                    </div>
-                };
-            } else {
-                return html! {
-                    <div class="uk-flex uk-height-1-1 non-scrollable-container">
-                        <div class="container uk-height-1-1 uk-width-1-6">
-                            <ul class="scrollable uk-height-1-1 uk-padding uk-nav-default uk-nav-parent-icon" uk-nav="">
-                                <li class="uk-nav-header">{"Rooms"}</li>
-                                { self.state.rooms.iter().map(|(_, room)| self.get_room(room.clone())).collect::<Html>() }
-                            </ul>
-                        </div>
-
-                        <div class="container uk-height-1-1 uk-width-5-6 uk-padding">
-                            <h1>{ self.state.rooms.iter().filter(|(id, _)| **id == self.state.current_room.clone().unwrap()).map(|(_, room)| room.name.clone()).collect::<String>() }</h1>
-                            <div class="scrollable" uk-height-viewport="expand: true">
-                                { self.state.events.iter().filter(|x| x.room_id == self.state.current_room.clone().unwrap()).map(|event| self.get_event(event.clone())).collect::<Html>() }
-                            </div>
-                        </div>
-                    </div>
-                };
-            }
-        } else {
+        if self.state.current_room.is_none() {
             return html! {
-                <div class="container">
-                    <div class="uk-position-center uk-padding">
-                        <span uk-spinner="ratio: 4.5"></span>
+                <div class="uk-flex auto-scrollable-container" style="height: 100%">
+                    <RoomList change_room_callback=self.link.callback(Msg::ChangeRoom)/>
+
+                    <div class="container uk-flex uk-width-5-6 uk-padding">
+                        <div class="scrollable">
+                            // TODO add some content to the empty page
+                        </div>
                     </div>
                 </div>
             };
-        }
-    }
-}
-
-impl MainView {
-    fn get_event(&self, event: MessageWrapper) -> Html {
-        html! {
-            <p>{event.sender_displayname.clone()}{": "}{event.content.clone()}</p>
-        }
-    }
-
-    fn get_room(&self, room: SmallRoom) -> Html {
-        // TODO better linking than onlclick (yew limitation?)
-
-        let room_id = room.clone().id.to_string();
-        html! {
-            <li>
-                <a href="#" onclick=self.link.callback(move |e: MouseEvent| Msg::ChangeRoom(room_id.clone()))>
-                    {room.name.clone()}
-                    {
-                        if room.unread_notifications.is_some() && room.unread_notifications.unwrap() != UInt::from(0u32) {
-                            html! { <span class="uk-badge uk-margin-small-left">{room.unread_notifications.unwrap()}</span> }
-                        } else {
-                            html! {}
-                        }
-                    }
-                    {
-                        if room.unread_highlight.is_some() && room.unread_highlight.unwrap() != UInt::from(0u32) {
-                            html! { <span class="uk-badge red uk-margin-small-left">{room.unread_highlight.unwrap()}</span> }
-                        } else {
-                            html! {}
-                        }
-                    }
-                </a>
-            </li>
+        } else {
+            return html! {
+                <div class="uk-flex auto-scrollable-container" style="height: 100%">
+                    <RoomList change_room_callback=self.link.callback(Msg::ChangeRoom)/>
+                    <EventList current_room=self.state.current_room.clone() displayname=self.state.current_room_displayname.clone() />
+                </div>
+            };
         }
     }
 }

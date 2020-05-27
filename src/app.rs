@@ -6,6 +6,7 @@ use crate::app::matrix::{MatrixAgent, Response};
 use crate::app::views::{login::Login, main_view::MainView};
 use yew_router::agent::RouteRequest::ChangeRoute;
 
+pub mod components;
 mod matrix;
 mod views;
 
@@ -63,7 +64,7 @@ impl Component for App {
                 self.route_agent.send(ChangeRoute(route));
             }
             Msg::NewMessage(response) => {
-                info!("NewMessage: {:#?}", response);
+                //info!("NewMessage: {:#?}", response);
                 match response {
                     Response::Error(_) => {}
                     Response::LoggedIn(logged_in) => {

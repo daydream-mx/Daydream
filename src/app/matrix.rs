@@ -79,7 +79,7 @@ pub enum Response {
 }
 
 impl Agent for MatrixAgent {
-    type Reach = Context;
+    type Reach = Context<MatrixAgent>;
     type Message = ();
     type Input = Request;
     type Output = Response;
@@ -284,12 +284,14 @@ impl Agent for MatrixAgent {
                                         .await
                                         .unwrap();
                                     let room = room.read().await;
-                                    let member = room.members.get(&sender).unwrap();
-                                    member
-                                        .display_name
-                                        .as_ref()
-                                        .map(ToString::to_string)
-                                        .unwrap_or(sender.to_string())
+                                    match room.members.get(&sender) {
+                                        Some(member) => member
+                                            .display_name
+                                            .as_ref()
+                                            .map(ToString::to_string)
+                                            .unwrap_or(sender.to_string()),
+                                        None => sender.to_string(),
+                                    }
                                 };
 
                                 let wrapper = MessageWrapper {

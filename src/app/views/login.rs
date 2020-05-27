@@ -73,7 +73,7 @@ impl Component for Login {
             <div class="container">
                 <div class="uk-position-center uk-padding">
                     <h1 class="title">{"Login"}</h1>
-                    <form class="uk-form-stacked uk-margin" onsubmit=self.link.callback(|e: Event| {e.prevent_default();  Msg::Login})>
+                    <form class="uk-form-stacked uk-margin" onsubmit=self.link.callback(|e: FocusEvent| {e.prevent_default();  Msg::Login})>
                         <div class="uk-margin">
                             <label class="uk-form-label">{"Homeserver URL"}</label>
                             <div class="uk-form-controls">
