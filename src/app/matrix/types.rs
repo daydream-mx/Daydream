@@ -12,6 +12,7 @@ pub struct SmallRoom {
 
 #[derive(Serialize, Deserialize, Debug, Clone, Hash, Eq, PartialEq)]
 pub struct MessageWrapper {
+    pub(crate) sender_displayname: String,
     pub(crate) room_id: RoomId,
     // TODO use ruma structs
     pub(crate) content: String,

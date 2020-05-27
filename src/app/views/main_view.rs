@@ -109,7 +109,7 @@ impl Component for MainView {
                         <div class="container uk-height-1-1 uk-width-5-6 uk-padding">
                             <h1>{ self.state.rooms.iter().filter(|(id, _)| **id == self.state.current_room.clone().unwrap()).map(|(_, room)| room.name.clone()).collect::<String>() }</h1>
                             <div class="scrollable uk-height-1-1">
-                                { self.state.events.iter().filter(|x| x.room_id == self.state.current_room.clone().unwrap()).map(|event| self.get_event(event.content.clone())).collect::<Html>() }
+                                { self.state.events.iter().filter(|x| x.room_id == self.state.current_room.clone().unwrap()).map(|event| self.get_event(event.clone())).collect::<Html>() }
                             </div>
                         </div>
                     </div>
@@ -128,9 +128,9 @@ impl Component for MainView {
 }
 
 impl MainView {
-    fn get_event(&self, event: String) -> Html {
+    fn get_event(&self, event: MessageWrapper) -> Html {
         html! {
-            <p>{event}</p>
+            <p>{event.sender_displayname.clone()}{": "}{event.content.clone()}</p>
         }
     }
 

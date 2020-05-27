@@ -6,8 +6,11 @@ use matrix_sdk::{
     events::collections::all::RoomEvent,
     events::room::message::{MessageEvent, MessageEventContent, TextMessageEventContent},
     identifiers::RoomId,
-    Client, SyncSettings,
+    Client, Room, SyncSettings,
 };
+use futures::AsyncReadExt;
+use std::sync::Arc;
+use futures_locks::RwLock;
 
 pub struct Sync<F>
 where
@@ -51,22 +54,33 @@ where
 
     async fn on_room_message(&self, room_id: &RoomId, event: RoomEvent) {
         // TODO handle all messages...
-        let msg_body = if let RoomEvent::RoomMessage(MessageEvent {
+        if let RoomEvent::RoomMessage(MessageEvent {
             content: MessageEventContent::Text(TextMessageEventContent { body: msg_body, .. }),
+            sender,
             ..
         }) = event
         {
-            msg_body.clone()
+            let name = {
+                let room: Arc<RwLock<Room>> = self.matrix_client.get_joined_room(room_id).await.unwrap();
+                let room = room.read().await;
+                let member = room.members.get(&sender).unwrap();
+                member
+                    .display_name
+                    .as_ref()
+                    .map(ToString::to_string)
+                    .unwrap_or(sender.to_string())
+            };
+
+            let wrapper = MessageWrapper {
+                sender_displayname: name.clone(),
+                room_id: room_id.clone(),
+                content: msg_body.clone(),
+            };
+
+            let resp = Response::Sync(wrapper);
+            (self.callback)(resp);
         } else {
             return;
         };
-
-        let wrapper = MessageWrapper {
-            room_id: room_id.clone(),
-            content: msg_body,
-        };
-
-        let resp = Response::Sync(wrapper);
-        (self.callback)(resp);
     }
 }
