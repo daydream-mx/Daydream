@@ -114,7 +114,7 @@ impl Component for RoomList {
                             if self.state.search_query.is_none() || (self.state.search_query.clone().unwrap_or("".to_string()) == "".to_string()) {
                                 self.state.rooms.iter().map(|(_, room)| self.get_room(room.clone())).collect::<Html>()
                             } else {
-                                self.state.rooms.iter().filter(|(_, room)| room.name.contains(&self.state.search_query.clone().unwrap())).map(|(_, room)| self.get_room(room.clone())).collect::<Html>()
+                                self.state.rooms.iter().filter(|(_, room)| room.name.to_lowercase().contains(&self.state.search_query.clone().unwrap().to_lowercase())).map(|(_, room)| self.get_room(room.clone())).collect::<Html>()
                             }
                         }
                     </ul>
