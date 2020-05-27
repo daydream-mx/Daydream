@@ -10,6 +10,7 @@ use yew::ComponentLink;
 
 use crate::app::matrix::types::{MessageWrapper, SmallRoom};
 use crate::app::matrix::{MatrixAgent, Request, Response};
+use linked_hash_set::LinkedHashSet;
 
 pub struct MainView {
     link: ComponentLink<Self>,
@@ -25,7 +26,7 @@ pub enum Msg {
 #[derive(Serialize, Deserialize, Default)]
 pub struct State {
     // TODO handle all events
-    pub events: HashSet<MessageWrapper>,
+    pub events: LinkedHashSet<MessageWrapper>,
     pub rooms: HashMap<RoomId, SmallRoom>,
     pub current_room: Option<RoomId>,
 }
