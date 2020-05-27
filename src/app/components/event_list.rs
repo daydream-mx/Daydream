@@ -104,10 +104,11 @@ impl Component for EventList {
 
     fn view(&self) -> Html {
         return html! {
-            <div class="container uk-flex uk-flex-column uk-width-5-6 uk-padding uk-padding-remove-bottom">
+            <div class="container uk-flex uk-flex-column uk-width-5-6 uk-padding uk-padding-remove-bottom" style="height: 100%">
                 <h1>{ self.props.displayname.clone() }</h1>
-                <div class="scrollable">
+                <div class="scrollable" style="height: 100%">
                     { self.state.events.iter().filter(|x| x.room_id == self.props.current_room.clone().unwrap()).map(|event| self.get_event(event.clone())).collect::<Html>() }
+                    <div id="anchor"></div>
                 </div>
             </div>
         };

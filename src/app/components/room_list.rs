@@ -21,13 +21,15 @@ pub struct RoomList {
 pub enum Msg {
     NewMessage(Response),
     ChangeRoom(String),
+    SetFilter(String),
 }
 
 #[derive(Serialize, Deserialize, Default)]
 pub struct State {
-    pub rooms: HashMap<RoomId, SmallRoom>,
-    pub current_room: Option<RoomId>,
+    rooms: HashMap<RoomId, SmallRoom>,
+    current_room: Option<RoomId>,
     loading: bool,
+    search_query: Option<String>,
 }
 
 #[derive(Clone, PartialEq, Properties)]
@@ -47,6 +49,7 @@ impl Component for RoomList {
             rooms: Default::default(),
             current_room: None,
             loading: true,
+            search_query: None
         };
 
         RoomList {
@@ -72,6 +75,10 @@ impl Component for RoomList {
                 self.props.change_room_callback.emit((displayname, room));
                 false
             }
+            Msg::SetFilter(query) => {
+                self.state.search_query = Some(query);
+                true
+            }
         }
     }
 
@@ -94,12 +101,22 @@ impl Component for RoomList {
                     <div class="uk-padding uk-padding-remove-bottom">
                         <form class="uk-search uk-search-default">
                             <span uk-search-icon=""></span>
-                            <input class="uk-search-input" type="search" placeholder="Filter Rooms..." />
+                            <input
+                                class="uk-search-input"
+                                type="search"
+                                placeholder="Filter Rooms..."
+                                oninput=self.link.callback(|e: InputData| Msg::SetFilter(e.value)) />
                         </form>
                     </div>
                     <ul class="scrollable uk-flex uk-flex-column uk-padding uk-nav-default uk-nav-parent-icon" uk-nav="" style="height: 100%">
                         <li class="uk-nav-header">{"Rooms"}</li>
-                        { self.state.rooms.iter().map(|(_, room)| self.get_room(room.clone())).collect::<Html>() }
+                        {
+                            if self.state.search_query.is_none() || (self.state.search_query.clone().unwrap_or("".to_string()) == "".to_string()) {
+                                self.state.rooms.iter().map(|(_, room)| self.get_room(room.clone())).collect::<Html>()
+                            } else {
+                                self.state.rooms.iter().filter(|(_, room)| room.name.contains(&self.state.search_query.clone().unwrap())).map(|(_, room)| self.get_room(room.clone())).collect::<Html>()
+                            }
+                        }
                     </ul>
                 </div>
             };

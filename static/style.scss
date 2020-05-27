@@ -9,6 +9,19 @@ $scrollbar-bg-color: #181b21;
   scrollbar-color: $scrollbar-bg-color $scrollbar-color;
 }
 
+.scrollable * {
+  /* don't allow the children of the scrollable element to be selected as an anchor node */
+  overflow-anchor: none;
+}
+
+#anchor {
+  /* allow the final child to be selected as an anchor node */
+  overflow-anchor: auto;
+
+  /* anchor nodes are required to have non-zero area */
+  height: 1px;
+}
+
 .scrollable::-webkit-scrollbar {
   width: 11px;
 }
