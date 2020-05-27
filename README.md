@@ -5,6 +5,7 @@
 [![Stargazers][stars-shield]][stars-url]
 [![Issues][issues-shield]][issues-url]
 [![GPL-3.0 License][license-shield]][license-url]
+[![#daydream](https://img.shields.io/badge/matrix-%23daydream-blue?style=flat-square)](https://matrix.to/#/#daydream:nordgedanken.dev)
 
 
 
@@ -141,6 +142,8 @@ Distributed under the AGPL-v3.0 License. See `LICENSE` for more information.
 
 <!-- CONTACT -->
 ## Contact
+
+Matrix Room - [#daydream:nordgedanken.dev](https://matrix.to/#/#daydream:nordgedanken.dev)
 
 MTRNord - [@mtrnord](https://github.com/mtrnord) - https://matrix.to/#/@mtrnord:nordgedanken.dev
 
