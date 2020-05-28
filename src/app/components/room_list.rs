@@ -131,7 +131,7 @@ impl RoomList {
         let room_id = room.clone().id.to_string();
         html! {
             <li>
-                <a href="#" onclick=self.link.callback(move |e: MouseEvent| Msg::ChangeRoom(room_id.clone()))>
+                <a onclick=self.link.callback(move |e: MouseEvent| Msg::ChangeRoom(room_id.clone()))>
                     {room.name.clone()}
                     {
                         if room.unread_notifications.is_some() && room.unread_notifications.unwrap() != UInt::from(0u32) {
