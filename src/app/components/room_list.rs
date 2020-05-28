@@ -101,7 +101,6 @@ impl Component for RoomList {
                 false
             }
             Msg::SetFilter(query) => {
-                info!("{}", query);
                 self.state.search_query = Some(query);
                 true
             }

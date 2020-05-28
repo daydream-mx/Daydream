@@ -4,7 +4,7 @@ use std::sync::Arc;
 use futures_locks::RwLock;
 use matrix_sdk::{
     events::room::message::{MessageEvent, MessageEventContent, TextMessageEventContent},
-    identifiers::{RoomId, UserId},
+    identifiers::{RoomId, UserId, EventId},
     js_int::UInt,
     Client, Room,
 };
@@ -23,6 +23,7 @@ pub struct SmallRoom {
 pub struct MessageWrapper {
     pub(crate) sender_displayname: Option<String>,
     pub(crate) room_id: Option<RoomId>,
+    pub(crate) event_id: EventId,
     pub(crate) sender: UserId,
     // TODO use ruma structs
     pub(crate) content: String,
@@ -57,6 +58,7 @@ impl TryFrom<MessageEvent> for MessageWrapper {
             Ok(MessageWrapper {
                 sender_displayname: None, // We cant get it without a Client and therefor cant calculate it here
                 room_id: event.room_id,
+                event_id: event.event_id,
                 sender,
                 content: msg_body,
             })
