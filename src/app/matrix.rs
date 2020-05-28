@@ -8,7 +8,7 @@ use log::*;
 use matrix_sdk::{
     api::r0::{filter::RoomEventFilter, message::get_message_events::Direction},
     events::collections::all::RoomEvent,
-    events::room::message::MessageEventContent,
+    events::room::message::{MessageEventContent, TextMessageEventContent},
     identifiers::RoomId,
     js_int::UInt,
     Client, ClientConfig, MessagesRequestBuilder, Room, Session,
@@ -65,6 +65,7 @@ pub enum Request {
     StartSync,
     GetJoinedRooms,
     GetJoinedRoom(RoomId),
+    SendMessage((RoomId,String))
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -331,6 +332,16 @@ impl Agent for MatrixAgent {
                         agent.link.respond(*sub, resp);
                     }
                 });
+            }
+            Request::SendMessage((room_id,message)) => {
+                let client = self.matrix_client.clone().unwrap();
+                let content = MessageEventContent::Text(TextMessageEventContent::new_plain(
+                    message.clone()
+                ));
+                spawn_local(async move {
+                    client.room_send(&room_id, content, None).await;
+                });
+
             }
         }
     }

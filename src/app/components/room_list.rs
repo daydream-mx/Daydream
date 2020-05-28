@@ -69,7 +69,6 @@ impl Component for RoomList {
                 }
                 // Handle new rooms from sync
                 Response::Sync(msg) => {
-                    info!("room_list sync_message: {:#?}", msg);
                     if !(self
                         .state
                         .rooms

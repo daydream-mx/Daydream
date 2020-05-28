@@ -1,6 +1,6 @@
 use linked_hash_set::LinkedHashSet;
 use log::*;
-use matrix_sdk::identifiers::RoomId;
+use matrix_sdk::identifiers::{RoomId, EventId};
 use serde::{Deserialize, Serialize};
 use yew::prelude::*;
 use yewtil::NeqAssign;
@@ -19,10 +19,14 @@ pub struct EventList {
 pub struct State {
     // TODO handle all events
     pub events: LinkedHashSet<MessageWrapper>,
+    pub message: Option<String>,
 }
 
 pub enum Msg {
     NewMessage(Response),
+    SetMessage(String),
+    SendMessage,
+    Nope,
 }
 
 #[derive(Clone, PartialEq, Properties)]
@@ -43,6 +47,7 @@ impl Component for EventList {
 
         let state = State {
             events: Default::default(),
+            message: None
         };
 
         if props.clone().current_room.is_some() {
@@ -72,7 +77,16 @@ impl Component for EventList {
                 match response {
                     Response::Sync(msg) => {
                         // TODO handle all events
-                        self.state.events.insert(msg);
+                        if !(self
+                            .state
+                            .events
+                            .iter()
+                            .map(|x|x.event_id.clone())
+                            .collect::<Vec<EventId>>()
+                            .contains(&msg.event_id.clone()))
+                        {
+                            self.state.events.insert(msg);
+                        }
                         true
                     }
                     Response::OldMessages(messages) => {
@@ -91,6 +105,22 @@ impl Component for EventList {
                     _ => false,
                 }
             }
+            Msg::SetMessage(message) => {
+                self.state.message = Some(message);
+                true
+            }
+            Msg::SendMessage => {
+                info!("Sending Message");
+                if self.state.message.is_some() {
+                    self.matrix_agent.send(Request::SendMessage((self.props.current_room.clone().unwrap(), self.state.message.clone().unwrap())));
+                    self.state.message = None;
+                }
+
+                true
+            }
+            Msg::Nope => {
+                false
+            }
         }
     }
 
@@ -106,6 +136,22 @@ impl Component for EventList {
                     { self.state.events.iter().filter(|x| x.room_id.clone().unwrap() == self.props.current_room.clone().unwrap()).map(|event| self.get_event(event.clone())).collect::<Html>() }
                     <div id="anchor"></div>
                 </div>
+                <form
+                onsubmit=self.link.callback(|e: FocusEvent| {e.prevent_default();  Msg::Nope})
+                onkeypress=self.link.callback(|e: KeyboardEvent| {
+                    if e.key() == "Enter" { Msg::SendMessage } else { Msg::Nope }
+                })>
+                    <div class="uk-margin">
+                        <div class="uk-inline" style="display: block !important;">
+                            <span class="uk-form-icon" uk-icon="icon: pencil"></span>
+                            <input class="uk-input" type="text"
+                                value=&self.state.message.clone().unwrap_or("".to_string())
+                                oninput=self.link.callback(|e: InputData| Msg::SetMessage(e.value))
+
+                            />
+                        </div>
+                    </div>
+                </form>
             </div>
         };
     }
