@@ -5,8 +5,8 @@ use serde::{Deserialize, Serialize};
 use yew::prelude::*;
 use yewtil::NeqAssign;
 
-use crate::app::matrix::{MatrixAgent, Request, Response};
 use crate::app::matrix::types::MessageWrapper;
+use crate::app::matrix::{MatrixAgent, Request, Response};
 
 pub struct EventList {
     link: ComponentLink<Self>,
@@ -50,15 +50,13 @@ impl Component for EventList {
             if state
                 .events
                 .iter()
-                .filter(|x| x.room_id == room_id)
+                .filter(|x| x.room_id.clone().unwrap() == room_id)
                 .collect::<LinkedHashSet<&MessageWrapper>>()
                 .is_empty()
             {
                 matrix_agent.send(Request::GetOldMessages((room_id.clone(), None)));
             }
         }
-
-
 
         EventList {
             props,
@@ -80,19 +78,17 @@ impl Component for EventList {
                     Response::OldMessages(messages) => {
                         // TODO this doesn't seem smart
                         let mut new_events_map = LinkedHashSet::new();
-                        for event in messages.into_iter() {
+                        for event in self.state.events.clone().into_iter() {
                             new_events_map.insert(event);
                         }
-                        for event in self.state.events.clone().into_iter() {
+                        for event in messages.into_iter() {
                             new_events_map.insert(event);
                         }
                         self.state.events = new_events_map;
                         true
                     }
 
-                    _ => {
-                        false
-                    }
+                    _ => false,
                 }
             }
         }
@@ -107,7 +103,7 @@ impl Component for EventList {
             <div class="container uk-flex uk-flex-column uk-width-5-6 uk-padding uk-padding-remove-bottom" style="height: 100%">
                 <h1>{ self.props.displayname.clone() }</h1>
                 <div class="scrollable" style="height: 100%">
-                    { self.state.events.iter().filter(|x| x.room_id == self.props.current_room.clone().unwrap()).map(|event| self.get_event(event.clone())).collect::<Html>() }
+                    { self.state.events.iter().filter(|x| x.room_id.clone().unwrap() == self.props.current_room.clone().unwrap()).map(|event| self.get_event(event.clone())).collect::<Html>() }
                     <div id="anchor"></div>
                 </div>
             </div>
@@ -115,11 +111,10 @@ impl Component for EventList {
     }
 }
 
-
 impl EventList {
     fn get_event(&self, event: MessageWrapper) -> Html {
         html! {
-            <p>{event.sender_displayname.clone()}{": "}{event.content.clone()}</p>
+            <p>{event.sender_displayname.unwrap_or(event.sender.to_string()).clone()}{": "}{event.content.clone()}</p>
         }
     }
 }

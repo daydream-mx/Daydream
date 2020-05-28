@@ -1,16 +1,16 @@
 use std::collections::{HashMap, HashSet};
-use std::convert::TryFrom;
+use std::convert::{TryFrom, TryInto};
 use std::sync::{Arc, Mutex};
 
 use futures_locks::RwLock;
-use js_int::UInt;
 use linked_hash_set::LinkedHashSet;
 use log::*;
 use matrix_sdk::{
     api::r0::{filter::RoomEventFilter, message::get_message_events::Direction},
     events::collections::all::RoomEvent,
-    events::room::message::{MessageEvent, MessageEventContent, TextMessageEventContent},
+    events::room::message::MessageEventContent,
     identifiers::RoomId,
+    js_int::UInt,
     Client, ClientConfig, MessagesRequestBuilder, Room, Session,
 };
 use serde::{Deserialize, Serialize};
@@ -64,6 +64,7 @@ pub enum Request {
     GetOldMessages((RoomId, Option<String>)),
     StartSync,
     GetJoinedRooms,
+    GetJoinedRoom(RoomId),
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -76,11 +77,17 @@ pub enum Response {
     JoinedRoomList(HashMap<RoomId, SmallRoom>),
     Userdata(),
     OldMessages(LinkedHashSet<MessageWrapper>),
+    JoinedRoom((RoomId, SmallRoom)),
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub enum Msg {
+    OnSyncResponse(Response),
 }
 
 impl Agent for MatrixAgent {
     type Reach = Context<MatrixAgent>;
-    type Message = ();
+    type Message = Msg;
     type Input = Request;
     type Output = Response;
 
@@ -105,7 +112,15 @@ impl Agent for MatrixAgent {
         }
     }
 
-    fn update(&mut self, _: Self::Message) {}
+    fn update(&mut self, msg: Self::Message) {
+        match msg {
+            Msg::OnSyncResponse(resp) => {
+                for sub in self.subscribers.iter() {
+                    self.link.respond(*sub, resp.clone());
+                }
+            }
+        }
+    }
 
     fn connected(&mut self, id: HandlerId) {
         self.subscribers.insert(id);
@@ -267,47 +282,52 @@ impl Agent for MatrixAgent {
                     let mut wrapped_messages: LinkedHashSet<MessageWrapper> = LinkedHashSet::new();
                     for event in messsages.chunk.iter().rev() {
                         if let Ok(event) = event.deserialize() {
-                            if let RoomEvent::RoomMessage(MessageEvent {
-                                content:
-                                    MessageEventContent::Text(TextMessageEventContent {
-                                        body: msg_body,
-                                        ..
-                                    }),
-                                sender,
-                                ..
-                            }) = event
-                            {
-                                let name = {
-                                    let room: Arc<RwLock<Room>> = client
-                                        .clone()
-                                        .get_joined_room(&room_id.clone())
-                                        .await
-                                        .unwrap();
-                                    let room = room.read().await;
-                                    match room.members.get(&sender) {
-                                        Some(member) => member
-                                            .display_name
-                                            .as_ref()
-                                            .map(ToString::to_string)
-                                            .unwrap_or(sender.to_string()),
-                                        None => sender.to_string(),
-                                    }
-                                };
+                            match event {
+                                RoomEvent::RoomMessage(event) => match event.content {
+                                    MessageEventContent::Text(_) => {
+                                        let mut wrapped_event: MessageWrapper =
+                                            event.try_into().expect("m.room.message");
 
-                                let wrapper = MessageWrapper {
-                                    sender_displayname: name.clone(),
-                                    room_id: room_id.clone(),
-                                    content: msg_body.clone(),
-                                };
-                                wrapped_messages.insert(wrapper);
-                            } else {
-                                continue;
-                            };
+                                        if wrapped_event.room_id.is_none() {
+                                            wrapped_event.room_id = Some(room_id.clone());
+                                        }
+
+                                        wrapped_event.sender_displayname = Some(
+                                            wrapped_event.get_displayname(client.clone()).await,
+                                        );
+                                        wrapped_messages.insert(wrapped_event);
+                                    }
+                                    _ => {
+                                        return;
+                                    }
+                                },
+                                _ => {
+                                    continue;
+                                }
+                            }
                         }
                     }
 
                     for sub in agent.subscribers.iter() {
                         let resp = Response::OldMessages(wrapped_messages.clone());
+                        agent.link.respond(*sub, resp);
+                    }
+                });
+            }
+            Request::GetJoinedRoom(room_id) => {
+                let agent = self.clone();
+                let client = self.matrix_client.clone().unwrap();
+                spawn_local(async move {
+                    let room: Arc<RwLock<Room>> =
+                        client.get_joined_room(&room_id.clone()).await.unwrap();
+                    let small_room = SmallRoom {
+                        name: room.read().await.display_name(),
+                        unread_notifications: room.read().await.unread_notifications.clone(),
+                        unread_highlight: room.read().await.unread_highlight.clone(),
+                        id: room_id.clone(),
+                    };
+                    for sub in agent.subscribers.iter() {
+                        let resp = Response::JoinedRoom((room_id.clone(), small_room.clone()));
                         agent.link.respond(*sub, resp);
                     }
                 });
@@ -328,11 +348,7 @@ impl MatrixAgent {
     async fn start_sync(&self) {
         let sync = sync::Sync {
             matrix_client: self.matrix_client.clone().unwrap(),
-            callback: |x: Response| {
-                for sub in self.subscribers.iter() {
-                    self.link.respond(*sub, x.clone());
-                }
-            },
+            callback: self.link.callback(Msg::OnSyncResponse),
         };
         sync.start_sync().await;
     }

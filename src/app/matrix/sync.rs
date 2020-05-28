@@ -1,35 +1,28 @@
-use crate::app::matrix::types::MessageWrapper;
-use crate::app::matrix::Response;
-use futures_locks::RwLock;
+use std::convert::TryInto;
+
 use log::*;
 use matrix_sdk::{
-    api::r0::sync::sync_events::Response as SyncResponse,
-    events::collections::all::RoomEvent,
-    events::room::message::{MessageEvent, MessageEventContent, TextMessageEventContent},
-    identifiers::RoomId,
-    Client, Room, SyncSettings,
+    api::r0::sync::sync_events::Response as SyncResponse, events::collections::all::RoomEvent,
+    events::room::message::MessageEventContent, identifiers::RoomId, Client, SyncSettings,
 };
-use std::sync::Arc;
 
-pub struct Sync<F>
-where
-    F: Fn(Response) + std::marker::Sync,
-{
+use crate::app::matrix::types::MessageWrapper;
+use crate::app::matrix::Response;
+use yew::Callback;
+
+pub struct Sync {
     pub(crate) matrix_client: Client,
-    pub(crate) callback: F,
+    pub(crate) callback: Callback<Response>,
 }
 
-impl<F> Sync<F>
-where
-    F: Fn(Response) + std::marker::Sync,
-{
+impl Sync {
     pub async fn start_sync(&self) {
         let client = self.matrix_client.clone();
         let resp = client.clone().sync(SyncSettings::default()).await;
         match resp {
             Ok(_) => {
                 let resp = Response::FinishedFirstSync;
-                (self.callback)(resp);
+                self.callback.emit(resp);
             }
             _ => {}
         }
@@ -53,34 +46,32 @@ where
 
     async fn on_room_message(&self, room_id: &RoomId, event: RoomEvent) {
         // TODO handle all messages...
-        if let RoomEvent::RoomMessage(MessageEvent {
-            content: MessageEventContent::Text(TextMessageEventContent { body: msg_body, .. }),
-            sender,
-            ..
-        }) = event
-        {
-            let name = {
-                let room: Arc<RwLock<Room>> =
-                    self.matrix_client.get_joined_room(room_id).await.unwrap();
-                let room = room.read().await;
-                let member = room.members.get(&sender).unwrap();
-                member
-                    .display_name
-                    .as_ref()
-                    .map(ToString::to_string)
-                    .unwrap_or(sender.to_string())
-            };
 
-            let wrapper = MessageWrapper {
-                sender_displayname: name.clone(),
-                room_id: room_id.clone(),
-                content: msg_body.clone(),
-            };
+        match event {
+            RoomEvent::RoomMessage(event) => match event.content {
+                MessageEventContent::Text(_) => {
+                    let mut wrapped_event: MessageWrapper =
+                        event.try_into().expect("m.room.message");
 
-            let resp = Response::Sync(wrapper);
-            (self.callback)(resp);
-        } else {
-            return;
-        };
+                    if wrapped_event.room_id.is_none() {
+                        wrapped_event.room_id = Some(room_id.clone());
+                    }
+
+                    wrapped_event.sender_displayname = Some(
+                        wrapped_event
+                            .get_displayname(self.matrix_client.clone())
+                            .await,
+                    );
+                    let resp = Response::Sync(wrapped_event);
+                    self.callback.emit(resp);
+                }
+                _ => {
+                    return;
+                }
+            },
+            _ => {
+                return;
+            }
+        }
     }
 }

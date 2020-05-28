@@ -1,15 +1,14 @@
 use std::collections::HashMap;
 
-use js_int::UInt;
 use log::*;
-use matrix_sdk::identifiers::RoomId;
+use matrix_sdk::{identifiers::RoomId, js_int::UInt};
 use serde::{Deserialize, Serialize};
 use yew::prelude::*;
 use yew::{Bridge, Bridged, Component, ComponentLink, Html};
 use yewtil::NeqAssign;
 
 use crate::app::matrix::types::SmallRoom;
-use crate::app::matrix::{MatrixAgent, Response};
+use crate::app::matrix::{MatrixAgent, Request, Response};
 
 pub struct RoomList {
     link: ComponentLink<Self>,
@@ -49,7 +48,7 @@ impl Component for RoomList {
             rooms: Default::default(),
             current_room: None,
             loading: true,
-            search_query: None
+            search_query: None,
         };
 
         RoomList {
@@ -68,14 +67,41 @@ impl Component for RoomList {
                     self.state.loading = false;
                     true
                 }
+                // Handle new rooms from sync
+                Response::Sync(msg) => {
+                    info!("room_list sync_message: {:#?}", msg);
+                    if !(self
+                        .state
+                        .rooms
+                        .keys()
+                        .map(|x| x.clone())
+                        .collect::<Vec<RoomId>>()
+                        .contains(&msg.room_id.clone().unwrap()))
+                    {
+                        self.matrix_agent
+                            .send(Request::GetJoinedRoom(msg.room_id.clone().unwrap()));
+                    }
+                    true
+                }
+                Response::JoinedRoom((room_id, room)) => {
+                    self.state.rooms.insert(room_id, room);
+                    true
+                }
                 _ => false,
             },
             Msg::ChangeRoom(room) => {
-                let displayname = self.state.rooms.iter().filter(|(id, _)| **id == room).map(|(_, room)| room.name.clone()).collect::<String>();
+                let displayname = self
+                    .state
+                    .rooms
+                    .iter()
+                    .filter(|(id, _)| **id == room)
+                    .map(|(_, room)| room.name.clone())
+                    .collect::<String>();
                 self.props.change_room_callback.emit((displayname, room));
                 false
             }
             Msg::SetFilter(query) => {
+                info!("{}", query);
                 self.state.search_query = Some(query);
                 true
             }
@@ -105,6 +131,7 @@ impl Component for RoomList {
                                 class="uk-search-input"
                                 type="search"
                                 placeholder="Filter Rooms..."
+                                value=&self.state.search_query.clone().unwrap_or("".to_string())
                                 oninput=self.link.callback(|e: InputData| Msg::SetFilter(e.value)) />
                         </form>
                     </div>

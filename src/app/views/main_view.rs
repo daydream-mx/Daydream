@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use yew::prelude::*;
 use yew::ComponentLink;
 
-use crate::app::components::{room_list::RoomList, event_list::EventList};
+use crate::app::components::{event_list::EventList, room_list::RoomList};
 use crate::app::matrix::types::MessageWrapper;
 use crate::app::matrix::{MatrixAgent, Request, Response};
 
@@ -41,7 +41,7 @@ impl Component for MainView {
         let state = State {
             events: Default::default(),
             current_room: None,
-            current_room_displayname: Default::default()
+            current_room_displayname: Default::default(),
         };
 
         MainView {
@@ -53,27 +53,15 @@ impl Component for MainView {
 
     fn update(&mut self, msg: Self::Message) -> bool {
         match msg {
-            Msg::NewMessage(response) => {
-                match response {
-                    Response::FinishedFirstSync => {
-                        self.matrix_agent.send(Request::GetJoinedRooms);
-                    }
-                    _ => {}
+            Msg::NewMessage(response) => match response {
+                Response::FinishedFirstSync => {
+                    self.matrix_agent.send(Request::GetJoinedRooms);
                 }
-            }
+                _ => {}
+            },
             Msg::ChangeRoom((displayname, room)) => {
                 let room_id = RoomId::try_from(room).unwrap();
-                if self
-                    .state
-                    .events
-                    .iter()
-                    .filter(|x| x.room_id == room_id)
-                    .collect::<LinkedHashSet<&MessageWrapper>>()
-                    .is_empty()
-                {
-                    self.matrix_agent
-                        .send(Request::GetOldMessages((room_id.clone(), None)));
-                }
+
                 self.state.current_room = Some(room_id.clone());
                 self.state.current_room_displayname = displayname;
             }
