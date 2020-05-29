@@ -10,8 +10,8 @@ $global-emphasis-color: var(--global-emphasis-color);
 $global-color: var(--global-color);
 $icon-link-active-color: var(--icon-link-active-color);
 
-.uk-input {
+/*.uk-input, .uk-search-input {
   border: 1px solid $global-emphasis-color;
-}
+}*/
 
 @import "../../node_modules/uikit/src/scss/variables-theme.scss";
