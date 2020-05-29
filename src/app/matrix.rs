@@ -23,6 +23,7 @@ use yew::worker::*;
 use crate::app::matrix::types::{MessageWrapper, SmallRoom};
 use crate::constants::AUTH_KEY;
 use crate::errors::MatrixError;
+use comrak::{Arena, ComrakOptions, parse_document, format_html};
 
 mod sync;
 pub mod types;
@@ -335,9 +336,33 @@ impl Agent for MatrixAgent {
             }
             Request::SendMessage((room_id, message)) => {
                 let client = self.matrix_client.clone().unwrap();
-                let content =
-                    MessageEventContent::Text(TextMessageEventContent::new_plain(message.clone()));
                 spawn_local(async move {
+                    let arena = Arena::new();
+
+                    let root = parse_document(
+                        &arena,
+                        message.clone().as_str(),
+                        &ComrakOptions::default());
+
+                    let mut html = vec![];
+                    format_html(root, &ComrakOptions::default(), &mut html).unwrap();
+                    let mut formatted_message =  String::from_utf8(html).unwrap();
+                    formatted_message = formatted_message.replace("<p>", "").replace("</p>","");
+                    formatted_message.pop();
+
+                    let content;
+                    if formatted_message == message {
+                        content =
+                            MessageEventContent::Text(TextMessageEventContent::new_plain(message.clone()));
+                    } else {
+                        content =
+                            MessageEventContent::Text(TextMessageEventContent {
+                                body: message.into(),
+                                format: Some("org.matrix.custom.html".to_string()),
+                                formatted_body: Some(formatted_message),
+                                relates_to: None,
+                            });
+                    }
                     client.room_send(&room_id, content, None).await;
                 });
             }
