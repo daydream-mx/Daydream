@@ -26,7 +26,7 @@ pub enum Msg {
 #[derive(Serialize, Deserialize, Default)]
 pub struct State {
     rooms: HashMap<RoomId, SmallRoom>,
-    current_room: Option<RoomId>,
+    current_room: Option<String>,
     loading: bool,
     search_query: Option<String>,
 }
@@ -96,8 +96,9 @@ impl Component for RoomList {
                     .filter(|(id, _)| **id == room)
                     .map(|(_, room)| room.name.clone())
                     .collect::<String>();
-                self.props.change_room_callback.emit((displayname, room));
-                false
+                self.props.change_room_callback.emit((displayname, room.clone()));
+                self.state.current_room = Some(room);
+                true
             }
             Msg::SetFilter(query) => {
                 self.state.search_query = Some(query);
@@ -153,9 +154,19 @@ impl RoomList {
     fn get_room(&self, room: SmallRoom) -> Html {
         // TODO better linking than onlclick (yew limitation?)
 
+        let classes = if self.state.current_room.clone().is_some() {
+            if self.state.current_room.clone().unwrap() == room.id.to_string() {
+                "uk-active"
+            } else {
+                ""
+            }
+        } else {
+            ""
+        };
+
         let room_id = room.clone().id.to_string();
         html! {
-            <li>
+            <li class=classes>
                 <a onclick=self.link.callback(move |e: MouseEvent| Msg::ChangeRoom(room_id.clone()))>
                     {room.name.clone()}
                     {

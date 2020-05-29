@@ -4,7 +4,7 @@ use std::sync::Arc;
 use futures_locks::RwLock;
 use matrix_sdk::{
     events::room::message::{MessageEvent, MessageEventContent, TextMessageEventContent},
-    identifiers::{RoomId, UserId, EventId},
+    identifiers::{EventId, RoomId, UserId},
     js_int::UInt,
     Client, Room,
 };
@@ -36,7 +36,10 @@ impl MessageWrapper {
             .await
             .unwrap();
         let room = room.read().await;
-        let member = room.members.get(&self.sender.clone()).unwrap();
+        let member = match room.members.get(&self.sender.clone()) {
+            None => {return self.sender.clone().to_string();},
+            Some(v) => {v},
+        };
         member
             .display_name
             .as_ref()

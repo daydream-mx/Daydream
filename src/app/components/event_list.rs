@@ -1,6 +1,6 @@
 use linked_hash_set::LinkedHashSet;
 use log::*;
-use matrix_sdk::identifiers::{RoomId, EventId};
+use matrix_sdk::identifiers::{EventId, RoomId};
 use serde::{Deserialize, Serialize};
 use yew::prelude::*;
 use yewtil::NeqAssign;
@@ -18,6 +18,7 @@ pub struct EventList {
 #[derive(Serialize, Deserialize, Default)]
 pub struct State {
     // TODO handle all events
+    // TODO use roomId based hashmap
     pub events: LinkedHashSet<MessageWrapper>,
     pub message: Option<String>,
 }
@@ -29,7 +30,7 @@ pub enum Msg {
     Nope,
 }
 
-#[derive(Clone, PartialEq, Properties)]
+#[derive(Clone, PartialEq, Properties, Debug)]
 pub struct Props {
     #[prop_or_default]
     pub current_room: Option<RoomId>,
@@ -47,7 +48,7 @@ impl Component for EventList {
 
         let state = State {
             events: Default::default(),
-            message: None
+            message: None,
         };
 
         if props.clone().current_room.is_some() {
@@ -81,7 +82,7 @@ impl Component for EventList {
                             .state
                             .events
                             .iter()
-                            .map(|x|x.event_id.clone())
+                            .map(|x| x.event_id.clone())
                             .collect::<Vec<EventId>>()
                             .contains(&msg.event_id.clone()))
                         {
@@ -91,14 +92,17 @@ impl Component for EventList {
                     }
                     Response::OldMessages(messages) => {
                         // TODO this doesn't seem smart
-                        let mut new_events_map = LinkedHashSet::new();
-                        for event in self.state.events.clone().into_iter() {
+                       // let mut new_events_map = LinkedHashSet::new();
+                        info!("{}", self.state.events.len());
+                        self.state.events = self.state.events.clone().into_iter().chain(messages).collect();
+                        info!("{}", self.state.events.len());
+                        /*for event in self.state.events.clone().into_iter() {
                             new_events_map.insert(event);
                         }
-                        for event in messages.into_iter() {
+                        for event in messages.clone().into_iter() {
                             new_events_map.insert(event);
                         }
-                        self.state.events = new_events_map;
+                        self.state.events = new_events_map.clone();*/
                         true
                     }
 
@@ -112,20 +116,40 @@ impl Component for EventList {
             Msg::SendMessage => {
                 info!("Sending Message");
                 if self.state.message.is_some() {
-                    self.matrix_agent.send(Request::SendMessage((self.props.current_room.clone().unwrap(), self.state.message.clone().unwrap())));
+                    self.matrix_agent.send(Request::SendMessage((
+                        self.props.current_room.clone().unwrap(),
+                        self.state.message.clone().unwrap(),
+                    )));
                     self.state.message = None;
                 }
 
                 true
             }
-            Msg::Nope => {
-                false
-            }
+            Msg::Nope => false,
         }
     }
 
     fn change(&mut self, props: Self::Properties) -> bool {
-        self.props.neq_assign(props)
+        if self.props != props {
+            info!("{:#?}", props);
+            if props.clone().current_room.is_some() {
+                let room_id = props.clone().current_room.clone().unwrap();
+                if self
+                    .state
+                    .events
+                    .iter()
+                    .filter(|x| x.room_id.clone().unwrap() == room_id)
+                    .collect::<LinkedHashSet<&MessageWrapper>>()
+                    .is_empty()
+                {
+                    self.matrix_agent.send(Request::GetOldMessages((room_id.clone(), None)));
+                }
+            }
+            self.props = props;
+            true
+        } else {
+            false
+        }
     }
 
     fn view(&self) -> Html {

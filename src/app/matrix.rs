@@ -65,7 +65,7 @@ pub enum Request {
     StartSync,
     GetJoinedRooms,
     GetJoinedRoom(RoomId),
-    SendMessage((RoomId,String))
+    SendMessage((RoomId, String)),
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -333,15 +333,13 @@ impl Agent for MatrixAgent {
                     }
                 });
             }
-            Request::SendMessage((room_id,message)) => {
+            Request::SendMessage((room_id, message)) => {
                 let client = self.matrix_client.clone().unwrap();
-                let content = MessageEventContent::Text(TextMessageEventContent::new_plain(
-                    message.clone()
-                ));
+                let content =
+                    MessageEventContent::Text(TextMessageEventContent::new_plain(message.clone()));
                 spawn_local(async move {
                     client.room_send(&room_id, content, None).await;
                 });
-
             }
         }
     }
