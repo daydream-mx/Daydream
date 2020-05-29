@@ -1,7 +1,7 @@
-@import "theme_slider.scss";
+@import "./theme_slider.scss";
 
 [data-theme="dark"] {
-  @import "static/dark_theme/variables";
+  @import "./dark_theme/variables";
 
   [data-theme] {
     background-color: var(--global-background);
@@ -9,7 +9,7 @@
   }
 
   @at-root {
-    @import "custom-css.scss";
+    @import "./custom-css.scss";
   }
   @at-root {
     @import "../node_modules/uikit/src/scss/mixins-theme.scss";
@@ -20,7 +20,7 @@
 }
 
 [data-theme="light"] {
-  @import "static/light_theme/variables";
+  @import "./light_theme/variables";
 
   [data-theme] {
     background-color: var(--global-background);
@@ -28,7 +28,7 @@
   }
 
   @at-root {
-    @import "custom-css.scss";
+    @import "./custom-css.scss";
   }
   @at-root {
     @import "../node_modules/uikit/src/scss/mixins-theme.scss";
