@@ -20,7 +20,7 @@ use yew::format::Json;
 use yew::services::{storage::Area, StorageService};
 use yew::worker::*;
 
-use crate::app::matrix::types::{MessageWrapper, SmallRoom};
+use crate::app::matrix::types::{ImageInfoWrapper, MessageWrapper, SmallRoom};
 use crate::constants::AUTH_KEY;
 use crate::errors::MatrixError;
 use comrak::{format_html, parse_document, Arena, ComrakOptions};
@@ -285,24 +285,59 @@ impl Agent for MatrixAgent {
                     for event in messsages.chunk.iter().rev() {
                         if let Ok(event) = event.deserialize() {
                             match event {
-                                RoomEvent::RoomMessage(event) => match event.content {
-                                    MessageEventContent::Text(_) => {
-                                        let mut wrapped_event: MessageWrapper =
-                                            event.try_into().expect("m.room.message");
+                                RoomEvent::RoomMessage(event) => {
+                                    let wrapped_event_result: Result<MessageWrapper, MatrixError> =
+                                        event.try_into();
+                                    match wrapped_event_result {
+                                        Ok(mut wrapped_event) => {
+                                            if wrapped_event.room_id.is_none() {
+                                                wrapped_event.room_id = Some(room_id.clone());
+                                            }
 
-                                        if wrapped_event.room_id.is_none() {
-                                            wrapped_event.room_id = Some(room_id.clone());
+                                            wrapped_event.sender_displayname = Some(
+                                                wrapped_event.get_displayname(client.clone()).await,
+                                            );
+
+                                            // Convert mxc URLs
+                                            if wrapped_event.info.is_some() {
+                                                let mxc_url = wrapped_event
+                                                    .info
+                                                    .clone()
+                                                    .unwrap()
+                                                    .url
+                                                    .clone()
+                                                    .unwrap();
+                                                let download_url = wrapped_event
+                                                    .get_media_download_url(
+                                                        client.clone(),
+                                                        mxc_url,
+                                                    );
+                                                let mxc_thumbnail_url = wrapped_event
+                                                    .info
+                                                    .clone()
+                                                    .unwrap()
+                                                    .thumbnail_url
+                                                    .clone()
+                                                    .unwrap();
+                                                let thumbnail_download_url = wrapped_event
+                                                    .get_media_download_url(
+                                                        client.clone(),
+                                                        mxc_thumbnail_url,
+                                                    );
+                                                wrapped_event.info = Some(ImageInfoWrapper {
+                                                    url: Some(download_url),
+                                                    thumbnail_url: Some(thumbnail_download_url),
+                                                });
+                                            }
+
+                                            wrapped_messages.insert(wrapped_event);
                                         }
-
-                                        wrapped_event.sender_displayname = Some(
-                                            wrapped_event.get_displayname(client.clone()).await,
-                                        );
-                                        wrapped_messages.insert(wrapped_event);
+                                        Err(_) => {
+                                            // Ignore events we cant parse
+                                            continue;
+                                        }
                                     }
-                                    _ => {
-                                        return;
-                                    }
-                                },
+                                }
                                 _ => {
                                     continue;
                                 }

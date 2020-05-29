@@ -3,11 +3,11 @@ use std::collections::HashMap;
 use log::*;
 use matrix_sdk::{identifiers::RoomId, js_int::UInt};
 use serde::{Deserialize, Serialize};
+use wasm_bindgen::JsCast;
+use web_sys::HtmlElement;
 use yew::prelude::*;
 use yew::{Bridge, Bridged, Component, ComponentLink, Html};
 use yewtil::NeqAssign;
-use web_sys::HtmlElement;
-use wasm_bindgen::JsCast;
 
 use crate::app::matrix::types::SmallRoom;
 use crate::app::matrix::{MatrixAgent, Request, Response};

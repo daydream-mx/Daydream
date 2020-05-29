@@ -3,7 +3,6 @@ use log::*;
 use matrix_sdk::identifiers::{EventId, RoomId};
 use serde::{Deserialize, Serialize};
 use yew::prelude::*;
-use yewtil::NeqAssign;
 
 use crate::app::matrix::types::MessageWrapper;
 use crate::app::matrix::{MatrixAgent, Request, Response};
@@ -189,9 +188,39 @@ impl Component for EventList {
 }
 
 impl EventList {
+    // Typeinspection of IDEA breaks with this :D
+    //noinspection RsTypeCheck
     fn get_event(&self, event: MessageWrapper) -> Html {
-        html! {
-           <p>{event.sender_displayname.unwrap_or(event.sender.to_string()).clone()}{": "}{event.content.clone()}</p>
+        if event.event_type == "m.text" {
+            html! {
+               <p>{event.sender_displayname.unwrap_or(event.sender.to_string()).clone()}{": "}{event.content.clone()}</p>
+            }
+        } else if event.event_type == "m.notice" {
+            html! {
+               <p style="opacity: .6;">{event.sender_displayname.unwrap_or(event.sender.to_string()).clone()}{": "}{event.content.clone()}</p>
+            }
+        } else if event.event_type == "m.image" {
+            let caption = format!(
+                "{}: {}",
+                event
+                    .sender_displayname
+                    .unwrap_or(event.sender.to_string())
+                    .clone(),
+                event.content.clone()
+            );
+            let thumbnail = match event.info.clone().unwrap().thumbnail_url {
+                None => event.info.clone().unwrap().url.clone().unwrap(),
+                Some(v) => v,
+            };
+            html! {
+               <div uk-lightbox="">
+                    <a class="uk-inline" href=event.info.clone().unwrap().url.clone().unwrap() data-caption=caption.clone() >
+                        <img src=thumbnail.clone() alt=caption.clone() />
+                    </a>
+               </div>
+            }
+        } else {
+            html! {}
         }
     }
 }

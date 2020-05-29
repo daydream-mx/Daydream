@@ -7,4 +7,6 @@ pub enum MatrixError {
     MissingClient,
     #[error("Missing required Data")]
     MissingFields,
+    #[error("This Matrix Event is not yet supported by Daydream")]
+    UnsupportedEvent,
 }

@@ -3,11 +3,12 @@ use std::convert::TryInto;
 use log::*;
 use matrix_sdk::{
     api::r0::sync::sync_events::Response as SyncResponse, events::collections::all::RoomEvent,
-    events::room::message::MessageEventContent, identifiers::RoomId, Client, SyncSettings,
+    identifiers::RoomId, Client, SyncSettings,
 };
 
-use crate::app::matrix::types::MessageWrapper;
+use crate::app::matrix::types::{MessageWrapper, ImageInfoWrapper};
 use crate::app::matrix::Response;
+use crate::errors::MatrixError;
 use yew::Callback;
 
 pub struct Sync {
@@ -48,27 +49,60 @@ impl Sync {
         // TODO handle all messages...
 
         match event {
-            RoomEvent::RoomMessage(event) => match event.content {
-                MessageEventContent::Text(_) => {
-                    let mut wrapped_event: MessageWrapper =
-                        event.try_into().expect("m.room.message");
+            RoomEvent::RoomMessage(event) => {
+                let wrapped_event_result: Result<MessageWrapper, MatrixError> = event.try_into();
+                match wrapped_event_result {
+                    Ok(mut wrapped_event) => {
+                        if wrapped_event.room_id.is_none() {
+                            wrapped_event.room_id = Some(room_id.clone());
+                        }
 
-                    if wrapped_event.room_id.is_none() {
-                        wrapped_event.room_id = Some(room_id.clone());
+                        wrapped_event.sender_displayname = Some(
+                            wrapped_event
+                                .get_displayname(self.matrix_client.clone())
+                                .await,
+                        );
+
+                        // Convert mxc URLs
+                        if wrapped_event.info.is_some() {
+                            let mxc_url = wrapped_event
+                                .info
+                                .clone()
+                                .unwrap()
+                                .url
+                                .clone()
+                                .unwrap();
+                            let download_url = wrapped_event
+                                .get_media_download_url(
+                                    self.matrix_client.clone(),
+                                    mxc_url,
+                                );
+                            let mxc_thumbnail_url = wrapped_event
+                                .info
+                                .clone()
+                                .unwrap()
+                                .thumbnail_url
+                                .clone()
+                                .unwrap();
+                            let thumbnail_download_url = wrapped_event
+                                .get_media_download_url(
+                                    self.matrix_client.clone(),
+                                    mxc_thumbnail_url,
+                                );
+                            wrapped_event.info = Some(ImageInfoWrapper {
+                                url: Some(download_url),
+                                thumbnail_url: Some(thumbnail_download_url),
+                            });
+                        }
+                        let resp = Response::Sync(wrapped_event);
+                        self.callback.emit(resp);
                     }
-
-                    wrapped_event.sender_displayname = Some(
-                        wrapped_event
-                            .get_displayname(self.matrix_client.clone())
-                            .await,
-                    );
-                    let resp = Response::Sync(wrapped_event);
-                    self.callback.emit(resp);
+                    Err(_) => {
+                        // Ignore events we cant parse
+                        return;
+                    }
                 }
-                _ => {
-                    return;
-                }
-            },
+            }
             _ => {
                 return;
             }
