@@ -22,10 +22,10 @@ jobs:
           node-version: 14
 
       - name: Install
-        run: npm install
+        run: yarn
 
       - name: Build
-        run: npm run build
+        run: yarn run build
 
       #- name: Publish
       #  uses: netlify/actions/cli@master
