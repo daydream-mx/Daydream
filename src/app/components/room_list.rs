@@ -6,9 +6,12 @@ use serde::{Deserialize, Serialize};
 use yew::prelude::*;
 use yew::{Bridge, Bridged, Component, ComponentLink, Html};
 use yewtil::NeqAssign;
+use web_sys::HtmlElement;
+use wasm_bindgen::JsCast;
 
 use crate::app::matrix::types::SmallRoom;
 use crate::app::matrix::{MatrixAgent, Request, Response};
+use yew::utils::document;
 
 pub struct RoomList {
     link: ComponentLink<Self>,
@@ -21,6 +24,7 @@ pub enum Msg {
     NewMessage(Response),
     ChangeRoom(String),
     SetFilter(String),
+    ToggleTheme,
 }
 
 #[derive(Serialize, Deserialize, Default)]
@@ -29,6 +33,7 @@ pub struct State {
     current_room: Option<String>,
     loading: bool,
     search_query: Option<String>,
+    dark_theme: bool,
 }
 
 #[derive(Clone, PartialEq, Properties)]
@@ -49,6 +54,7 @@ impl Component for RoomList {
             current_room: None,
             loading: true,
             search_query: None,
+            dark_theme: false,
         };
 
         RoomList {
@@ -96,12 +102,31 @@ impl Component for RoomList {
                     .filter(|(id, _)| **id == room)
                     .map(|(_, room)| room.name.clone())
                     .collect::<String>();
-                self.props.change_room_callback.emit((displayname, room.clone()));
+                self.props
+                    .change_room_callback
+                    .emit((displayname, room.clone()));
                 self.state.current_room = Some(room);
                 true
             }
             Msg::SetFilter(query) => {
                 self.state.search_query = Some(query);
+                true
+            }
+            Msg::ToggleTheme => {
+                self.state.dark_theme = !self.state.dark_theme;
+                let theme = if self.state.dark_theme {
+                    "dark"
+                } else {
+                    "light"
+                };
+                document()
+                    .document_element()
+                    .unwrap()
+                    .dyn_into::<HtmlElement>()
+                    .unwrap()
+                    .dataset()
+                    .set("theme", theme)
+                    .unwrap();
                 true
             }
         }
@@ -123,7 +148,7 @@ impl Component for RoomList {
         } else {
             return html! {
                 <div class="container uk-flex uk-flex-column uk-width-1-6" style="height: 100%">
-                    <div class="uk-padding uk-padding-remove-bottom">
+                    <div class="uk-padding uk-padding-remove-bottom" style="height: 50px">
                         <form class="uk-search uk-search-default">
                             <span uk-search-icon=""></span>
                             <input
@@ -134,7 +159,7 @@ impl Component for RoomList {
                                 oninput=self.link.callback(|e: InputData| Msg::SetFilter(e.value)) />
                         </form>
                     </div>
-                    <ul class="scrollable uk-flex uk-flex-column uk-padding uk-nav-default uk-nav-parent-icon" uk-nav="" style="height: 100%">
+                    <ul class="scrollable uk-flex uk-flex-column uk-padding uk-nav-default uk-nav-parent-icon uk-padding-remove-bottom" uk-nav="">
                         <li class="uk-nav-header">{"Rooms"}</li>
                         {
                             if self.state.search_query.is_none() || (self.state.search_query.clone().unwrap_or("".to_string()) == "".to_string()) {
@@ -144,6 +169,22 @@ impl Component for RoomList {
                             }
                         }
                     </ul>
+                    <div class="toggleWrapper uk-margin uk-flex uk-flex-column uk-flex-center" style="height: 60px;">
+                        <input type="checkbox" class="dn" id="dn" checked=self.state.dark_theme value=self.state.dark_theme onclick=self.link.callback(|e: MouseEvent| {Msg::ToggleTheme})/>
+                        <label for="dn" class="toggle">
+                            <span class="toggle__handler">
+                                <span class="crater crater--1"></span>
+                                <span class="crater crater--2"></span>
+                                <span class="crater crater--3"></span>
+                            </span>
+                            <span class="star star--1"></span>
+                            <span class="star star--2"></span>
+                            <span class="star star--3"></span>
+                            <span class="star star--4"></span>
+                            <span class="star star--5"></span>
+                            //<span class="star star--6"></span>
+                        </label>
+                    </div>
                 </div>
             };
         }

@@ -76,7 +76,7 @@ impl Component for MainView {
     fn view(&self) -> Html {
         if self.state.current_room.is_none() {
             return html! {
-                <div class="uk-flex auto-scrollable-container" style="height: 100%">
+                <div class="uk-flex auto-scrollable-container uk-background-default" style="height: 100%">
                     <RoomList change_room_callback=self.link.callback(Msg::ChangeRoom)/>
 
                     <div class="container uk-flex uk-width-5-6 uk-padding">

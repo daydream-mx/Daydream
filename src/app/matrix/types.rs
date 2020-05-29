@@ -37,8 +37,10 @@ impl MessageWrapper {
             .unwrap();
         let room = room.read().await;
         let member = match room.members.get(&self.sender.clone()) {
-            None => {return self.sender.clone().to_string();},
-            Some(v) => {v},
+            None => {
+                return self.sender.clone().to_string();
+            }
+            Some(v) => v,
         };
         member
             .display_name

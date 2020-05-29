@@ -37,6 +37,8 @@ wasm-bindgen-test = "0.3"
 version = "0.3"
 features = [
   'KeyboardEvent',
+  'HtmlElement',
+  'DomStringMap'
 ]
 
 [profile.release]

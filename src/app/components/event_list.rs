@@ -92,9 +92,15 @@ impl Component for EventList {
                     }
                     Response::OldMessages(messages) => {
                         // TODO this doesn't seem smart
-                       // let mut new_events_map = LinkedHashSet::new();
+                        // let mut new_events_map = LinkedHashSet::new();
                         info!("{}", self.state.events.len());
-                        self.state.events = self.state.events.clone().into_iter().chain(messages).collect();
+                        self.state.events = self
+                            .state
+                            .events
+                            .clone()
+                            .into_iter()
+                            .chain(messages)
+                            .collect();
                         info!("{}", self.state.events.len());
                         /*for event in self.state.events.clone().into_iter() {
                             new_events_map.insert(event);
@@ -142,7 +148,8 @@ impl Component for EventList {
                     .collect::<LinkedHashSet<&MessageWrapper>>()
                     .is_empty()
                 {
-                    self.matrix_agent.send(Request::GetOldMessages((room_id.clone(), None)));
+                    self.matrix_agent
+                        .send(Request::GetOldMessages((room_id.clone(), None)));
                 }
             }
             self.props = props;
@@ -160,12 +167,12 @@ impl Component for EventList {
                     { self.state.events.iter().filter(|x| x.room_id.clone().unwrap() == self.props.current_room.clone().unwrap()).map(|event| self.get_event(event.clone())).collect::<Html>() }
                     <div id="anchor"></div>
                 </div>
-                <form
+                <form  class="uk-margin"
                 onsubmit=self.link.callback(|e: FocusEvent| {e.prevent_default();  Msg::Nope})
                 onkeypress=self.link.callback(|e: KeyboardEvent| {
                     if e.key() == "Enter" { Msg::SendMessage } else { Msg::Nope }
                 })>
-                    <div class="uk-margin">
+                    <div>
                         <div class="uk-inline" style="display: block !important;">
                             <span class="uk-form-icon" uk-icon="icon: pencil"></span>
                             <input class="uk-input" type="text"
@@ -184,7 +191,7 @@ impl Component for EventList {
 impl EventList {
     fn get_event(&self, event: MessageWrapper) -> Html {
         html! {
-            <p>{event.sender_displayname.unwrap_or(event.sender.to_string()).clone()}{": "}{event.content.clone()}</p>
+           <p>{event.sender_displayname.unwrap_or(event.sender.to_string()).clone()}{": "}{event.content.clone()}</p>
         }
     }
 }

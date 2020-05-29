@@ -1,0 +1,56 @@
+.scrollable {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  height: 100% !important;
+  scrollbar-width: thin;
+  scrollbar-color: $scrollbar-color $scrollbar-bg-color;
+}
+
+.scrollable * {
+  /* don't allow the children of the scrollable element to be selected as an anchor node */
+  overflow-anchor: none;
+}
+
+#anchor {
+  /* allow the final child to be selected as an anchor node */
+  overflow-anchor: auto;
+
+  /* anchor nodes are required to have non-zero area */
+  height: 1px;
+}
+
+.scrollable::-webkit-scrollbar {
+  width: 11px;
+}
+
+.non-scrollable-container {
+  overflow: hidden;
+}
+
+
+.auto-scrollable-container {
+  overflow: auto;
+}
+
+.uk-badge.red {
+  background: #f0506e;
+}
+
+.h-100 {
+  height: 100% !important;
+}
+
+html {
+  overflow: hidden !important;
+  height: 100% !important;
+}
+
+body {
+  overflow: hidden !important;
+  height: 100% !important;
+}
+
+.menu {
+  width: 20rem;
+  padding: 1.5rem;
+}
