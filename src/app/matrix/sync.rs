@@ -29,7 +29,7 @@ impl Sync {
         }
         let settings = match client.clone().sync_token().await {
             None => {
-                SyncSettings::default().token(client.clone().sync_token().await.unwrap()).timeout(Duration::from_secs(30)).full_state(true)
+                SyncSettings::default().timeout(Duration::from_secs(30)).full_state(true)
             },
             Some(token) => {
                 SyncSettings::default().token(token).timeout(Duration::from_secs(30)).full_state(true)
