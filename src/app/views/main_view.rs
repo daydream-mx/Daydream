@@ -55,7 +55,7 @@ impl Component for MainView {
         match msg {
             Msg::NewMessage(response) => match response {
                 Response::FinishedFirstSync => {
-                    self.matrix_agent.send(Request::GetJoinedRooms);
+                    //self.matrix_agent.send(Request::GetJoinedRooms);
                 }
                 _ => {}
             },

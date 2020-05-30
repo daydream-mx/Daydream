@@ -75,6 +75,7 @@ pub enum Response {
     LoggedIn(bool),
     // TODO properly handle sync events
     Sync(MessageWrapper),
+    SyncPing,
     FinishedFirstSync,
     JoinedRoomList(HashMap<RoomId, SmallRoom>),
     Userdata(),

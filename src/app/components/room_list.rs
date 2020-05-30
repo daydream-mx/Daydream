@@ -73,12 +73,16 @@ impl Component for RoomList {
                     self.state.loading = false;
                     true
                 }
-                // Handle new rooms from sync
-                Response::Sync(msg) => {
-                    // TODO properly do this...
+                // Better Initial Sync Detection
+                Response::SyncPing => {
                     if self.state.rooms.is_empty() {
                         self.matrix_agent.send(Request::GetJoinedRooms);
+                        return true;
                     }
+                    false
+                }
+                // Handle new rooms from sync
+                Response::Sync(msg) => {
                     if !(self
                         .state
                         .rooms

@@ -44,6 +44,9 @@ impl Sync {
 
     async fn on_sync_response(&self, response: SyncResponse) {
         for (room_id, room) in response.rooms.join {
+            // Is there a smarter way?
+            let resp = Response::SyncPing;
+            self.callback.emit(resp);
             for event in room.timeline.events {
                 if let Ok(event) = event.deserialize() {
                     self.on_room_message(&room_id, event).await
