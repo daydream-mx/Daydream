@@ -22,11 +22,10 @@ impl Sync {
         let client = self.matrix_client.clone();
         let resp = client.clone().sync(SyncSettings::default()).await;
         match resp {
-            Ok(_) => {
+            _ => {
                 let resp = Response::FinishedFirstSync;
                 self.callback.emit(resp);
             }
-            _ => {}
         }
         let settings = match client.clone().sync_token().await {
             None => {
