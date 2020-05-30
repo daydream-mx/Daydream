@@ -10,6 +10,7 @@ use crate::app::matrix::types::{MessageWrapper, ImageInfoWrapper};
 use crate::app::matrix::Response;
 use crate::errors::MatrixError;
 use yew::Callback;
+use std::time::Duration;
 
 pub struct Sync {
     pub(crate) matrix_client: Client,
@@ -27,8 +28,15 @@ impl Sync {
             }
             _ => {}
         }
+        let settings = match client.clone().sync_token().await {
+            None => {
+                SyncSettings::default().token(client.clone().sync_token().await.unwrap()).timeout(Duration::from_secs(30)).full_state(true)
+            },
+            Some(token) => {
+                SyncSettings::default().token(token).timeout(Duration::from_secs(30)).full_state(true)
+            },
+        };
 
-        let settings = SyncSettings::default().token(client.clone().sync_token().await.unwrap());
         client
             .clone()
             .sync_forever(settings, |response| self.on_sync_response(response))
