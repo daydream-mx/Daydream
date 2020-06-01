@@ -343,12 +343,12 @@ impl Agent for MatrixAgent {
             Request::SendMessage((room_id, message)) => {
                 let client = self.matrix_client.clone().unwrap();
                 spawn_local(async move {
-
                     let mut options = Options::empty();
                     options.insert(Options::ENABLE_STRIKETHROUGH);
                     let parser = Parser::new_ext(message.as_str(), options);
 
-                    let mut formatted_message: String = String::with_capacity(message.len() * 3 / 2);
+                    let mut formatted_message: String =
+                        String::with_capacity(message.len() * 3 / 2);
                     html::push_html(&mut formatted_message, parser);
                     formatted_message = formatted_message.replace("<p>", "").replace("</p>", "");
                     formatted_message.pop();

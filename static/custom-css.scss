@@ -20,7 +20,12 @@
 }
 
 .scrollable::-webkit-scrollbar {
-  width: 11px;
+  width: 5px;
+  background: $scrollbar-bg-color;
+}
+
+.scrollable::-webkit-scrollbar-thumb {
+  background: $scrollbar-color;
 }
 
 .non-scrollable-container {
@@ -53,4 +58,18 @@ body {
 .menu {
   width: 20rem;
   padding: 1.5rem;
+}
+
+blockquote {
+  margin: 0 0 10px 0 !important;
+  font-size: 16px !important;
+  line-height: 1.5 !important;
+  border-left: 4px solid #ddd !important;
+  padding-left: 2px !important;
+  font-style: italic !important;
+  color: var(--global-emphasis-color) !important;
+}
+
+displayname {
+  font-weight: bold !important;
 }

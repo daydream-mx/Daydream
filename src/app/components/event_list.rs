@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::convert::TryFrom;
 
 use log::*;
 use matrix_sdk::{
@@ -6,7 +7,9 @@ use matrix_sdk::{
     identifiers::{EventId, RoomId},
     Room,
 };
+use web_sys::Node;
 use yew::prelude::*;
+use yew::virtual_dom::VNode;
 
 use crate::app::matrix::{MatrixAgent, Request, Response};
 
@@ -71,7 +74,7 @@ impl Component for EventList {
                 match response {
                     Response::Sync((room_id, msg)) => {
                         // TODO handle all events
-                        if self.state.events.contains_key(&room_id) {
+                        return if self.state.events.contains_key(&room_id) {
                             if !(self.state.events[&room_id]
                                 .iter()
                                 .map(|x| x.event_id.clone())
@@ -79,17 +82,26 @@ impl Component for EventList {
                                 .contains(&msg.event_id))
                             {
                                 self.state.events.get_mut(&room_id).unwrap().push(msg);
-                                return true;
+                                return if room_id
+                                    == self.props.current_room.clone().unwrap().room_id
+                                {
+                                    true
+                                } else {
+                                    false
+                                };
                             } else {
-                                return false;
+                                false
                             }
                         } else {
                             let mut msgs = Vec::new();
                             msgs.push(msg);
-                            self.state.events.insert(room_id, msgs);
-                            return true;
-                        }
-                        return false;
+                            self.state.events.insert(room_id.clone(), msgs);
+                            return if room_id == self.props.current_room.clone().unwrap().room_id {
+                                true
+                            } else {
+                                false
+                            };
+                        };
                     }
                     Response::OldMessages((room_id, mut messages)) => {
                         if self.state.events.contains_key(&room_id) {
@@ -182,44 +194,72 @@ impl EventList {
     // Typeinspection of IDEA breaks with this :D
     //noinspection RsTypeCheck
     fn get_event(&self, event: &MessageEvent) -> Html {
+        // TODO make encryption supported
+
         let sender_displayname = {
             let room = self.props.current_room.as_ref().unwrap();
             match room.members.get(&event.sender) {
-                None => { event.sender.to_string() }
-                Some(member) => {
-                    member
-                        .display_name
-                        .as_ref()
-                        .map(ToString::to_string)
-                        .unwrap_or(event.sender.to_string())
-                }
+                None => event.sender.to_string(),
+                Some(member) => member
+                    .display_name
+                    .as_ref()
+                    .map(ToString::to_string)
+                    .unwrap_or(event.sender.to_string()),
             }
         };
         match &event.content {
             MessageEventContent::Text(text_event) => {
-                html! {
-                   <p>{sender_displayname}{": "}{text_event.body.clone()}</p>
+                if text_event.formatted_body.is_some() {
+                    let js_text_event = {
+                        let div = web_sys::window()
+                            .unwrap()
+                            .document()
+                            .unwrap()
+                            .create_element("p")
+                            .unwrap();
+                        div.set_inner_html(
+                            format!(
+                                "<displayname>{}:</displayname> {}",
+                                sender_displayname,
+                                text_event.formatted_body.as_ref().unwrap()
+                            )
+                            .as_str(),
+                        );
+                        div
+                    };
+                    info!("js_text_event: {:?}", js_text_event);
+                    let node = Node::from(js_text_event);
+                    let vnode = VNode::VRef(node);
+                    info!("js_text_event: {:?}", vnode);
+                    vnode
+                } else {
+                    html! {
+                       <p><displayname>{sender_displayname}{": "}</displayname>{text_event.body.clone()}</p>
+                    }
                 }
             }
             MessageEventContent::Notice(notice_event) => {
                 html! {
-                   <p style="opacity: .6;">{sender_displayname}{": "}{notice_event.body.clone()}</p>
+                   <p style="opacity: .6;"><displayname>{sender_displayname}{": "}</displayname>{notice_event.body.clone()}</p>
                 }
             }
             MessageEventContent::Image(image_event) => {
                 let caption = format!("{}: {}", sender_displayname, image_event.body);
-
-                let image_url = image_event.url.clone().unwrap();
-                let thumbnail = match image_event.info.clone().unwrap().thumbnail_url {
-                    None => image_url.clone(),
-                    Some(v) => v,
-                };
-                html! {
-                   <div uk-lightbox="">
-                        <a class="uk-inline" href=image_url data-caption=caption >
-                            <img src=thumbnail alt=caption />
-                        </a>
-                   </div>
+                if image_event.url.clone().is_some() {
+                    let image_url = image_event.url.clone().unwrap();
+                    let thumbnail = match image_event.info.clone().unwrap().thumbnail_url {
+                        None => image_url.clone(),
+                        Some(v) => v,
+                    };
+                    html! {
+                       <div uk-lightbox="">
+                            <a class="uk-inline" href=image_url data-caption=caption >
+                                <img src=thumbnail alt=caption />
+                            </a>
+                       </div>
+                    }
+                } else {
+                    html! {}
                 }
             }
             _ => {
