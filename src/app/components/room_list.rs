@@ -1,17 +1,16 @@
 use std::collections::HashMap;
 
 use log::*;
-use matrix_sdk::{identifiers::RoomId, js_int::UInt};
+use matrix_sdk::{identifiers::RoomId, js_int::UInt, Room};
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::JsCast;
 use web_sys::HtmlElement;
 use yew::prelude::*;
+use yew::utils::document;
 use yew::{Bridge, Bridged, Component, ComponentLink, Html};
 use yewtil::NeqAssign;
 
-use crate::app::matrix::types::SmallRoom;
 use crate::app::matrix::{MatrixAgent, Request, Response};
-use yew::utils::document;
 
 pub struct RoomList {
     link: ComponentLink<Self>,
@@ -22,24 +21,25 @@ pub struct RoomList {
 
 pub enum Msg {
     NewMessage(Response),
-    ChangeRoom(String),
+    ChangeRoom(Room),
     SetFilter(String),
     ToggleTheme,
 }
 
 #[derive(Serialize, Deserialize, Default)]
 pub struct State {
-    rooms: HashMap<RoomId, SmallRoom>,
-    current_room: Option<String>,
+    rooms: HashMap<RoomId, Room>,
+    current_room: Option<Room>,
     loading: bool,
     search_query: Option<String>,
     dark_theme: bool,
+    did_fetch: bool,
 }
 
 #[derive(Clone, PartialEq, Properties)]
 pub struct Props {
     #[prop_or_default]
-    pub change_room_callback: Callback<(String, String)>,
+    pub change_room_callback: Callback<Room>,
 }
 
 impl Component for RoomList {
@@ -55,6 +55,7 @@ impl Component for RoomList {
             loading: true,
             search_query: None,
             dark_theme: false,
+            did_fetch: false,
         };
 
         RoomList {
@@ -71,30 +72,23 @@ impl Component for RoomList {
                 Response::JoinedRoomList(rooms) => {
                     self.state.rooms = rooms;
                     self.state.loading = false;
+                    self.state.did_fetch = false;
                     true
                 }
                 // Better Initial Sync Detection
                 Response::SyncPing => {
-                    if self.state.rooms.is_empty() {
+                    if self.state.rooms.is_empty() && !self.state.did_fetch {
                         self.matrix_agent.send(Request::GetJoinedRooms);
-                        return true;
+                        self.state.did_fetch = true;
                     }
                     false
                 }
                 // Handle new rooms from sync
-                Response::Sync(msg) => {
-                    if !(self
-                        .state
-                        .rooms
-                        .keys()
-                        .map(|x| x.clone())
-                        .collect::<Vec<RoomId>>()
-                        .contains(&msg.room_id.clone().unwrap()))
-                    {
-                        self.matrix_agent
-                            .send(Request::GetJoinedRoom(msg.room_id.clone().unwrap()));
+                Response::Sync((room_id, _msg)) => {
+                    if !(self.state.rooms.contains_key(&room_id)) && !self.state.did_fetch {
+                        self.matrix_agent.send(Request::GetJoinedRoom(room_id));
                     }
-                    true
+                    false
                 }
                 Response::JoinedRoom((room_id, room)) => {
                     self.state.rooms.insert(room_id, room);
@@ -103,16 +97,7 @@ impl Component for RoomList {
                 _ => false,
             },
             Msg::ChangeRoom(room) => {
-                let displayname = self
-                    .state
-                    .rooms
-                    .iter()
-                    .filter(|(id, _)| **id == room)
-                    .map(|(_, room)| room.name.clone())
-                    .collect::<String>();
-                self.props
-                    .change_room_callback
-                    .emit((displayname, room.clone()));
+                self.props.change_room_callback.emit(room.clone());
                 self.state.current_room = Some(room);
                 true
             }
@@ -144,17 +129,18 @@ impl Component for RoomList {
         self.props.neq_assign(props)
     }
 
+    //noinspection RsTypeCheck
     fn view(&self) -> Html {
-        if self.state.loading {
-            return html! {
+        return if self.state.loading {
+            html! {
                 <div class="container">
                     <div class="uk-position-center uk-padding">
                         <span uk-spinner="ratio: 4.5"></span>
                     </div>
                 </div>
-            };
+            }
         } else {
-            return html! {
+            html! {
                 <div class="container uk-flex uk-flex-column uk-width-1-6" style="height: 100%">
                     <div class="uk-padding uk-padding-remove-bottom" style="height: 50px">
                         <form class="uk-search uk-search-default">
@@ -163,17 +149,17 @@ impl Component for RoomList {
                                 class="uk-search-input"
                                 type="search"
                                 placeholder="Filter Rooms..."
-                                value=&self.state.search_query.clone().unwrap_or("".to_string())
+                                value=&self.state.search_query.as_ref().unwrap_or(&"".to_string())
                                 oninput=self.link.callback(|e: InputData| Msg::SetFilter(e.value)) />
                         </form>
                     </div>
                     <ul class="scrollable uk-flex uk-flex-column uk-padding uk-nav-default uk-nav-parent-icon uk-padding-remove-bottom" uk-nav="">
                         <li class="uk-nav-header">{"Rooms"}</li>
                         {
-                            if self.state.search_query.is_none() || (self.state.search_query.clone().unwrap_or("".to_string()) == "".to_string()) {
-                                self.state.rooms.iter().map(|(_, room)| self.get_room(room.clone())).collect::<Html>()
+                            if self.state.search_query.is_none() || (self.state.search_query.as_ref().unwrap_or(&"".to_string()) == &"".to_string()) {
+                                self.state.rooms.iter().map(|(_, room)| self.get_room(room)).collect::<Html>()
                             } else {
-                                self.state.rooms.iter().filter(|(_, room)| room.name.to_lowercase().contains(&self.state.search_query.clone().unwrap().to_lowercase())).map(|(_, room)| self.get_room(room.clone())).collect::<Html>()
+                                self.state.rooms.iter().filter(|(_, room)| room.display_name().to_lowercase().contains(&self.state.search_query.as_ref().unwrap().to_lowercase())).map(|(_, room)| self.get_room(room)).collect::<Html>()
                             }
                         }
                     </ul>
@@ -194,17 +180,15 @@ impl Component for RoomList {
                         </label>
                     </div>
                 </div>
-            };
-        }
+            }
+        };
     }
 }
 
 impl RoomList {
-    fn get_room(&self, room: SmallRoom) -> Html {
-        // TODO better linking than onlclick (yew limitation?)
-
-        let classes = if self.state.current_room.clone().is_some() {
-            if self.state.current_room.clone().unwrap() == room.id.to_string() {
+    fn get_room(&self, matrix_room: &Room) -> Html {
+        let classes = if self.state.current_room.is_some() {
+            if self.state.current_room.as_ref().unwrap().room_id == matrix_room.room_id {
                 "uk-active"
             } else {
                 ""
@@ -213,21 +197,21 @@ impl RoomList {
             ""
         };
 
-        let room_id = room.clone().id.to_string();
+        let room = matrix_room.clone();
         html! {
             <li class=classes>
-                <a onclick=self.link.callback(move |e: MouseEvent| Msg::ChangeRoom(room_id.clone()))>
-                    {room.name.clone()}
+                <a onclick=self.link.callback(move |e: MouseEvent| Msg::ChangeRoom(room.clone()))>
+                    {matrix_room.display_name()}
                     {
-                        if room.unread_notifications.is_some() && room.unread_notifications.unwrap() != UInt::from(0u32) {
-                            html! { <span class="uk-badge uk-margin-small-left">{room.unread_notifications.unwrap()}</span> }
+                        if matrix_room.unread_notifications.is_some() && matrix_room.unread_notifications.unwrap() != UInt::from(0u32) {
+                            html! { <span class="uk-badge uk-margin-small-left">{matrix_room.unread_notifications.unwrap()}</span> }
                         } else {
                             html! {}
                         }
                     }
                     {
-                        if room.unread_highlight.is_some() && room.unread_highlight.unwrap() != UInt::from(0u32) {
-                            html! { <span class="uk-badge red uk-margin-small-left">{room.unread_highlight.unwrap()}</span> }
+                        if matrix_room.unread_highlight.is_some() && matrix_room.unread_highlight.unwrap() != UInt::from(0u32) {
+                            html! { <span class="uk-badge red uk-margin-small-left">{matrix_room.unread_highlight.unwrap()}</span> }
                         } else {
                             html! {}
                         }

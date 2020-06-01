@@ -17,7 +17,6 @@ pub enum Msg {
     SetUsername(String),
     SetPassword(String),
     Login,
-    Nope,
 }
 
 impl Component for Login {
@@ -40,27 +39,23 @@ impl Component for Login {
         match msg {
             Msg::SetHomeserver(homeserver) => {
                 self.homeserver = homeserver.clone();
-                self.matrix_agent
-                    .send(Request::SetHomeserver(homeserver.clone()));
+                self.matrix_agent.send(Request::SetHomeserver(homeserver));
                 true
             }
             Msg::SetUsername(username) => {
                 self.username = username.clone();
-                self.matrix_agent
-                    .send(Request::SetUsername(username.clone()));
+                self.matrix_agent.send(Request::SetUsername(username));
                 true
             }
             Msg::SetPassword(password) => {
                 self.password = password.clone();
-                self.matrix_agent
-                    .send(Request::SetPassword(password.clone()));
+                self.matrix_agent.send(Request::SetPassword(password));
                 true
             }
             Msg::Login => {
                 self.matrix_agent.send(Request::Login());
                 false
             }
-            Msg::Nope => false,
         }
     }
 

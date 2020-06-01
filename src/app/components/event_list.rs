@@ -1,10 +1,13 @@
-use linked_hash_set::LinkedHashSet;
+use std::collections::HashMap;
+
 use log::*;
-use matrix_sdk::identifiers::{EventId, RoomId};
-use serde::{Deserialize, Serialize};
+use matrix_sdk::{
+    events::room::message::{MessageEvent, MessageEventContent},
+    identifiers::{EventId, RoomId},
+    Room,
+};
 use yew::prelude::*;
 
-use crate::app::matrix::types::MessageWrapper;
 use crate::app::matrix::{MatrixAgent, Request, Response};
 
 pub struct EventList {
@@ -14,11 +17,10 @@ pub struct EventList {
     props: Props,
 }
 
-#[derive(Serialize, Deserialize, Default)]
+#[derive(Default)]
 pub struct State {
     // TODO handle all events
-    // TODO use roomId based hashmap
-    pub events: LinkedHashSet<MessageWrapper>,
+    pub events: HashMap<RoomId, Vec<MessageEvent>>,
     pub message: Option<String>,
 }
 
@@ -32,9 +34,7 @@ pub enum Msg {
 #[derive(Clone, PartialEq, Properties, Debug)]
 pub struct Props {
     #[prop_or_default]
-    pub current_room: Option<RoomId>,
-    #[prop_or_default]
-    pub displayname: String,
+    pub current_room: Option<Room>,
 }
 
 impl Component for EventList {
@@ -50,15 +50,9 @@ impl Component for EventList {
             message: None,
         };
 
-        if props.clone().current_room.is_some() {
-            let room_id = props.clone().current_room.clone().unwrap();
-            if state
-                .events
-                .iter()
-                .filter(|x| x.room_id.clone().unwrap() == room_id)
-                .collect::<LinkedHashSet<&MessageWrapper>>()
-                .is_empty()
-            {
+        if props.current_room.is_some() {
+            let room_id = props.current_room.clone().unwrap().room_id;
+            if !state.events.contains_key(&room_id) {
                 matrix_agent.send(Request::GetOldMessages((room_id.clone(), None)));
             }
         }
@@ -75,40 +69,30 @@ impl Component for EventList {
         match msg {
             Msg::NewMessage(response) => {
                 match response {
-                    Response::Sync(msg) => {
+                    Response::Sync((room_id, msg)) => {
                         // TODO handle all events
-                        if !(self
-                            .state
-                            .events
+                        if !(self.state.events[&room_id]
                             .iter()
                             .map(|x| x.event_id.clone())
                             .collect::<Vec<EventId>>()
-                            .contains(&msg.event_id.clone()))
+                            .contains(&msg.event_id))
                         {
-                            self.state.events.insert(msg);
+                            self.state.events.get_mut(&room_id).unwrap().push(msg);
                         }
                         true
                     }
-                    Response::OldMessages(messages) => {
-                        // TODO this doesn't seem smart
-                        // let mut new_events_map = LinkedHashSet::new();
-                        info!("{}", self.state.events.len());
-                        self.state.events = self
-                            .state
-                            .events
-                            .clone()
-                            .into_iter()
-                            .chain(messages)
-                            .collect();
-                        info!("{}", self.state.events.len());
-                        /*for event in self.state.events.clone().into_iter() {
-                            new_events_map.insert(event);
+                    Response::OldMessages((room_id, mut messages)) => {
+                        if self.state.events.contains_key(&room_id) {
+                            self.state
+                                .events
+                                .get_mut(&room_id)
+                                .unwrap()
+                                .append(messages.as_mut());
+                            true
+                        } else {
+                            self.state.events.insert(room_id, messages);
+                            true
                         }
-                        for event in messages.clone().into_iter() {
-                            new_events_map.insert(event);
-                        }
-                        self.state.events = new_events_map.clone();*/
-                        true
                     }
 
                     _ => false,
@@ -122,7 +106,7 @@ impl Component for EventList {
                 info!("Sending Message");
                 if self.state.message.is_some() {
                     self.matrix_agent.send(Request::SendMessage((
-                        self.props.current_room.clone().unwrap(),
+                        self.props.current_room.clone().unwrap().room_id,
                         self.state.message.clone().unwrap(),
                     )));
                     self.state.message = None;
@@ -136,17 +120,9 @@ impl Component for EventList {
 
     fn change(&mut self, props: Self::Properties) -> bool {
         if self.props != props {
-            info!("{:#?}", props);
             if props.clone().current_room.is_some() {
-                let room_id = props.clone().current_room.clone().unwrap();
-                if self
-                    .state
-                    .events
-                    .iter()
-                    .filter(|x| x.room_id.clone().unwrap() == room_id)
-                    .collect::<LinkedHashSet<&MessageWrapper>>()
-                    .is_empty()
-                {
+                let room_id = props.clone().current_room.unwrap().room_id;
+                if !self.state.events.contains_key(&room_id) {
                     self.matrix_agent
                         .send(Request::GetOldMessages((room_id.clone(), None)));
                 }
@@ -161,23 +137,28 @@ impl Component for EventList {
     fn view(&self) -> Html {
         return html! {
             <div class="container uk-flex uk-flex-column uk-width-5-6 uk-padding uk-padding-remove-bottom" style="height: 100%">
-                <h1>{ self.props.displayname.clone() }</h1>
+                <h1>{ self.props.current_room.as_ref().unwrap().display_name() }</h1>
                 <div class="scrollable" style="height: 100%">
-                    { self.state.events.iter().filter(|x| x.room_id.clone().unwrap() == self.props.current_room.clone().unwrap()).map(|event| self.get_event(event.clone())).collect::<Html>() }
+                    {
+                        if self.state.events.contains_key(&self.props.current_room.as_ref().unwrap().room_id) {
+                            self.state.events[&self.props.current_room.as_ref().unwrap().room_id].iter().map(|event| self.get_event(event)).collect::<Html>()
+                        } else {
+                            html!{}
+                        }
+                    }
                     <div id="anchor"></div>
                 </div>
-                <form  class="uk-margin"
-                onsubmit=self.link.callback(|e: FocusEvent| {e.prevent_default();  Msg::Nope})
-                onkeypress=self.link.callback(|e: KeyboardEvent| {
-                    if e.key() == "Enter" { Msg::SendMessage } else { Msg::Nope }
-                })>
+                <form class="uk-margin"
+                    onsubmit=self.link.callback(|e: FocusEvent| {e.prevent_default();  Msg::Nope})
+                    onkeypress=self.link.callback(|e: KeyboardEvent| {
+                        if e.key() == "Enter" { Msg::SendMessage } else { Msg::Nope }
+                    })>
                     <div>
                         <div class="uk-inline" style="display: block !important;">
                             <span class="uk-form-icon" uk-icon="icon: pencil"></span>
                             <input class="uk-input" type="text"
-                                value=&self.state.message.clone().unwrap_or("".to_string())
+                                value=&self.state.message.as_ref().unwrap_or(&"".to_string())
                                 oninput=self.link.callback(|e: InputData| Msg::SetMessage(e.value))
-
                             />
                         </div>
                     </div>
@@ -190,37 +171,46 @@ impl Component for EventList {
 impl EventList {
     // Typeinspection of IDEA breaks with this :D
     //noinspection RsTypeCheck
-    fn get_event(&self, event: MessageWrapper) -> Html {
-        if event.event_type == "m.text" {
-            html! {
-               <p>{event.sender_displayname.unwrap_or(event.sender.to_string()).clone()}{": "}{event.content.clone()}</p>
+    fn get_event(&self, event: &MessageEvent) -> Html {
+        let sender_displayname = {
+            let room = self.props.current_room.as_ref().unwrap();
+            let member = room.members.get(&event.sender).unwrap();
+            member
+                .display_name
+                .as_ref()
+                .map(ToString::to_string)
+                .unwrap_or(event.sender.to_string())
+        };
+        match &event.content {
+            MessageEventContent::Text(text_event) => {
+                html! {
+                   <p>{sender_displayname}{": "}{text_event.body.clone()}</p>
+                }
             }
-        } else if event.event_type == "m.notice" {
-            html! {
-               <p style="opacity: .6;">{event.sender_displayname.unwrap_or(event.sender.to_string()).clone()}{": "}{event.content.clone()}</p>
+            MessageEventContent::Notice(notice_event) => {
+                html! {
+                   <p style="opacity: .6;">{sender_displayname}{": "}{notice_event.body.clone()}</p>
+                }
             }
-        } else if event.event_type == "m.image" {
-            let caption = format!(
-                "{}: {}",
-                event
-                    .sender_displayname
-                    .unwrap_or(event.sender.to_string())
-                    .clone(),
-                event.content.clone()
-            );
-            let thumbnail = match event.info.clone().unwrap().thumbnail_url {
-                None => event.info.clone().unwrap().url.clone().unwrap(),
-                Some(v) => v,
-            };
-            html! {
-               <div uk-lightbox="">
-                    <a class="uk-inline" href=event.info.clone().unwrap().url.clone().unwrap() data-caption=caption.clone() >
-                        <img src=thumbnail.clone() alt=caption.clone() />
-                    </a>
-               </div>
+            MessageEventContent::Image(image_event) => {
+                let caption = format!("{}: {}", sender_displayname, image_event.body);
+
+                let image_url = image_event.url.clone().unwrap();
+                let thumbnail = match image_event.info.clone().unwrap().thumbnail_url {
+                    None => image_url.clone(),
+                    Some(v) => v,
+                };
+                html! {
+                   <div uk-lightbox="">
+                        <a class="uk-inline" href=image_url data-caption=caption >
+                            <img src=thumbnail alt=caption />
+                        </a>
+                   </div>
+                }
             }
-        } else {
-            html! {}
+            _ => {
+                html! {}
+            }
         }
     }
 }

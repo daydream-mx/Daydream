@@ -1,14 +1,17 @@
 use std::collections::{HashMap, HashSet};
-use std::convert::{TryFrom, TryInto};
+use std::convert::TryFrom;
 use std::sync::{Arc, Mutex};
 
+use comrak::{format_html, parse_document, Arena, ComrakOptions};
 use futures_locks::RwLock;
-use linked_hash_set::LinkedHashSet;
 use log::*;
 use matrix_sdk::{
     api::r0::{filter::RoomEventFilter, message::get_message_events::Direction},
-    events::collections::all::RoomEvent,
-    events::room::message::{MessageEventContent, TextMessageEventContent},
+    events::{
+        collections::all::RoomEvent,
+        room::message::{MessageEvent, MessageEventContent, TextMessageEventContent},
+        EventJson,
+    },
     identifiers::RoomId,
     js_int::UInt,
     Client, ClientConfig, MessagesRequestBuilder, Room, Session,
@@ -20,10 +23,9 @@ use yew::format::Json;
 use yew::services::{storage::Area, StorageService};
 use yew::worker::*;
 
-use crate::app::matrix::types::{ImageInfoWrapper, MessageWrapper, SmallRoom};
+use crate::app::matrix::types::get_media_download_url;
 use crate::constants::AUTH_KEY;
 use crate::errors::MatrixError;
-use comrak::{format_html, parse_document, Arena, ComrakOptions};
 
 mod sync;
 pub mod types;
@@ -69,21 +71,20 @@ pub enum Request {
     SendMessage((RoomId, String)),
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Debug, Clone)]
 pub enum Response {
     Error(MatrixError),
     LoggedIn(bool),
     // TODO properly handle sync events
-    Sync(MessageWrapper),
+    Sync((RoomId, MessageEvent)),
     SyncPing,
-    FinishedFirstSync,
-    JoinedRoomList(HashMap<RoomId, SmallRoom>),
+    JoinedRoomList(HashMap<RoomId, Room>),
     Userdata(),
-    OldMessages(LinkedHashSet<MessageWrapper>),
-    JoinedRoom((RoomId, SmallRoom)),
+    OldMessages((RoomId, Vec<MessageEvent>)),
+    JoinedRoom((RoomId, Room)),
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Debug, Clone)]
 pub enum Msg {
     OnSyncResponse(Response),
 }
@@ -131,13 +132,13 @@ impl Agent for MatrixAgent {
     fn handle_input(&mut self, msg: Self::Input, _: HandlerId) {
         match msg {
             Request::SetHomeserver(homeserver) => {
-                self.matrix_state.homeserver = Some(homeserver.clone());
+                self.matrix_state.homeserver = Some(homeserver);
             }
             Request::SetUsername(username) => {
-                self.matrix_state.username = Some(username.clone());
+                self.matrix_state.username = Some(username);
             }
             Request::SetPassword(password) => {
-                self.matrix_state.password = Some(password.clone());
+                self.matrix_state.password = Some(password);
             }
             Request::Login() => {
                 let login_client = self.login();
@@ -148,18 +149,15 @@ impl Agent for MatrixAgent {
                     }
                     return;
                 }
-                let client = login_client.clone().unwrap();
+                let client = login_client.unwrap();
                 let username = self.matrix_state.username.clone().unwrap();
                 let password = self.matrix_state.password.clone().unwrap();
-                let username = username.clone();
-                let password = password.clone();
-                let client = client.clone();
                 let subscribers = self.subscribers.clone();
                 let agent = self.clone();
                 spawn_local(async move {
                     // TODO handle login error
                     if agent.session.is_some() {
-                        let stored_session = agent.session.clone().unwrap();
+                        let stored_session = agent.session.unwrap();
                         let session = Session {
                             access_token: stored_session.access_token,
                             user_id: matrix_sdk::identifiers::UserId::try_from(
@@ -171,19 +169,14 @@ impl Agent for MatrixAgent {
                         client.restore_login(session).await;
                     } else {
                         let login_response: matrix_sdk::api::r0::session::login::Response = client
-                            .login(
-                                username.clone(),
-                                password.clone(),
-                                None,
-                                Some("Daydream".to_string()),
-                            )
+                            .login(username, password, None, Some("Daydream".to_string()))
                             .await
                             .unwrap();
                         let session_store = SessionStore {
                             access_token: login_response.access_token,
                             user_id: login_response.user_id.to_string(),
                             device_id: login_response.device_id,
-                            homeserver_url: client.homeserver().clone().into_string(),
+                            homeserver_url: client.homeserver().to_string(),
                         };
                         let mut storage = agent.storage.lock().unwrap();
                         storage.store(AUTH_KEY, Json(&session_store));
@@ -196,7 +189,6 @@ impl Agent for MatrixAgent {
                 });
             }
             Request::GetLoggedIn => {
-                let subscribers = self.subscribers.clone();
                 let login_client = self.login();
                 if login_client.is_none() {
                     for sub in self.subscribers.iter() {
@@ -215,8 +207,8 @@ impl Agent for MatrixAgent {
                     if !logged_in && agent.session.is_some() {
                         error!("Not logged in but got session");
                     } else {
-                        for sub in subscribers.iter() {
-                            let resp = Response::LoggedIn(logged_in.clone());
+                        for sub in agent.subscribers.iter() {
+                            let resp = Response::LoggedIn(logged_in);
                             agent.link.respond(*sub, resp);
                         }
                     }
@@ -231,27 +223,18 @@ impl Agent for MatrixAgent {
             }
             Request::GetJoinedRooms => {
                 let agent = self.clone();
-                let client = agent.matrix_client.clone().unwrap();
                 spawn_local(async move {
-                    for sub in agent.subscribers.iter() {
-                        let rooms: Arc<RwLock<HashMap<RoomId, Arc<RwLock<Room>>>>> =
-                            client.clone().joined_rooms();
-                        let mut rooms_list_hack = HashMap::new();
-                        for (id, room) in rooms.read().await.iter() {
-                            let small_room = SmallRoom {
-                                name: room.read().await.display_name(),
-                                unread_notifications: room
-                                    .read()
-                                    .await
-                                    .unread_notifications
-                                    .clone(),
-                                unread_highlight: room.read().await.unread_highlight.clone(),
-                                id: id.clone(),
-                            };
-                            rooms_list_hack.insert(id.clone(), small_room);
-                        }
+                    let rooms: Arc<RwLock<HashMap<RoomId, Arc<RwLock<Room>>>>> =
+                        agent.matrix_client.unwrap().joined_rooms();
 
-                        let resp = Response::JoinedRoomList(rooms_list_hack);
+                    let readable_rooms = rooms.read().await;
+                    let mut rooms_unarced: HashMap<RoomId, Room> = HashMap::new();
+                    for (id, room) in readable_rooms.iter() {
+                        let unarced_room = (*room.write().await).clone();
+                        rooms_unarced.insert(id.clone(), unarced_room);
+                    }
+                    for sub in agent.subscribers.iter() {
+                        let resp = Response::JoinedRoomList(rooms_unarced.clone());
                         agent.link.respond(*sub, resp);
                     }
                 });
@@ -261,14 +244,21 @@ impl Agent for MatrixAgent {
             }
             Request::GetOldMessages((room_id, from)) => {
                 let agent = self.clone();
-                let client = self.matrix_client.clone().unwrap();
                 spawn_local(async move {
                     let mut builder = &mut MessagesRequestBuilder::new();
                     builder = builder.room_id(room_id.clone());
                     if from.is_some() {
                         builder = builder.from(from.unwrap());
                     } else {
-                        builder = builder.from(client.clone().sync_token().await.unwrap());
+                        builder = builder.from(
+                            agent
+                                .matrix_client
+                                .clone()
+                                .unwrap()
+                                .sync_token()
+                                .await
+                                .unwrap(),
+                        );
                     }
                     let filter = RoomEventFilter {
                         types: Some(vec!["m.room.message".to_string()]),
@@ -279,93 +269,73 @@ impl Agent for MatrixAgent {
                         .direction(Direction::Backward)
                         .limit(UInt::new(30).unwrap());
 
-                    let messsages = client.room_messages(builder.clone()).await.unwrap();
+                    // TODO handle error gracefully
+                    let messsages = agent
+                        .matrix_client
+                        .clone()
+                        .unwrap()
+                        .room_messages(builder.clone())
+                        .await
+                        .unwrap();
                     // TODO save end point for future loading
 
-                    let mut wrapped_messages: LinkedHashSet<MessageWrapper> = LinkedHashSet::new();
-                    for event in messsages.chunk.iter().rev() {
-                        if let Ok(event) = event.deserialize() {
-                            match event {
-                                RoomEvent::RoomMessage(event) => {
-                                    let wrapped_event_result: Result<MessageWrapper, MatrixError> =
-                                        event.try_into();
-                                    match wrapped_event_result {
-                                        Ok(mut wrapped_event) => {
-                                            if wrapped_event.room_id.is_none() {
-                                                wrapped_event.room_id = Some(room_id.clone());
-                                            }
+                    let mut wrapped_messages: Vec<MessageEvent> = Vec::new();
+                    let chunk_iter: Vec<EventJson<RoomEvent>> = messsages.chunk;
+                    let (oks, _): (Vec<_>, Vec<_>) = chunk_iter
+                        .iter()
+                        .map(|event| event.deserialize())
+                        .partition(Result::is_ok);
 
-                                            wrapped_event.sender_displayname = Some(
-                                                wrapped_event.get_displayname(client.clone()).await,
-                                            );
+                    let deserialized_events: Vec<RoomEvent> =
+                        oks.into_iter().map(Result::unwrap).collect();
 
-                                            // Convert mxc URLs
-                                            if wrapped_event.info.is_some() {
-                                                let mxc_url = wrapped_event
-                                                    .info
-                                                    .clone()
-                                                    .unwrap()
-                                                    .url
-                                                    .clone()
-                                                    .unwrap();
-                                                let download_url = wrapped_event
-                                                    .get_media_download_url(
-                                                        client.clone(),
-                                                        mxc_url,
-                                                    );
-                                                let mxc_thumbnail_url = wrapped_event
-                                                    .info
-                                                    .clone()
-                                                    .unwrap()
-                                                    .thumbnail_url
-                                                    .clone()
-                                                    .unwrap();
-                                                let thumbnail_download_url = wrapped_event
-                                                    .get_media_download_url(
-                                                        client.clone(),
-                                                        mxc_thumbnail_url,
-                                                    );
-                                                wrapped_event.info = Some(ImageInfoWrapper {
-                                                    url: Some(download_url),
-                                                    thumbnail_url: Some(thumbnail_download_url),
-                                                });
-                                            }
-
-                                            wrapped_messages.insert(wrapped_event);
-                                        }
-                                        Err(_) => {
-                                            // Ignore events we cant parse
-                                            continue;
-                                        }
+                    for event in deserialized_events.into_iter().rev() {
+                        if let RoomEvent::RoomMessage(mut event) = event {
+                            if let MessageEventContent::Image(mut image_event) = event.content {
+                                if image_event.url.is_some() {
+                                    let new_url = Some(get_media_download_url(
+                                        agent.matrix_client.clone().unwrap(),
+                                        image_event.url.unwrap(),
+                                    ));
+                                    image_event.url = new_url;
+                                }
+                                if image_event.info.is_some() {
+                                    let mut info = image_event.info.unwrap();
+                                    if info.thumbnail_url.is_some() {
+                                        let new_url = Some(get_media_download_url(
+                                            agent.matrix_client.clone().unwrap(),
+                                            info.thumbnail_url.unwrap(),
+                                        ));
+                                        info.thumbnail_url = new_url;
                                     }
+                                    image_event.info = Some(info);
                                 }
-                                _ => {
-                                    continue;
-                                }
+                                event.content = MessageEventContent::Image(image_event);
                             }
+                            wrapped_messages.push(event.clone());
                         }
                     }
 
                     for sub in agent.subscribers.iter() {
-                        let resp = Response::OldMessages(wrapped_messages.clone());
+                        let resp =
+                            Response::OldMessages((room_id.clone(), wrapped_messages.clone()));
                         agent.link.respond(*sub, resp);
                     }
                 });
             }
             Request::GetJoinedRoom(room_id) => {
                 let agent = self.clone();
-                let client = self.matrix_client.clone().unwrap();
                 spawn_local(async move {
-                    let room: Arc<RwLock<Room>> =
-                        client.get_joined_room(&room_id.clone()).await.unwrap();
-                    let small_room = SmallRoom {
-                        name: room.read().await.display_name(),
-                        unread_notifications: room.read().await.unread_notifications.clone(),
-                        unread_highlight: room.read().await.unread_highlight.clone(),
-                        id: room_id.clone(),
-                    };
+                    let room: Arc<RwLock<Room>> = agent
+                        .matrix_client
+                        .unwrap()
+                        .get_joined_room(&room_id)
+                        .await
+                        .unwrap();
+                    let read_clone = room.clone().read().await;
+                    let clean_room = (*read_clone).clone();
                     for sub in agent.subscribers.iter() {
-                        let resp = Response::JoinedRoom((room_id.clone(), small_room.clone()));
+                        let resp = Response::JoinedRoom((room_id.clone(), clean_room.clone()));
                         agent.link.respond(*sub, resp);
                     }
                 });
@@ -375,8 +345,7 @@ impl Agent for MatrixAgent {
                 spawn_local(async move {
                     let arena = Arena::new();
 
-                    let root =
-                        parse_document(&arena, message.clone().as_str(), &ComrakOptions::default());
+                    let root = parse_document(&arena, message.as_str(), &ComrakOptions::default());
 
                     let mut html = vec![];
                     format_html(root, &ComrakOptions::default(), &mut html).unwrap();
@@ -386,9 +355,8 @@ impl Agent for MatrixAgent {
 
                     let content;
                     if formatted_message == message {
-                        content = MessageEventContent::Text(TextMessageEventContent::new_plain(
-                            message.clone(),
-                        ));
+                        content =
+                            MessageEventContent::Text(TextMessageEventContent::new_plain(message));
                     } else {
                         content = MessageEventContent::Text(TextMessageEventContent {
                             body: message.into(),
@@ -425,7 +393,7 @@ impl MatrixAgent {
         if self.matrix_client.is_none() {
             return false;
         }
-        self.matrix_client.clone().unwrap().logged_in().await
+        self.matrix_client.as_ref().unwrap().logged_in().await
     }
 
     fn login(&mut self) -> Option<Client> {
