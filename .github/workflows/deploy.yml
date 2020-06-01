@@ -25,11 +25,7 @@ jobs:
         run: yarn
 
       - name: Get emscripten SDK
-        run:
-          - wget https://github.com/emscripten-core/emsdk/archive/master.zip
-          - unzip master.zip
-          - ./emsdk-master/emsdk install latest
-          - ./emsdk-master/emsdk activate latest
+        run: wget https://github.com/emscripten-core/emsdk/archive/master.zip && unzip master.zip && ./emsdk-master/emsdk install latest && ./emsdk-master/emsdk activate latest
 
       - name: Build
         run: source emsdk-master/emsdk_env.sh && yarn run build
