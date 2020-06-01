@@ -17,7 +17,7 @@ pub struct Sync {
 impl Sync {
     pub async fn start_sync(&self) {
         let client = self.matrix_client.clone();
-        let settings = SyncSettings::default().timeout(Duration::from_secs(30));
+        let settings = SyncSettings::default().timeout(Duration::from_secs(30)).full_state(true);
 
         client
             .sync_forever(settings, |response| self.on_sync_response(response))

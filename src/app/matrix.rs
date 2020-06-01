@@ -2,7 +2,6 @@ use std::collections::{HashMap, HashSet};
 use std::convert::TryFrom;
 use std::sync::{Arc, Mutex};
 
-use comrak::{format_html, parse_document, Arena, ComrakOptions};
 use futures_locks::RwLock;
 use log::*;
 use matrix_sdk::{
@@ -26,6 +25,7 @@ use yew::worker::*;
 use crate::app::matrix::types::get_media_download_url;
 use crate::constants::AUTH_KEY;
 use crate::errors::MatrixError;
+use pulldown_cmark::{html, Options, Parser};
 
 mod sync;
 pub mod types;
@@ -343,13 +343,13 @@ impl Agent for MatrixAgent {
             Request::SendMessage((room_id, message)) => {
                 let client = self.matrix_client.clone().unwrap();
                 spawn_local(async move {
-                    let arena = Arena::new();
 
-                    let root = parse_document(&arena, message.as_str(), &ComrakOptions::default());
+                    let mut options = Options::empty();
+                    options.insert(Options::ENABLE_STRIKETHROUGH);
+                    let parser = Parser::new_ext(message.as_str(), options);
 
-                    let mut html = vec![];
-                    format_html(root, &ComrakOptions::default(), &mut html).unwrap();
-                    let mut formatted_message = String::from_utf8(html).unwrap();
+                    let mut formatted_message: String = String::with_capacity(message.len() * 3 / 2);
+                    html::push_html(&mut formatted_message, parser);
                     formatted_message = formatted_message.replace("<p>", "").replace("</p>", "");
                     formatted_message.pop();
 

@@ -27,7 +27,7 @@ url = "2.1.1"
 thiserror = "1.0"
 futures-locks = { git = "https://github.com/asomers/futures-locks", default-features = false }
 linked_hash_set = {version = "0.1.3", features = ["serde"] }
-comrak = "0.7"
+pulldown-cmark = "0.7.1"
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3"
