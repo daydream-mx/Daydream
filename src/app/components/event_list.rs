@@ -163,9 +163,18 @@ impl Component for EventList {
                 <div class="scrollable" style="height: 100%">
                     {
                         if self.state.events.contains_key(&self.props.current_room.as_ref().unwrap().room_id) {
-                            self.state.events[&self.props.current_room.as_ref().unwrap().room_id].iter().map(|event| self.get_event(event)).collect::<Html>()
+                            let events = self.state.events[&self.props.current_room.as_ref().unwrap().room_id].clone();
+                            let mut elements: Vec<Html> = Vec::new();
+                            for (pos, event) in self.state.events[&self.props.current_room.as_ref().unwrap().room_id].iter().enumerate() {
+                                if pos == 0 {
+                                    elements.push(self.get_event(None, event));
+                                } else {
+                                    elements.push(self.get_event(Some(&events[pos - 1]), event));
+                                };
+                            }
+                            elements.into_iter().collect::<Html>()
                         } else {
-                            html!{}
+                            html! {}
                         }
                     }
                     <div id="anchor"></div>
@@ -193,8 +202,18 @@ impl Component for EventList {
 impl EventList {
     // Typeinspection of IDEA breaks with this :D
     //noinspection RsTypeCheck
-    fn get_event(&self, event: &MessageEvent) -> Html {
+    fn get_event(&self, prev_event: Option<&MessageEvent>, event: &MessageEvent) -> Html {
         // TODO make encryption supported
+
+        let new_user = if prev_event.is_some() {
+            if prev_event.unwrap().sender.to_string() == event.sender.to_string() {
+                false
+            } else {
+                true
+            }
+        } else {
+            true
+        };
 
         let sender_displayname = {
             let room = self.props.current_room.as_ref().unwrap();
@@ -210,6 +229,18 @@ impl EventList {
         match &event.content {
             MessageEventContent::Text(text_event) => {
                 if text_event.formatted_body.is_some() {
+                    let message = if new_user {
+                        format!(
+                            "<displayname>{}:</displayname> {}",
+                            sender_displayname,
+                            text_event.formatted_body.as_ref().unwrap()
+                        )
+                    } else {
+                        format!(
+                            "{}",
+                            text_event.formatted_body.as_ref().unwrap()
+                        )
+                    };
                     let js_text_event = {
                         let div = web_sys::window()
                             .unwrap()
@@ -218,12 +249,8 @@ impl EventList {
                             .create_element("p")
                             .unwrap();
                         div.set_inner_html(
-                            format!(
-                                "<displayname>{}:</displayname> {}",
-                                sender_displayname,
-                                text_event.formatted_body.as_ref().unwrap()
-                            )
-                            .as_str(),
+                            message
+                                .as_str(),
                         );
                         div
                     };
@@ -231,14 +258,26 @@ impl EventList {
                     let vnode = VNode::VRef(node);
                     vnode
                 } else {
-                    html! {
-                       <p><displayname>{sender_displayname}{": "}</displayname>{text_event.body.clone()}</p>
+                    if new_user {
+                        html! {
+                           <p><displayname>{sender_displayname}{": "}</displayname>{text_event.body.clone()}</p>
+                        }
+                    } else {
+                        html! {
+                           <p>{text_event.body.clone()}</p>
+                        }
                     }
                 }
             }
             MessageEventContent::Notice(notice_event) => {
-                html! {
-                   <p style="opacity: .6;"><displayname>{sender_displayname}{": "}</displayname>{notice_event.body.clone()}</p>
+                if new_user {
+                    html! {
+                        <p style="opacity: .6;"><displayname>{sender_displayname}{": "}</displayname>{notice_event.body.clone()}</p>
+                    }
+                } else {
+                    html! {
+                       <p style="opacity: .6;">{notice_event.body.clone()}</p>
+                    }
                 }
             }
             MessageEventContent::Image(image_event) => {
@@ -249,12 +288,25 @@ impl EventList {
                         None => image_url.clone(),
                         Some(v) => v,
                     };
-                    html! {
-                       <div uk-lightbox="">
-                            <a class="uk-inline" href=image_url data-caption=caption >
-                                <img src=thumbnail alt=caption />
-                            </a>
-                       </div>
+                    if new_user {
+                        html! {
+                            <>
+                                <p><displayname>{sender_displayname}{": "}</displayname></p>
+                                <div uk-lightbox="">
+                                    <a class="uk-inline" href=image_url data-caption=caption >
+                                        <img src=thumbnail alt=caption />
+                                    </a>
+                               </div>
+                            </>
+                        }
+                    } else {
+                        html! {
+                           <div uk-lightbox="">
+                                <a class="uk-inline" href=image_url data-caption=caption >
+                                    <img src=thumbnail alt=caption />
+                                </a>
+                           </div>
+                        }
                     }
                 } else {
                     html! {}

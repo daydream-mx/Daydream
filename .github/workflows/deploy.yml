@@ -24,8 +24,15 @@ jobs:
       - name: Install
         run: yarn
 
+      - name: Get emscripten SDK
+        run:
+          - wget https://github.com/emscripten-core/emsdk/archive/master.zip
+          - unzip master.zip
+          - ./emsdk-master/emsdk install latest
+          - ./emsdk-master/emsdk activate latest
+
       - name: Build
-        run: yarn run build
+        run: source emsdk-master/emsdk_env.sh && yarn run build
 
       #- name: Publish
       #  uses: netlify/actions/cli@master

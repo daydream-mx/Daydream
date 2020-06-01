@@ -22,7 +22,7 @@ wee_alloc = "0.4"
 yew = { git = "https://github.com/yewstack/yew" }
 yew-router = { git = "https://github.com/yewstack/yew" }
 yewtil = { git = "https://github.com/yewstack/yew" }
-matrix-sdk = { version = "0.1.0", git = "https://github.com/MTRNord/matrix-rust-sdk", branch = "expose-send-rebased", default-features = false}
+matrix-sdk = { version = "0.1.0", git = "https://github.com/MTRNord/matrix-rust-sdk", branch = "expose-send-rebased", default-features = false}# features = ["encryption"]}
 url = "2.1.1"
 thiserror = "1.0"
 futures-locks = { git = "https://github.com/asomers/futures-locks", default-features = false }
@@ -39,6 +39,10 @@ features = [
   'HtmlElement',
   'DomStringMap'
 ]
+
+[patch.crates-io]
+olm-sys = { git = "https://gitlab.gnome.org/stoically/olm-sys", branch = "wasm-target" }
+cjson = { git = "https://github.com/engineerd/cjson" }
 
 [profile.release]
 # less code to include into binary

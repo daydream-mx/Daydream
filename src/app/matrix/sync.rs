@@ -2,12 +2,13 @@ use std::time::Duration;
 
 use log::*;
 use matrix_sdk::{
-    api::r0::sync::sync_events::Response as SyncResponse, events::collections::all::RoomEvent,
+    api::r0::sync::sync_events::Response as SyncResponse, events::{collections::all::RoomEvent, room::message::{MessageEvent, MessageEventContent, TextMessageEventContent},},
     identifiers::RoomId, Client, SyncSettings,
 };
 use yew::Callback;
 
 use crate::app::matrix::Response;
+use crate::app::matrix::types::get_media_download_url;
 
 pub struct Sync {
     pub(crate) matrix_client: Client,
@@ -42,14 +43,30 @@ impl Sync {
     async fn on_room_message(&self, room_id: &RoomId, event: RoomEvent) {
         // TODO handle all messages...
 
-        match event {
-            RoomEvent::RoomMessage(event) => {
-                let resp = Response::Sync((room_id.clone(), event));
-                self.callback.emit(resp);
+        if let RoomEvent::RoomMessage(mut event) = event {
+            if let MessageEventContent::Image(mut image_event) = event.content {
+                if image_event.url.is_some() {
+                    let new_url = Some(get_media_download_url(
+                        self.matrix_client.clone(),
+                        image_event.url.unwrap(),
+                    ));
+                    image_event.url = new_url;
+                }
+                if image_event.info.is_some() {
+                    let mut info = image_event.info.unwrap();
+                    if info.thumbnail_url.is_some() {
+                        let new_url = Some(get_media_download_url(
+                            self.matrix_client.clone(),
+                            info.thumbnail_url.unwrap(),
+                        ));
+                        info.thumbnail_url = new_url;
+                    }
+                    image_event.info = Some(info);
+                }
+                event.content = MessageEventContent::Image(image_event);
             }
-            _ => {
-                return;
-            }
+            let resp = Response::Sync((room_id.clone(), event.clone()));
+            self.callback.emit(resp);
         }
     }
 }
