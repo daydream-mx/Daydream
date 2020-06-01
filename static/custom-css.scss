@@ -73,3 +73,15 @@ blockquote {
 displayname {
   font-weight: bold !important;
 }
+
+.uk-active, .uk-nav-default > li > a:hover, .uk-nav-default > li > a:focus {
+  font-weight: bold !important;
+}
+
+em {
+  color: black !important;
+}
+
+.uk-nav-default > li > a {
+  color: #666666 !important;
+}
