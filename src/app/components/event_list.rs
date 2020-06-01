@@ -71,15 +71,25 @@ impl Component for EventList {
                 match response {
                     Response::Sync((room_id, msg)) => {
                         // TODO handle all events
-                        if !(self.state.events[&room_id]
-                            .iter()
-                            .map(|x| x.event_id.clone())
-                            .collect::<Vec<EventId>>()
-                            .contains(&msg.event_id))
-                        {
-                            self.state.events.get_mut(&room_id).unwrap().push(msg);
+                        if self.state.events.contains_key(&room_id) {
+                            if !(self.state.events[&room_id]
+                                .iter()
+                                .map(|x| x.event_id.clone())
+                                .collect::<Vec<EventId>>()
+                                .contains(&msg.event_id))
+                            {
+                                self.state.events.get_mut(&room_id).unwrap().push(msg);
+                                return true;
+                            } else {
+                                return false;
+                            }
+                        } else {
+                            let mut msgs = Vec::new();
+                            msgs.push(msg);
+                            self.state.events.insert(room_id, msgs);
+                            return true;
                         }
-                        true
+                        return false;
                     }
                     Response::OldMessages((room_id, mut messages)) => {
                         if self.state.events.contains_key(&room_id) {
