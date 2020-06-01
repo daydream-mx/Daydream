@@ -227,10 +227,8 @@ impl EventList {
                         );
                         div
                     };
-                    info!("js_text_event: {:?}", js_text_event);
                     let node = Node::from(js_text_event);
                     let vnode = VNode::VRef(node);
-                    info!("js_text_event: {:?}", vnode);
                     vnode
                 } else {
                     html! {
