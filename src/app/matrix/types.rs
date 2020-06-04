@@ -2,9 +2,9 @@ use matrix_sdk::Client;
 
 pub fn get_media_download_url(client: Client, mxc_url: String) -> String {
     let url_parts_raw = mxc_url.replace("mxc://", "");
-    let url_parts: Vec<&str> = url_parts_raw.split("/").collect();
-    let server_name = url_parts.first().unwrap().to_string();
-    let media_id = url_parts.last().unwrap().to_string();
+    let url_parts: Vec<&str> = url_parts_raw.split('/').collect();
+    let server_name = (*url_parts.first().unwrap()).to_string();
+    let media_id = (*url_parts.last().unwrap()).to_string();
     let new_path = format!(
         "_matrix/media/r0/download/{}/{}/fix.jpg",
         server_name, media_id,

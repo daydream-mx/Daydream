@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 
-use log::*;
 use matrix_sdk::{identifiers::RoomId, js_int::UInt, Room};
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::JsCast;
@@ -131,7 +130,7 @@ impl Component for RoomList {
 
     //noinspection RsTypeCheck
     fn view(&self) -> Html {
-        return if self.state.loading {
+        if self.state.loading {
             html! {
                 <div class="container">
                     <div class="uk-position-center uk-padding">
@@ -181,7 +180,7 @@ impl Component for RoomList {
                     </div>
                 </div>
             }
-        };
+        }
     }
 }
 

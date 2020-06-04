@@ -1,4 +1,3 @@
-use log::*;
 use yew::agent::{Dispatched, Dispatcher};
 use yew::prelude::*;
 

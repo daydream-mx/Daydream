@@ -1,4 +1,3 @@
-use log::*;
 use yew::{prelude::*, virtual_dom::VNode};
 use yew_router::agent::RouteRequest::ChangeRoute;
 use yew_router::{prelude::*, Switch};

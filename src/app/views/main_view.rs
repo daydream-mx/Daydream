@@ -1,4 +1,3 @@
-use log::*;
 use matrix_sdk::Room;
 use serde::{Deserialize, Serialize};
 use yew::prelude::*;
@@ -52,7 +51,7 @@ impl Component for MainView {
 
     //noinspection RsTypeCheck
     fn view(&self) -> Html {
-        return if self.state.current_room.is_none() {
+        if self.state.current_room.is_none() {
             html! {
                 <div class="uk-flex auto-scrollable-container uk-background-default" style="height: 100%">
                     <RoomList change_room_callback=self.link.callback(Msg::ChangeRoom)/>
@@ -71,6 +70,6 @@ impl Component for MainView {
                     <EventList current_room=self.state.current_room.as_ref().unwrap() />
                 </div>
             }
-        };
+        }
     }
 }

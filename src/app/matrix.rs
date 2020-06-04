@@ -1,8 +1,3 @@
-use std::collections::{HashMap, HashSet};
-use std::convert::TryFrom;
-use std::sync::{Arc, Mutex};
-
-use futures_locks::RwLock;
 use log::*;
 use matrix_sdk::{
     api::r0::{filter::RoomEventFilter, message::get_message_events::Direction},
@@ -13,9 +8,13 @@ use matrix_sdk::{
     },
     identifiers::RoomId,
     js_int::UInt,
+    locks::RwLock,
     Client, ClientConfig, MessagesRequestBuilder, Room, Session,
 };
 use serde::{Deserialize, Serialize};
+use std::collections::{HashMap, HashSet};
+use std::convert::TryFrom;
+use std::sync::{Arc, Mutex};
 use url::Url;
 use wasm_bindgen_futures::spawn_local;
 use yew::format::Json;
@@ -168,6 +167,7 @@ impl Agent for MatrixAgent {
                         };
                         client.restore_login(session).await;
                     } else {
+                        // FIXME gracefully handle login errors
                         let login_response: matrix_sdk::api::r0::session::login::Response = client
                             .login(username, password, None, Some("Daydream".to_string()))
                             .await
@@ -247,8 +247,8 @@ impl Agent for MatrixAgent {
                 spawn_local(async move {
                     let mut builder = &mut MessagesRequestBuilder::new();
                     builder = builder.room_id(room_id.clone());
-                    if from.is_some() {
-                        builder = builder.from(from.unwrap());
+                    if let Some(from) = from {
+                        builder = builder.from(from);
                     } else {
                         builder = builder.from(
                             agent
@@ -332,7 +332,7 @@ impl Agent for MatrixAgent {
                         .get_joined_room(&room_id)
                         .await
                         .unwrap();
-                    let read_clone = room.clone().read().await;
+                    let read_clone = room.read().await;
                     let clean_room = (*read_clone).clone();
                     for sub in agent.subscribers.iter() {
                         let resp = Response::JoinedRoom((room_id.clone(), clean_room.clone()));
@@ -353,18 +353,16 @@ impl Agent for MatrixAgent {
                     formatted_message = formatted_message.replace("<p>", "").replace("</p>", "");
                     formatted_message.pop();
 
-                    let content;
-                    if formatted_message == message {
-                        content =
-                            MessageEventContent::Text(TextMessageEventContent::new_plain(message));
+                    let content = if formatted_message == message {
+                        MessageEventContent::Text(TextMessageEventContent::new_plain(message))
                     } else {
-                        content = MessageEventContent::Text(TextMessageEventContent {
-                            body: message.into(),
+                        MessageEventContent::Text(TextMessageEventContent {
+                            body: message,
                             format: Some("org.matrix.custom.html".to_string()),
                             formatted_body: Some(formatted_message),
                             relates_to: None,
-                        });
-                    }
+                        })
+                    };
                     client.room_send(&room_id, content, None).await;
                 });
             }
@@ -397,7 +395,7 @@ impl MatrixAgent {
     }
 
     fn login(&mut self) -> Option<Client> {
-        return if (self.matrix_state.homeserver.is_none()
+        if (self.matrix_state.homeserver.is_none()
             || self.matrix_state.username.is_none()
             || self.matrix_state.password.is_none()
             || self.matrix_client.is_some())
@@ -412,7 +410,7 @@ impl MatrixAgent {
             let homeserver = self.session.clone().unwrap().homeserver_url;
 
             let client_config = ClientConfig::new();
-            let homeserver_url = Url::parse(&homeserver.clone()).unwrap();
+            let homeserver_url = Url::parse(&homeserver).unwrap();
             let client = Client::new_with_config(homeserver_url, client_config).unwrap();
             self.matrix_client = Some(client.clone());
 
@@ -429,16 +427,16 @@ impl MatrixAgent {
                 client_clone.restore_login(session).await;
             });
 
-            Some(client.clone())
+            Some(client)
         } else {
             let homeserver = self.matrix_state.homeserver.clone().unwrap();
 
             let client_config = ClientConfig::new();
-            let homeserver_url = Url::parse(&homeserver.clone()).unwrap();
+            let homeserver_url = Url::parse(&homeserver).unwrap();
             let client = Client::new_with_config(homeserver_url, client_config).unwrap();
             self.matrix_client = Some(client.clone());
 
-            Some(client.clone())
-        };
+            Some(client)
+        }
     }
 }

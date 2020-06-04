@@ -1,14 +1,15 @@
 use std::time::Duration;
 
-use log::*;
 use matrix_sdk::{
-    api::r0::sync::sync_events::Response as SyncResponse, events::{collections::all::RoomEvent, room::message::{MessageEvent, MessageEventContent, TextMessageEventContent},},
-    identifiers::RoomId, Client, SyncSettings,
+    api::r0::sync::sync_events::Response as SyncResponse,
+    events::{collections::all::RoomEvent, room::message::MessageEventContent},
+    identifiers::RoomId,
+    Client, SyncSettings,
 };
 use yew::Callback;
 
-use crate::app::matrix::Response;
 use crate::app::matrix::types::get_media_download_url;
+use crate::app::matrix::Response;
 
 pub struct Sync {
     pub(crate) matrix_client: Client,

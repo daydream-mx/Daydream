@@ -1,16 +1,14 @@
 use std::collections::HashMap;
-use std::convert::TryFrom;
 
 use log::*;
 use matrix_sdk::{
     events::room::message::{MessageEvent, MessageEventContent},
-    identifiers::{EventId, RoomId},
+    identifiers::RoomId,
     Room,
 };
-use web_sys::Node;
 use yew::prelude::*;
-use yew::virtual_dom::VNode;
 
+use crate::app::components::events::text::Text;
 use crate::app::matrix::{MatrixAgent, Request, Response};
 
 pub struct EventList {
@@ -28,7 +26,7 @@ pub struct State {
 }
 
 pub enum Msg {
-    NewMessage(Response),
+        NewMessage(Response),
     SetMessage(String),
     SendMessage,
     Nope,
@@ -56,7 +54,7 @@ impl Component for EventList {
         if props.current_room.is_some() {
             let room_id = props.current_room.clone().unwrap().room_id;
             if !state.events.contains_key(&room_id) {
-                matrix_agent.send(Request::GetOldMessages((room_id.clone(), None)));
+                matrix_agent.send(Request::GetOldMessages((room_id, None)));
             }
         }
 
@@ -74,21 +72,14 @@ impl Component for EventList {
                 match response {
                     Response::Sync((room_id, msg)) => {
                         // TODO handle all events
-                        return if self.state.events.contains_key(&room_id) {
+                        if self.state.events.contains_key(&room_id) {
                             if !(self.state.events[&room_id]
                                 .iter()
                                 .map(|x| x.event_id.clone())
-                                .collect::<Vec<EventId>>()
-                                .contains(&msg.event_id))
+                                .any(|x| x == msg.event_id))
                             {
                                 self.state.events.get_mut(&room_id).unwrap().push(msg);
-                                return if room_id
-                                    == self.props.current_room.clone().unwrap().room_id
-                                {
-                                    true
-                                } else {
-                                    false
-                                };
+                                room_id == self.props.current_room.clone().unwrap().room_id
                             } else {
                                 false
                             }
@@ -96,14 +87,12 @@ impl Component for EventList {
                             let mut msgs = Vec::new();
                             msgs.push(msg);
                             self.state.events.insert(room_id.clone(), msgs);
-                            return if room_id == self.props.current_room.clone().unwrap().room_id {
-                                true
-                            } else {
-                                false
-                            };
-                        };
+                            room_id == self.props.current_room.clone().unwrap().room_id
+                        }
                     }
                     Response::OldMessages((room_id, mut messages)) => {
+                        // This is a clippy false positive
+                        #[allow(clippy::map_entry)]
                         if self.state.events.contains_key(&room_id) {
                             self.state
                                 .events
@@ -146,7 +135,7 @@ impl Component for EventList {
                 let room_id = props.clone().current_room.unwrap().room_id;
                 if !self.state.events.contains_key(&room_id) {
                     self.matrix_agent
-                        .send(Request::GetOldMessages((room_id.clone(), None)));
+                        .send(Request::GetOldMessages((room_id, None)));
                 }
             }
             self.props = props;
@@ -169,8 +158,8 @@ impl Component for EventList {
                                 if pos == 0 {
                                     elements.push(self.get_event(None, event));
                                 } else {
-                                    elements.push(self.get_event(Some(&events[pos - 1]), event));
-                                };
+                                    elements.push(self.get_event(Some(events[pos - 1].clone()), event));
+                                }
                             }
                             elements.into_iter().collect::<Html>()
                         } else {
@@ -202,15 +191,11 @@ impl Component for EventList {
 impl EventList {
     // Typeinspection of IDEA breaks with this :D
     //noinspection RsTypeCheck
-    fn get_event(&self, prev_event: Option<&MessageEvent>, event: &MessageEvent) -> Html {
+    fn get_event(&self, prev_event: Option<MessageEvent>, event: &MessageEvent) -> Html {
         // TODO make encryption supported
 
         let new_user = if prev_event.is_some() {
-            if prev_event.unwrap().sender.to_string() == event.sender.to_string() {
-                false
-            } else {
-                true
-            }
+            prev_event.clone().unwrap().sender != event.sender
         } else {
             true
         };
@@ -223,50 +208,18 @@ impl EventList {
                     .display_name
                     .as_ref()
                     .map(ToString::to_string)
-                    .unwrap_or(event.sender.to_string()),
+                    .unwrap_or_else(||event.sender.to_string()),
             }
         };
         match &event.content {
             MessageEventContent::Text(text_event) => {
-                if text_event.formatted_body.is_some() {
-                    let message = if new_user {
-                        format!(
-                            "<displayname>{}:</displayname> {}",
-                            sender_displayname,
-                            text_event.formatted_body.as_ref().unwrap()
-                        )
-                    } else {
-                        format!(
-                            "{}",
-                            text_event.formatted_body.as_ref().unwrap()
-                        )
-                    };
-                    let js_text_event = {
-                        let div = web_sys::window()
-                            .unwrap()
-                            .document()
-                            .unwrap()
-                            .create_element("p")
-                            .unwrap();
-                        div.set_inner_html(
-                            message
-                                .as_str(),
-                        );
-                        div
-                    };
-                    let node = Node::from(js_text_event);
-                    let vnode = VNode::VRef(node);
-                    vnode
-                } else {
-                    if new_user {
-                        html! {
-                           <p><displayname>{sender_displayname}{": "}</displayname>{text_event.body.clone()}</p>
-                        }
-                    } else {
-                        html! {
-                           <p>{text_event.body.clone()}</p>
-                        }
-                    }
+                html! {
+                    <Text
+                        prev_event=prev_event.clone()
+                        event=Some(event.clone())
+                        room=Some(self.props.current_room.clone().unwrap())
+                        text_event=Some(text_event.clone())
+                    />
                 }
             }
             MessageEventContent::Notice(notice_event) => {
