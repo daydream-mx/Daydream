@@ -16,6 +16,8 @@ pub enum AppRoute {
     #[to = "/"]
     MainView,
 }
+
+#[allow(clippy::large_enum_variant)]
 pub enum Msg {
     RouteChanged(Route<()>),
     ChangeRoute(AppRoute),

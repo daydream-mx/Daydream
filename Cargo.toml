@@ -43,6 +43,7 @@ features = [
 [patch.crates-io]
 olm-sys = { git = "https://gitlab.gnome.org/stoically/olm-sys", branch = "wasm-target" }
 cjson = { git = "https://github.com/engineerd/cjson" }
+ruma-events = { git = "https://github.com/ruma/ruma-events", branch = "struct-sizes" }
 
 [profile.release]
 # less code to include into binary

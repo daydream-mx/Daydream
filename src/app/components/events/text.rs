@@ -64,7 +64,7 @@ impl Component for Text {
             .text_event
             .clone()
             .unwrap()
-            .formatted_body
+            .formatted
             .is_some()
         {
             let message = if new_user {
@@ -75,17 +75,18 @@ impl Component for Text {
                         .text_event
                         .clone()
                         .unwrap()
-                        .formatted_body
-                        .as_ref()
+                        .formatted
                         .unwrap()
+                        .body
                 )
             } else {
                 self.props
                     .text_event
                     .clone()
                     .unwrap()
-                    .formatted_body
+                    .formatted
                     .unwrap()
+                    .body
             };
             let js_text_event = {
                 let div = web_sys::window()

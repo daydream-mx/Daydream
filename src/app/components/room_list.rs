@@ -18,6 +18,7 @@ pub struct RoomList {
     props: Props,
 }
 
+#[allow(clippy::large_enum_variant)]
 pub enum Msg {
     NewMessage(Response),
     ChangeRoom(Room),

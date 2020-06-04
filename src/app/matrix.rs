@@ -3,7 +3,7 @@ use matrix_sdk::{
     api::r0::{filter::RoomEventFilter, message::get_message_events::Direction},
     events::{
         collections::all::RoomEvent,
-        room::message::{MessageEvent, MessageEventContent, TextMessageEventContent},
+        room::message::{MessageEvent, MessageEventContent, TextMessageEventContent, FormattedBody, MessageFormat},
         EventJson,
     },
     identifiers::RoomId,
@@ -70,6 +70,7 @@ pub enum Request {
     SendMessage((RoomId, String)),
 }
 
+#[allow(clippy::large_enum_variant)]
 #[derive(Debug, Clone)]
 pub enum Response {
     Error(MatrixError),
@@ -358,9 +359,11 @@ impl Agent for MatrixAgent {
                     } else {
                         MessageEventContent::Text(TextMessageEventContent {
                             body: message,
-                            format: Some("org.matrix.custom.html".to_string()),
-                            formatted_body: Some(formatted_message),
                             relates_to: None,
+                            formatted: Some(FormattedBody{
+                                body: formatted_message,
+                                format: MessageFormat::Html,
+                            })
                         })
                     };
                     client.room_send(&room_id, content, None).await;

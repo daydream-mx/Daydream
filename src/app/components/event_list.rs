@@ -25,8 +25,9 @@ pub struct State {
     pub message: Option<String>,
 }
 
+#[allow(clippy::large_enum_variant)]
 pub enum Msg {
-        NewMessage(Response),
+    NewMessage(Response),
     SetMessage(String),
     SendMessage,
     Nope,
