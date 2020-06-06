@@ -27,6 +27,18 @@ jobs:
       - name: Get emscripten SDK
         run: wget https://github.com/emscripten-core/emsdk/archive/master.zip && unzip master.zip && ./emsdk-master/emsdk install latest && ./emsdk-master/emsdk activate latest
 
+      - name: Install gettext
+        run: sudo apt-get update && sudo apt-get install -y gettext
+
+      - name: Install xtr
+        run: cargo install xtr
+
+      - name: Install cargo-i18n
+        run: cargo install cargo-i18n
+
+      - name: Regenerate translation files
+        run: cargo i18n || exit 0
+
       - name: Build
         run: source emsdk-master/emsdk_env.sh && yarn run build
 
