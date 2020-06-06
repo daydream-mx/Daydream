@@ -3,7 +3,10 @@ use matrix_sdk::{
     api::r0::{filter::RoomEventFilter, message::get_message_events::Direction},
     events::{
         collections::all::RoomEvent,
-        room::message::{MessageEvent, MessageEventContent, TextMessageEventContent, FormattedBody, MessageFormat},
+        room::message::{
+            FormattedBody, MessageEvent, MessageEventContent, MessageFormat,
+            TextMessageEventContent,
+        },
         EventJson,
     },
     identifiers::RoomId,
@@ -23,7 +26,7 @@ use yew::worker::*;
 
 use crate::app::matrix::types::{get_media_download_url, get_video_media_download_url};
 use crate::constants::AUTH_KEY;
-use crate::errors::MatrixError;
+use crate::errors::{Field, MatrixError};
 use pulldown_cmark::{html, Options, Parser};
 
 mod sync;
@@ -60,7 +63,7 @@ pub enum Request {
     SetHomeserver(String),
     SetUsername(String),
     SetPassword(String),
-    Login(),
+    Login,
     GetLoggedIn,
     GetUserdata,
     GetOldMessages((RoomId, Option<String>)),
@@ -140,7 +143,8 @@ impl Agent for MatrixAgent {
             Request::SetPassword(password) => {
                 self.matrix_state.password = Some(password);
             }
-            Request::Login() => {
+            Request::Login => {
+                info!("Starting Login");
                 let login_client = self.login();
                 if login_client.is_none() {
                     for sub in self.subscribers.iter() {
@@ -169,23 +173,62 @@ impl Agent for MatrixAgent {
                         client.restore_login(session).await;
                     } else {
                         // FIXME gracefully handle login errors
-                        let login_response: matrix_sdk::api::r0::session::login::Response = client
+                        let login_response = client
                             .login(username, password, None, Some("Daydream".to_string()))
-                            .await
-                            .unwrap();
-                        let session_store = SessionStore {
-                            access_token: login_response.access_token,
-                            user_id: login_response.user_id.to_string(),
-                            device_id: login_response.device_id,
-                            homeserver_url: client.homeserver().to_string(),
-                        };
-                        let mut storage = agent.storage.lock().unwrap();
-                        storage.store(AUTH_KEY, Json(&session_store));
-                    }
+                            .await;
+                        match login_response {
+                            Ok(login_response) => {
+                                let session_store = SessionStore {
+                                    access_token: login_response.access_token,
+                                    user_id: login_response.user_id.to_string(),
+                                    device_id: login_response.device_id,
+                                    homeserver_url: client.homeserver().to_string(),
+                                };
+                                let mut storage = agent.storage.lock().unwrap();
+                                storage.store(AUTH_KEY, Json(&session_store));
 
-                    for sub in subscribers.iter() {
-                        let resp = Response::LoggedIn(true);
-                        agent.link.respond(*sub, resp);
+                                for sub in subscribers.iter() {
+                                    let resp = Response::LoggedIn(true);
+                                    agent.link.respond(*sub, resp);
+                                }
+                            }
+                            Err(e) => {
+                                if let matrix_sdk::Error::Reqwest(e) = e {
+                                    match e.status() {
+                                        None => {
+                                            for sub in subscribers.iter() {
+                                                let resp = Response::Error(MatrixError::SDKError(
+                                                    e.to_string(),
+                                                ));
+                                                agent.link.respond(*sub, resp);
+                                            }
+                                        }
+                                        Some(v) => {
+                                            if v.is_server_error() {
+                                                for sub in subscribers.iter() {
+                                                    let resp =
+                                                        Response::Error(MatrixError::LoginTimeout);
+                                                    agent.link.respond(*sub, resp);
+                                                }
+                                            } else {
+                                                for sub in subscribers.iter() {
+                                                    let resp = Response::Error(
+                                                        MatrixError::SDKError(e.to_string()),
+                                                    );
+                                                    agent.link.respond(*sub, resp);
+                                                }
+                                            }
+                                        }
+                                    }
+                                } else {
+                                    for sub in subscribers.iter() {
+                                        let resp =
+                                            Response::Error(MatrixError::SDKError(e.to_string()));
+                                        agent.link.respond(*sub, resp);
+                                    }
+                                }
+                            }
+                        }
                     }
                 });
             }
@@ -292,7 +335,9 @@ impl Agent for MatrixAgent {
 
                     for event in deserialized_events.into_iter().rev() {
                         if let RoomEvent::RoomMessage(mut event) = event {
-                            if let MessageEventContent::Image(mut image_event) = event.clone().content {
+                            if let MessageEventContent::Image(mut image_event) =
+                            event.clone().content
+                            {
                                 if image_event.url.is_some() {
                                     let new_url = Some(get_media_download_url(
                                         agent.matrix_client.clone().unwrap(),
@@ -381,10 +426,10 @@ impl Agent for MatrixAgent {
                         MessageEventContent::Text(TextMessageEventContent {
                             body: message,
                             relates_to: None,
-                            formatted: Some(FormattedBody{
+                            formatted: Some(FormattedBody {
                                 body: formatted_message,
                                 format: MessageFormat::Html,
-                            })
+                            }),
                         })
                     };
                     client.room_send(&room_id, content, None).await;
@@ -419,18 +464,9 @@ impl MatrixAgent {
     }
 
     fn login(&mut self) -> Option<Client> {
-        if (self.matrix_state.homeserver.is_none()
-            || self.matrix_state.username.is_none()
-            || self.matrix_state.password.is_none()
-            || self.matrix_client.is_some())
-            && self.session.is_none()
-        {
-            for sub in self.subscribers.iter() {
-                let resp = Response::Error(MatrixError::MissingFields);
-                self.link.respond(*sub, resp);
-            }
-            None
-        } else if self.session.is_some() {
+        info!("preparing client");
+        if self.session.is_some() {
+            info!("restoring login");
             let homeserver = self.session.clone().unwrap().homeserver_url;
 
             let client_config = ClientConfig::new();
@@ -452,7 +488,26 @@ impl MatrixAgent {
             });
 
             Some(client)
+        } else if self.matrix_state.homeserver.is_none() {
+            for sub in self.subscribers.iter() {
+                let resp = Response::Error(MatrixError::MissingFields(Field::Homeserver));
+                self.link.respond(*sub, resp);
+            }
+            None
+        } else if self.matrix_state.username.is_none() {
+            for sub in self.subscribers.iter() {
+                let resp = Response::Error(MatrixError::MissingFields(Field::MXID));
+                self.link.respond(*sub, resp);
+            }
+            None
+        } else if self.matrix_state.password.is_none() {
+            for sub in self.subscribers.iter() {
+                let resp = Response::Error(MatrixError::MissingFields(Field::Password));
+                self.link.respond(*sub, resp);
+            }
+            None
         } else {
+            info!("new login");
             let homeserver = self.matrix_state.homeserver.clone().unwrap();
 
             let client_config = ClientConfig::new();

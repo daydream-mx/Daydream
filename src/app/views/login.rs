@@ -1,23 +1,37 @@
-use yew::agent::{Dispatched, Dispatcher};
 use yew::prelude::*;
+use serde::{Deserialize, Serialize};
+use log::*;
 
 use tr::tr;
 
-use crate::app::matrix::{MatrixAgent, Request};
+use crate::app::matrix::{MatrixAgent, Request, Response};
+use crate::errors::{MatrixError, Field};
+use wasm_bindgen::__rt::std::thread::sleep;
+use wasm_bindgen::__rt::core::time::Duration;
 
 pub struct Login {
     link: ComponentLink<Self>,
-    homeserver: String,
-    username: String,
-    password: String,
-    matrix_agent: Dispatcher<MatrixAgent>,
+    state: State,
+    matrix_agent: Box<dyn Bridge<MatrixAgent>>,
 }
 
 pub enum Msg {
+    NewMessage(Response),
     SetHomeserver(String),
     SetUsername(String),
     SetPassword(String),
     Login,
+}
+
+#[derive(Serialize, Deserialize, Default)]
+pub struct State {
+    loading: bool,
+    homeserver: String,
+    username: String,
+    password: String,
+    error: Option<String>,
+    error_field: Option<Field>,
+    retries: u64
 }
 
 impl Component for Login {
@@ -25,13 +39,20 @@ impl Component for Login {
     type Properties = ();
 
     fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
-        let matrix_agent = MatrixAgent::dispatcher();
-        Login {
-            link,
-            //TODO use state
+        let matrix_callback = link.callback(Msg::NewMessage);
+        let matrix_agent = MatrixAgent::bridge(matrix_callback);
+        let state = State {
+            loading: false,
             homeserver: "".to_string(),
             username: "".to_string(),
             password: "".to_string(),
+            error: None,
+            error_field: None,
+            retries: 0
+        };
+        Login {
+            link,
+            state,
             matrix_agent,
         }
     }
@@ -39,23 +60,66 @@ impl Component for Login {
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
         match msg {
             Msg::SetHomeserver(homeserver) => {
-                self.homeserver = homeserver.clone();
+                self.state.homeserver = homeserver.clone();
                 self.matrix_agent.send(Request::SetHomeserver(homeserver));
                 true
             }
             Msg::SetUsername(username) => {
-                self.username = username.clone();
+                self.state.username = username.clone();
                 self.matrix_agent.send(Request::SetUsername(username));
                 true
             }
             Msg::SetPassword(password) => {
-                self.password = password.clone();
+                self.state.password = password.clone();
                 self.matrix_agent.send(Request::SetPassword(password));
                 true
             }
             Msg::Login => {
-                self.matrix_agent.send(Request::Login());
-                false
+                // Reset Errors
+                self.state.error = None;
+                self.state.error_field = None;
+
+                // Start loading
+                self.matrix_agent.send(Request::Login);
+                self.state.loading = true;
+                true
+            }
+            Msg::NewMessage(response) => {
+                match response {
+                    Response::Error(error) => {
+                        match error.clone() {
+                            MatrixError::MissingFields(field) => {
+                                self.state.loading = false;
+                                self.state.error = Some(error.to_string());
+                                self.state.error_field = Some(field);
+                                true
+                            },
+                            MatrixError::LoginTimeout => {
+                                // If we had less than 10 tries try again
+                                if self.state.retries < 10 {
+                                    self.state.retries += 1;
+                                    info!("Trying login again in 5 seconds");
+                                    sleep(Duration::from_secs(5));
+                                    self.link.send_message(Msg::Login);
+                                    false
+                                } else {
+                                    self.state.loading = false;
+                                    self.state.error = Some("Login failed after 10 tries.".to_string());
+                                    true
+                                }
+                            },
+                            MatrixError::SDKError(e) => {
+                                // TODO handle login error != timeout better
+                                error!("SDK Error: {}", e);
+                                false
+                            }
+                            _ => {
+                                false
+                            }
+                        }
+                    }
+                    _ => false
+                }
             }
         }
     }
@@ -64,105 +128,165 @@ impl Component for Login {
         false
     }
 
+    //noinspection RsTypeCheck
     fn view(&self) -> Html {
-        html! {
-            <div class="container">
-                <div class="uk-position-center uk-padding">
-                    <h1 class="title">{"Login"}</h1>
-                    <form class="uk-form-stacked uk-margin" onsubmit=self.link.callback(|e: FocusEvent| {e.prevent_default();  Msg::Login})>
-                        <div class="uk-margin">
-                            <label class="uk-form-label">
-                                {
-                                    tr!(
-                                        // The URL Field of the Login page
-                                        "Homeserver URL"
-                                    )
+        let mut homeserver_classes = "uk-input";
+        let mut mxid_classes = "uk-input";
+        let mut password_classes = "uk-input";
+        match self.state.error_field.as_ref() {
+            Some(v) => {
+                match v {
+                    Field::Homeserver => {
+                        homeserver_classes = "uk-input uk-form-danger"
+                    },
+                    Field::MXID => {
+                        mxid_classes = "uk-input uk-form-danger"
+                    },
+                    Field::Password => {
+                        password_classes = "uk-input uk-form-danger"
+                    },
+                }
+            },
+            _ => {}
+        }
+
+        if self.state.loading {
+            html! {
+                <div class="container">
+                    <div class="uk-position-center uk-padding">
+                        <span uk-spinner="ratio: 4.5"></span>
+                    </div>
+                </div>
+            }
+        } else {
+            html! {
+                <div class="container">
+                    <div class="uk-position-center uk-padding">
+                        <h1 class="title">
+                            {
+                                tr!(
+                                    // The Login Button of the Login page
+                                    "Login"
+                                )
+                            }
+                        </h1>
+                        {
+                            match &self.state.error {
+                                Some(v) => {
+                                    html! {
+                                        <h3 class="error">
+                                            {
+                                                tr!(
+                                                    // {0} is the Error that happened on login
+                                                    // The error message of the Login page
+                                                    "Error: {0}",
+                                                    v
+                                                )
+                                            }
+                                        </h3>
+                                    }
                                 }
-                            </label>
-                            <div class="uk-form-controls">
-                                <input
-                                    class="uk-input"
-                                    type="url"
-                                    id="homeserver"
-                                    placeholder=
+                                None => {
+                                    html!{}
+                                }
+                            }
+                        }
+
+                        <form class="uk-form-stacked uk-margin" onsubmit=self.link.callback(|e: FocusEvent| {e.prevent_default();  Msg::Login})>
+                            <div class="uk-margin">
+                                <label class="uk-form-label">
                                     {
                                         tr!(
                                             // The URL Field of the Login page
                                             "Homeserver URL"
                                         )
                                     }
-                                    value=&self.homeserver
-                                    oninput=self.link.callback(|e: InputData| Msg::SetHomeserver(e.value))
-                                />
+                                </label>
+                                <div class="uk-form-controls">
+                                    <input
+                                        class=homeserver_classes
+                                        type="url"
+                                        id="homeserver"
+                                        placeholder=
+                                        {
+                                            tr!(
+                                                // The URL Field of the Login page
+                                                "Homeserver URL"
+                                            )
+                                        }
+                                        value=&self.state.homeserver
+                                        oninput=self.link.callback(|e: InputData| Msg::SetHomeserver(e.value))
+                                    />
+                                </div>
                             </div>
-                        </div>
-                        <div class="uk-margin">
-                            <label class="uk-form-label">
-                                {
-                                    tr!(
-                                        // The Matrix ID Field of the Login page
-                                        "MXID"
-                                    )
-                                }
-                            </label>
-                            <div class="uk-form-controls">
-                                <input
-                                    class="uk-input"
-                                    id="username"
-                                    placeholder=
+                            <div class="uk-margin">
+                                <label class="uk-form-label">
                                     {
                                         tr!(
                                             // The Matrix ID Field of the Login page
                                             "MXID"
                                         )
                                     }
-                                    value=&self.username
-                                    oninput=self.link.callback(|e: InputData| Msg::SetUsername(e.value))
-                                />
+                                </label>
+                                <div class="uk-form-controls">
+                                    <input
+                                        class=mxid_classes
+                                        id="username"
+                                        placeholder=
+                                        {
+                                            tr!(
+                                                // The Matrix ID Field of the Login page
+                                                "MXID"
+                                            )
+                                        }
+                                        value=&self.state.username
+                                        oninput=self.link.callback(|e: InputData| Msg::SetUsername(e.value))
+                                    />
+                                </div>
                             </div>
-                        </div>
-                        <div class="uk-margin">
-                            <label class="uk-form-label">
-                                {
-                                    tr!(
-                                        // The Password Field of the Login page
-                                        "Password"
-                                    )
-                                }
-                            </label>
-                            <div class="uk-form-controls">
-                                <input
-                                    class="uk-input"
-                                    type="password"
-                                    id="password"
-                                    placeholder=
+                            <div class="uk-margin">
+                                <label class="uk-form-label">
                                     {
                                         tr!(
                                             // The Password Field of the Login page
                                             "Password"
                                         )
                                     }
-                                    value=&self.password
-                                    oninput=self.link.callback(|e: InputData| Msg::SetPassword(e.value))
-                                />
+                                </label>
+                                <div class="uk-form-controls">
+                                    <input
+                                        class=password_classes
+                                        type="password"
+                                        id="password"
+                                        placeholder=
+                                        {
+                                            tr!(
+                                                // The Password Field of the Login page
+                                                "Password"
+                                            )
+                                        }
+                                        value=&self.state.password
+                                        oninput=self.link.callback(|e: InputData| Msg::SetPassword(e.value))
+                                    />
+                                </div>
                             </div>
-                        </div>
 
-                        <div class="uk-margin">
-                            <div class="uk-form-controls">
-                                <button class="uk-button uk-button-primary">
-                                {
-                                    tr!(
-                                        // The Login Button of the Login page
-                                        "Login"
-                                    )
-                                }
-                                </button>
+                            <div class="uk-margin">
+                                <div class="uk-form-controls">
+                                    <button class="uk-button uk-button-primary">
+                                    {
+                                        tr!(
+                                            // The Login Button of the Login page
+                                            "Login"
+                                        )
+                                    }
+                                    </button>
+                                </div>
                             </div>
-                        </div>
-                    </form>
+                        </form>
+                    </div>
                 </div>
-            </div>
+            }
         }
     }
 }

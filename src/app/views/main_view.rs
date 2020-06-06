@@ -1,7 +1,8 @@
+use log::*;
 use matrix_sdk::Room;
 use serde::{Deserialize, Serialize};
-use yew::prelude::*;
 use yew::ComponentLink;
+use yew::prelude::*;
 
 use crate::app::components::{event_list::EventList, room_list::RoomList};
 use crate::app::matrix::{MatrixAgent, Request};
@@ -39,6 +40,7 @@ impl Component for MainView {
     fn update(&mut self, msg: Self::Message) -> bool {
         match msg {
             Msg::ChangeRoom(room) => {
+                info!("Changing room to: {}", room.room_id);
                 self.state.current_room = Some(room);
             }
         }
@@ -82,7 +84,6 @@ impl Component for MainView {
                     </div>
                 }
             }
-
         }
     }
 }
