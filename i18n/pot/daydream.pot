@@ -1,32 +1,11 @@
-# SOME DESCRIPTIVE TITLE.
-# Copyright (C) YEAR THE daydream'S COPYRIGHT HOLDER
-# This file is distributed under the same license as the daydream package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-#
-#, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: daydream 0.1.0\n"
-"Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-06-06 21:19+0000\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
-"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-
-#. The Login Button of the Login page
-#: src/app/views/login.rs:169 src/app/views/login.rs:280
-msgid "Login"
-msgstr ""
-
-#. {0} is the Error that happened on login
-#. The error message of the Login page
-#: src/app/views/login.rs:182
-msgid "Error: {0}"
-msgstr ""
+"X-Generator: POEditor.com\n"
+"Project-Id-Version: Daydream\n"
+"Language: en\n"
 
 #. The URL Field of the Login page
 #: src/app/views/login.rs:201 src/app/views/login.rs:214
@@ -42,3 +21,15 @@ msgstr ""
 #: src/app/views/login.rs:252 src/app/views/login.rs:265
 msgid "Password"
 msgstr ""
+
+#. The Login Button of the Login page
+#: src/app/views/login.rs:169 src/app/views/login.rs:280
+msgid "Login"
+msgstr ""
+
+#. {0} is the Error that happened on login
+#. The error message of the Login page
+#: src/app/views/login.rs:182
+msgid "Error: {0}"
+msgstr ""
+
