@@ -97,6 +97,11 @@ impl Component for RoomList {
                 _ => false,
             },
             Msg::ChangeRoom(room) => {
+                if self.state.current_room.is_some() {
+                    if self.state.current_room.as_ref().unwrap() == &room {
+                        return false;
+                    }
+                }
                 self.props.change_room_callback.emit(room.clone());
                 self.state.current_room = Some(room);
                 true
