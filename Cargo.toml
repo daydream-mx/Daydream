@@ -22,12 +22,19 @@ wee_alloc = "0.4"
 yew = { git = "https://github.com/yewstack/yew" }
 yew-router = { git = "https://github.com/yewstack/yew" }
 yewtil = { git = "https://github.com/yewstack/yew" }
+
+# Matrix
 matrix-sdk = { version = "0.1.0", git = "https://github.com/MTRNord/matrix-rust-sdk", branch = "expose-send-rebased", default-features = false}# features = ["encryption"]}
 url = "2.1.1"
 thiserror = "1.0"
 futures-locks = { git = "https://github.com/asomers/futures-locks", default-features = false }
-linked_hash_set = {version = "0.1.3", features = ["serde"] }
+
+# Markdown
 pulldown-cmark = "0.7.1"
+
+# Translations
+tr = { version = "0.1.3", default-features = false, features = ["gettext"]}
+i18n-embed = { version = "0.4", features = ["web-sys-requester"]}
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3"

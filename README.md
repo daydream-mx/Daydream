@@ -80,6 +80,10 @@ This is an example of how to list things you need to use the software and how to
 * Rust
 * Nodejs
 * Yarn
+* gettext (See: https://github.com/kellpossible/cargo-i18n#system-requirements)
+* When you want to recompile translations: 
+  * https://github.com/kellpossible/cargo-i18n
+  * `cargo install xtr`
 
 ### Setting up a Development Environment
  

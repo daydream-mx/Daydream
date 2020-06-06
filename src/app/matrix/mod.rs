@@ -21,7 +21,7 @@ use yew::format::Json;
 use yew::services::{storage::Area, StorageService};
 use yew::worker::*;
 
-use crate::app::matrix::types::get_media_download_url;
+use crate::app::matrix::types::{get_media_download_url, get_video_media_download_url};
 use crate::constants::AUTH_KEY;
 use crate::errors::MatrixError;
 use pulldown_cmark::{html, Options, Parser};
@@ -163,7 +163,7 @@ impl Agent for MatrixAgent {
                             user_id: matrix_sdk::identifiers::UserId::try_from(
                                 stored_session.user_id.as_str(),
                             )
-                            .unwrap(),
+                                .unwrap(),
                             device_id: stored_session.device_id,
                         };
                         client.restore_login(session).await;
@@ -292,7 +292,7 @@ impl Agent for MatrixAgent {
 
                     for event in deserialized_events.into_iter().rev() {
                         if let RoomEvent::RoomMessage(mut event) = event {
-                            if let MessageEventContent::Image(mut image_event) = event.content {
+                            if let MessageEventContent::Image(mut image_event) = event.clone().content {
                                 if image_event.url.is_some() {
                                     let new_url = Some(get_media_download_url(
                                         agent.matrix_client.clone().unwrap(),
@@ -312,6 +312,27 @@ impl Agent for MatrixAgent {
                                     image_event.info = Some(info);
                                 }
                                 event.content = MessageEventContent::Image(image_event);
+                            }
+                            if let MessageEventContent::Video(mut video_event) = event.content {
+                                if video_event.url.is_some() {
+                                    let new_url = Some(get_video_media_download_url(
+                                        agent.matrix_client.clone().unwrap(),
+                                        video_event.url.unwrap(),
+                                    ));
+                                    video_event.url = new_url;
+                                }
+                                if video_event.info.is_some() {
+                                    let mut info = video_event.info.unwrap();
+                                    if info.thumbnail_url.is_some() {
+                                        let new_url = Some(get_media_download_url(
+                                            agent.matrix_client.clone().unwrap(),
+                                            info.thumbnail_url.unwrap(),
+                                        ));
+                                        info.thumbnail_url = new_url;
+                                    }
+                                    video_event.info = Some(info);
+                                }
+                                event.content = MessageEventContent::Video(video_event);
                             }
                             wrapped_messages.push(event.clone());
                         }

@@ -8,7 +8,7 @@ use matrix_sdk::{
 };
 use yew::Callback;
 
-use crate::app::matrix::types::get_media_download_url;
+use crate::app::matrix::types::{get_media_download_url, get_video_media_download_url};
 use crate::app::matrix::Response;
 
 pub struct Sync {
@@ -45,7 +45,7 @@ impl Sync {
         // TODO handle all messages...
 
         if let RoomEvent::RoomMessage(mut event) = event {
-            if let MessageEventContent::Image(mut image_event) = event.content {
+            if let MessageEventContent::Image(mut image_event) = event.clone().content {
                 if image_event.url.is_some() {
                     let new_url = Some(get_media_download_url(
                         self.matrix_client.clone(),
@@ -65,6 +65,27 @@ impl Sync {
                     image_event.info = Some(info);
                 }
                 event.content = MessageEventContent::Image(image_event);
+            }
+            if let MessageEventContent::Video(mut video_event) = event.content {
+                if video_event.url.is_some() {
+                    let new_url = Some(get_video_media_download_url(
+                        self.matrix_client.clone(),
+                        video_event.url.unwrap(),
+                    ));
+                    video_event.url = new_url;
+                }
+                if video_event.info.is_some() {
+                    let mut info = video_event.info.unwrap();
+                    if info.thumbnail_url.is_some() {
+                        let new_url = Some(get_media_download_url(
+                            self.matrix_client.clone(),
+                            info.thumbnail_url.unwrap(),
+                        ));
+                        info.thumbnail_url = new_url;
+                    }
+                    video_event.info = Some(info);
+                }
+                event.content = MessageEventContent::Video(video_event);
             }
             let resp = Response::Sync((room_id.clone(), event.clone()));
             self.callback.emit(resp);

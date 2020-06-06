@@ -8,7 +8,7 @@ use matrix_sdk::{
 };
 use yew::prelude::*;
 
-use crate::app::components::events::text::Text;
+use crate::app::components::events::{text::Text, notice::Notice, image::Image, video::Video};
 use crate::app::matrix::{MatrixAgent, Request, Response};
 
 pub struct EventList {
@@ -224,46 +224,33 @@ impl EventList {
                 }
             }
             MessageEventContent::Notice(notice_event) => {
-                if new_user {
-                    html! {
-                        <p style="opacity: .6;"><displayname>{sender_displayname}{": "}</displayname>{notice_event.body.clone()}</p>
-                    }
-                } else {
-                    html! {
-                       <p style="opacity: .6;">{notice_event.body.clone()}</p>
-                    }
+                html! {
+                    <Notice
+                        prev_event=prev_event.clone()
+                        event=Some(event.clone())
+                        room=Some(self.props.current_room.clone().unwrap())
+                        notice_event=Some(notice_event.clone())
+                    />
                 }
             }
             MessageEventContent::Image(image_event) => {
-                let caption = format!("{}: {}", sender_displayname, image_event.body);
-                if image_event.url.clone().is_some() {
-                    let image_url = image_event.url.clone().unwrap();
-                    let thumbnail = match image_event.info.clone().unwrap().thumbnail_url {
-                        None => image_url.clone(),
-                        Some(v) => v,
-                    };
-                    if new_user {
-                        html! {
-                            <>
-                                <p><displayname>{sender_displayname}{": "}</displayname></p>
-                                <div uk-lightbox="">
-                                    <a class="uk-inline" href=image_url data-caption=caption >
-                                        <img src=thumbnail alt=caption />
-                                    </a>
-                               </div>
-                            </>
-                        }
-                    } else {
-                        html! {
-                           <div uk-lightbox="">
-                                <a class="uk-inline" href=image_url data-caption=caption >
-                                    <img src=thumbnail alt=caption />
-                                </a>
-                           </div>
-                        }
-                    }
-                } else {
-                    html! {}
+                html! {
+                    <Image
+                        prev_event=prev_event.clone()
+                        event=Some(event.clone())
+                        room=Some(self.props.current_room.clone().unwrap())
+                        image_event=Some(image_event.clone())
+                    />
+                }
+            }
+            MessageEventContent::Video(video_event) => {
+                html! {
+                    <Video
+                        prev_event=prev_event.clone()
+                        event=Some(event.clone())
+                        room=Some(self.props.current_room.clone().unwrap())
+                        video_event=Some(video_event.clone())
+                    />
                 }
             }
             _ => {
