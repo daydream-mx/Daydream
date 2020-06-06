@@ -1,0 +1,19 @@
+#. The URL Field of the Login page
+#: src/app/views/login.rs:78 src/app/views/login.rs:91
+msgid "Homeserver URL"
+msgstr ""
+
+#. The Matrix ID Field of the Login page
+#: src/app/views/login.rs:104 src/app/views/login.rs:116
+msgid "MXID"
+msgstr ""
+
+#. The Password Field of the Login page
+#: src/app/views/login.rs:129 src/app/views/login.rs:142
+msgid "Password"
+msgstr ""
+
+#. The Login Button of the Login page
+#: src/app/views/login.rs:157
+msgid "Login"
+msgstr ""

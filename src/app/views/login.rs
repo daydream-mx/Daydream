@@ -1,6 +1,8 @@
 use yew::agent::{Dispatched, Dispatcher};
 use yew::prelude::*;
 
+use tr::tr;
+
 use crate::app::matrix::{MatrixAgent, Request};
 
 pub struct Login {
@@ -69,38 +71,77 @@ impl Component for Login {
                     <h1 class="title">{"Login"}</h1>
                     <form class="uk-form-stacked uk-margin" onsubmit=self.link.callback(|e: FocusEvent| {e.prevent_default();  Msg::Login})>
                         <div class="uk-margin">
-                            <label class="uk-form-label">{"Homeserver URL"}</label>
+                            <label class="uk-form-label">
+                                {
+                                    tr!(
+                                        // The URL Field of the Login page
+                                        "Homeserver URL"
+                                    )
+                                }
+                            </label>
                             <div class="uk-form-controls">
                                 <input
                                     class="uk-input"
                                     type="url"
                                     id="homeserver"
-                                    placeholder="Homeserver URL"
+                                    placeholder=
+                                    {
+                                        tr!(
+                                            // The URL Field of the Login page
+                                            "Homeserver URL"
+                                        )
+                                    }
                                     value=&self.homeserver
                                     oninput=self.link.callback(|e: InputData| Msg::SetHomeserver(e.value))
                                 />
                             </div>
                         </div>
                         <div class="uk-margin">
-                            <label class="uk-form-label">{"MXID/Username"}</label>
+                            <label class="uk-form-label">
+                                {
+                                    tr!(
+                                        // The Matrix ID Field of the Login page
+                                        "MXID"
+                                    )
+                                }
+                            </label>
                             <div class="uk-form-controls">
                                 <input
                                     class="uk-input"
                                     id="username"
-                                    placeholder="MXID/Username"
+                                    placeholder=
+                                    {
+                                        tr!(
+                                            // The Matrix ID Field of the Login page
+                                            "MXID"
+                                        )
+                                    }
                                     value=&self.username
                                     oninput=self.link.callback(|e: InputData| Msg::SetUsername(e.value))
                                 />
                             </div>
                         </div>
                         <div class="uk-margin">
-                            <label class="uk-form-label">{"Password"}</label>
+                            <label class="uk-form-label">
+                                {
+                                    tr!(
+                                        // The Password Field of the Login page
+                                        "Password"
+                                    )
+                                }
+                            </label>
                             <div class="uk-form-controls">
                                 <input
                                     class="uk-input"
                                     type="password"
                                     id="password"
-                                    placeholder="Password"
+                                    placeholder=
+                                    {
+                                        tr!(
+                                            // The Password Field of the Login page
+                                            "Password"
+                                        )
+                                    }
                                     value=&self.password
                                     oninput=self.link.callback(|e: InputData| Msg::SetPassword(e.value))
                                 />
@@ -109,7 +150,14 @@ impl Component for Login {
 
                         <div class="uk-margin">
                             <div class="uk-form-controls">
-                                <button class="uk-button uk-button-primary">{ "Login" }</button>
+                                <button class="uk-button uk-button-primary">
+                                {
+                                    tr!(
+                                        // The Login Button of the Login page
+                                        "Login"
+                                    )
+                                }
+                                </button>
                             </div>
                         </div>
                     </form>

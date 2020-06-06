@@ -1,6 +1,6 @@
 # (Required) The locale/language identifier of the language used in the source
 # code.
-src_locale = "en"
+src_locale = "en-US"
 
 # (Required) The locales that the software will be translated into.
 target_locales = ["de"]
