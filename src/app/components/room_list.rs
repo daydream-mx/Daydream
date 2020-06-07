@@ -4,10 +4,12 @@ use matrix_sdk::{identifiers::RoomId, js_int::UInt, Room};
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::JsCast;
 use web_sys::HtmlElement;
+use yew::{Bridge, Bridged, Component, ComponentLink, Html};
 use yew::prelude::*;
 use yew::utils::document;
-use yew::{Bridge, Bridged, Component, ComponentLink, Html};
 use yewtil::NeqAssign;
+
+use tr::tr;
 
 use crate::app::matrix::{MatrixAgent, Request, Response};
 
@@ -153,13 +155,25 @@ impl Component for RoomList {
                             <input
                                 class="uk-search-input"
                                 type="search"
-                                placeholder="Filter Rooms..."
+                                placeholder={
+                                    tr!(
+                                        // Placeholder text for the roomlist filtering
+                                        "Filter Rooms..."
+                                    )
+                                }
                                 value=&self.state.search_query.as_ref().unwrap_or(&"".to_string())
                                 oninput=self.link.callback(|e: InputData| Msg::SetFilter(e.value)) />
                         </form>
                     </div>
                     <ul class="scrollable uk-flex uk-flex-column uk-padding uk-nav-default uk-nav-parent-icon uk-padding-remove-bottom" uk-nav="">
-                        <li class="uk-nav-header">{"Rooms"}</li>
+                        <li class="uk-nav-header">
+                            {
+                                tr!(
+                                    // Header of the Roomlist
+                                    "Rooms"
+                                )
+                            }
+                        </li>
                         {
                             if self.state.search_query.is_none() || (self.state.search_query.as_ref().unwrap_or(&"".to_string()) == &"".to_string()) {
                                 self.state.rooms.iter().map(|(_, room)| self.get_room(room)).collect::<Html>()

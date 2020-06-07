@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: daydream 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-06-06 21:19+0000\n"
+"POT-Creation-Date: 2020-06-07 12:39+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -16,3 +16,13 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+
+#. Placeholder text for the roomlist filtering
+#: ./src/app/components/room_list.rs:161
+msgid "Filter Rooms..."
+msgstr ""
+
+#. Header of the Roomlist
+#: ./src/app/components/room_list.rs:173
+msgid "Rooms"
+msgstr ""

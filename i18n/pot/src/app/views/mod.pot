@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: daydream 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-06-06 21:19+0000\n"
+"POT-Creation-Date: 2020-06-07 12:39+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -41,4 +41,9 @@ msgstr ""
 #. The Password Field of the Login page
 #: ./src/app/views/login.rs:252 ./src/app/views/login.rs:265
 msgid "Password"
+msgstr ""
+
+#. A warning for encrypted rooms
+#: ./src/app/views/main_view.rs:81
+msgid "Daydream currently does not support encryption."
 msgstr ""
