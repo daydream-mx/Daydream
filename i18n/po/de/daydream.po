@@ -1,34 +1,11 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: Daydream\n"
-"Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-06-07 12:39+0000\n"
-"Language: de\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: POEditor.com\n"
-
-#. Placeholder text for the roomlist filtering
-#: src/app/components/room_list.rs:161
-msgid "Filter Rooms..."
-msgstr ""
-
-#. Header of the Roomlist
-#: src/app/components/room_list.rs:173
-msgid "Rooms"
-msgstr ""
-
-#. The Login Button of the Login page
-#: src/app/views/login.rs:169 src/app/views/login.rs:280
-msgid "Login"
-msgstr "Anmelden"
-
-#. {0} is the Error that happened on login
-#. The error message of the Login page
-#: src/app/views/login.rs:182
-msgid "Error: {0}"
-msgstr "Fehler: {0}"
+"Project-Id-Version: Daydream\n"
+"Language: de\n"
 
 #. The URL Field of the Login page
 #: src/app/views/login.rs:201 src/app/views/login.rs:214
@@ -45,7 +22,29 @@ msgstr "MXID"
 msgid "Password"
 msgstr "Passwort"
 
+#. The Login Button of the Login page
+#: src/app/views/login.rs:169 src/app/views/login.rs:280
+msgid "Login"
+msgstr "Anmelden"
+
+#. {0} is the Error that happened on login
+#. The error message of the Login page
+#: src/app/views/login.rs:182
+msgid "Error: {0}"
+msgstr "Fehler: {0}"
+
+#. Placeholder text for the roomlist filtering
+#: src/app/components/room_list.rs:161
+msgid "Filter Rooms..."
+msgstr "Räume filter..."
+
+#. Header of the Roomlist
+#: src/app/components/room_list.rs:173
+msgid "Rooms"
+msgstr "Räume"
+
 #. A warning for encrypted rooms
 #: src/app/views/main_view.rs:81
 msgid "Daydream currently does not support encryption."
-msgstr ""
+msgstr "Daydream unterstützt aktuell keine Verschlüsselung"
+
