@@ -7,7 +7,7 @@ use i18n_embed::{language_loader, I18nEmbed, WebLanguageRequester};
 use rust_embed::RustEmbed;
 use wasm_bindgen::prelude::*;
 
-mod app;
+pub mod app;
 mod constants;
 mod errors;
 

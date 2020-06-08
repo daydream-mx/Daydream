@@ -59,14 +59,7 @@ impl Component for Text {
         } else {
             "".to_string()
         };
-        if self
-            .props
-            .text_event
-            .clone()
-            .unwrap()
-            .formatted
-            .is_some()
-        {
+        if self.props.text_event.clone().unwrap().formatted.is_some() {
             let message = if new_user {
                 format!(
                     "<displayname>{}:</displayname> {}",

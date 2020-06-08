@@ -1,6 +1,6 @@
 use yew::{prelude::*, virtual_dom::VNode};
-use yew_router::{prelude::*, Switch};
 use yew_router::agent::RouteRequest::ChangeRoute;
+use yew_router::{prelude::*, Switch};
 
 use crate::app::matrix::{MatrixAgent, Response};
 use crate::app::views::{login::Login, main_view::MainView};

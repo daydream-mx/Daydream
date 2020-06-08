@@ -4,9 +4,9 @@ use matrix_sdk::{identifiers::RoomId, js_int::UInt, Room};
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::JsCast;
 use web_sys::HtmlElement;
-use yew::{Bridge, Bridged, Component, ComponentLink, Html};
 use yew::prelude::*;
 use yew::utils::document;
+use yew::{Bridge, Bridged, Component, ComponentLink, Html};
 use yewtil::NeqAssign;
 
 use tr::tr;

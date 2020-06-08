@@ -1,8 +1,8 @@
 use log::*;
 use matrix_sdk::Room;
 use serde::{Deserialize, Serialize};
-use yew::ComponentLink;
 use yew::prelude::*;
+use yew::ComponentLink;
 
 use tr::tr;
 

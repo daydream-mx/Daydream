@@ -39,6 +39,19 @@ rust-embed = { version = "5", features = ["debug-embed", "compression"]}
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3"
+reqwest = { version = "0.10", features = ["blocking", "json"] }
+futures-timer = { version = "3.0.2", features = ["wasm-bindgen"] }
+
+[dev-dependencies.web-sys]
+version = "0.3"
+features = [
+  'Document',
+  'Element',
+  'HtmlElement',
+  'Node',
+  'Window',
+]
+
 
 [dependencies.web-sys]
 version = "0.3"

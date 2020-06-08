@@ -1,13 +1,13 @@
-use yew::prelude::*;
-use serde::{Deserialize, Serialize};
 use log::*;
+use serde::{Deserialize, Serialize};
+use yew::prelude::*;
 
 use tr::tr;
 
 use crate::app::matrix::{MatrixAgent, Request, Response};
-use crate::errors::{MatrixError, Field};
-use wasm_bindgen::__rt::std::thread::sleep;
+use crate::errors::{Field, MatrixError};
 use wasm_bindgen::__rt::core::time::Duration;
+use wasm_bindgen::__rt::std::thread::sleep;
 
 pub struct Login {
     link: ComponentLink<Self>,
@@ -31,7 +31,7 @@ pub struct State {
     password: String,
     error: Option<String>,
     error_field: Option<Field>,
-    retries: u64
+    retries: u64,
 }
 
 impl Component for Login {
@@ -48,7 +48,7 @@ impl Component for Login {
             password: "".to_string(),
             error: None,
             error_field: None,
-            retries: 0
+            retries: 0,
         };
         Login {
             link,
@@ -93,7 +93,7 @@ impl Component for Login {
                                 self.state.error = Some(error.to_string());
                                 self.state.error_field = Some(field);
                                 true
-                            },
+                            }
                             MatrixError::LoginTimeout => {
                                 // If we had less than 10 tries try again
                                 if self.state.retries < 10 {
@@ -104,21 +104,20 @@ impl Component for Login {
                                     false
                                 } else {
                                     self.state.loading = false;
-                                    self.state.error = Some("Login failed after 10 tries.".to_string());
+                                    self.state.error =
+                                        Some("Login failed after 10 tries.".to_string());
                                     true
                                 }
-                            },
+                            }
                             MatrixError::SDKError(e) => {
                                 // TODO handle login error != timeout better
                                 error!("SDK Error: {}", e);
                                 false
                             }
-                            _ => {
-                                false
-                            }
+                            _ => false,
                         }
                     }
-                    _ => false
+                    _ => false,
                 }
             }
         }
@@ -134,18 +133,10 @@ impl Component for Login {
         let mut mxid_classes = "uk-input";
         let mut password_classes = "uk-input";
         match self.state.error_field.as_ref() {
-            Some(v) => {
-                match v {
-                    Field::Homeserver => {
-                        homeserver_classes = "uk-input uk-form-danger"
-                    },
-                    Field::MXID => {
-                        mxid_classes = "uk-input uk-form-danger"
-                    },
-                    Field::Password => {
-                        password_classes = "uk-input uk-form-danger"
-                    },
-                }
+            Some(v) => match v {
+                Field::Homeserver => homeserver_classes = "uk-input uk-form-danger",
+                Field::MXID => mxid_classes = "uk-input uk-form-danger",
+                Field::Password => password_classes = "uk-input uk-form-danger",
             },
             _ => {}
         }

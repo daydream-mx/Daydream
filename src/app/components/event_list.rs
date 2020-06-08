@@ -8,7 +8,7 @@ use matrix_sdk::{
 };
 use yew::prelude::*;
 
-use crate::app::components::events::{text::Text, notice::Notice, image::Image, video::Video};
+use crate::app::components::events::{image::Image, notice::Notice, text::Text, video::Video};
 use crate::app::matrix::{MatrixAgent, Request, Response};
 
 pub struct EventList {
@@ -209,7 +209,7 @@ impl EventList {
                     .display_name
                     .as_ref()
                     .map(ToString::to_string)
-                    .unwrap_or_else(||event.sender.to_string()),
+                    .unwrap_or_else(|| event.sender.to_string()),
             }
         };
         match &event.content {

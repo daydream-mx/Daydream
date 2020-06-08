@@ -167,7 +167,7 @@ impl Agent for MatrixAgent {
                             user_id: matrix_sdk::identifiers::UserId::try_from(
                                 stored_session.user_id.as_str(),
                             )
-                                .unwrap(),
+                            .unwrap(),
                             device_id: stored_session.device_id,
                         };
                         client.restore_login(session).await;
@@ -336,7 +336,7 @@ impl Agent for MatrixAgent {
                     for event in deserialized_events.into_iter().rev() {
                         if let RoomEvent::RoomMessage(mut event) = event {
                             if let MessageEventContent::Image(mut image_event) =
-                            event.clone().content
+                                event.clone().content
                             {
                                 if image_event.url.is_some() {
                                     let new_url = Some(get_media_download_url(
