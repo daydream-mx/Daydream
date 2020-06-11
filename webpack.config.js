@@ -62,7 +62,7 @@ module.exports = (env, argv) => {
             new HtmlWebpackPlugin({
                 template: path.resolve(__dirname, "static/index.html")
             })
-        ],
-        watch: argv.mode !== 'production'
+        ]
+        //watch: argv.mode !== 'production'
     };
 };

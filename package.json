@@ -3,7 +3,7 @@
   "scripts": {
     "test": "wasm-pack test --firefox --headless",
     "tarpaulin-test": "cargo tarpaulin -v",
-    "dev": "webpack --mode development",
+    "build:dev": "webpack --mode development",
     "build": "webpack --mode production",
     "start:dev": "webpack-dev-server --mode development",
     "start:prod": "webpack-dev-server --mode production"

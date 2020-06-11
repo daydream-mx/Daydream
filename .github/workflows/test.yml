@@ -48,7 +48,7 @@ jobs:
         run: cargo i18n || exit 0
 
       - name: Build
-        run: source emsdk-master/emsdk_env.sh && yarn run dev
+        run: source emsdk-master/emsdk_env.sh && yarn run build:dev
 
       - name: Install matrix-test-server
         run: |
