@@ -18,6 +18,12 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
+
+      - name: Setup nightly Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly
+
       - name: Setup Wasm Rust
         uses: actions-rs/toolchain@v1
         with:
@@ -52,7 +58,7 @@ jobs:
 
       - name: Install matrix-test-server
         run: |
-          cargo install --git https://github.com/MTRNord/matrixclient-testsuite
+          cargo +nightly install --git https://github.com/MTRNord/matrixclient-testsuite
           mxctest &
       - uses: nanasess/setup-chromedriver@master
       - run: |
