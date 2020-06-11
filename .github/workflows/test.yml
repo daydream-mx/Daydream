@@ -9,7 +9,7 @@ on:
       - master
 
 jobs:
-  deploy:
+  test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -48,7 +48,7 @@ jobs:
         run: cargo i18n || exit 0
 
       - name: Build
-        run: source emsdk-master/emsdk_env.sh && yarn run build
+        run: source emsdk-master/emsdk_env.sh && yarn run dev
 
       - name: Install matrix-test-server
         run: |
