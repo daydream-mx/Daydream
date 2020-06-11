@@ -183,7 +183,7 @@ impl Component for Login {
                             }
                         }
 
-                        <form class="uk-form-stacked uk-margin" onsubmit=self.link.callback(|e: FocusEvent| {e.prevent_default();  Msg::Login})>
+                        <form class="uk-form-stacked uk-margin" id="login_form" onsubmit=self.link.callback(|e: FocusEvent| {e.prevent_default();  Msg::Login})>
                             <div class="uk-margin">
                                 <label class="uk-form-label">
                                     {
@@ -198,6 +198,7 @@ impl Component for Login {
                                         class=homeserver_classes
                                         type="url"
                                         id="homeserver"
+                                        name="homeserver"
                                         placeholder=
                                         {
                                             tr!(
@@ -223,6 +224,7 @@ impl Component for Login {
                                     <input
                                         class=mxid_classes
                                         id="username"
+                                        name="username"
                                         placeholder=
                                         {
                                             tr!(
@@ -249,6 +251,7 @@ impl Component for Login {
                                         class=password_classes
                                         type="password"
                                         id="password"
+                                        name="password"
                                         placeholder=
                                         {
                                             tr!(
@@ -264,7 +267,7 @@ impl Component for Login {
 
                             <div class="uk-margin">
                                 <div class="uk-form-controls">
-                                    <button class="uk-button uk-button-primary">
+                                    <button class="uk-button uk-button-primary" id="login_button">
                                     {
                                         tr!(
                                             // The Login Button of the Login page

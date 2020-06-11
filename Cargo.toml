@@ -38,19 +38,9 @@ i18n-embed = { version = "0.4", features = ["web-sys-requester"] }
 rust-embed = { version = "5", features = ["debug-embed", "compression"]}
 
 [dev-dependencies]
-wasm-bindgen-test = "0.3"
-reqwest = { version = "0.10", features = ["blocking", "json"] }
-futures-timer = { version = "3.0.2", features = ["wasm-bindgen"] }
-
-[dev-dependencies.web-sys]
-version = "0.3"
-features = [
-  'Document',
-  'Element',
-  'HtmlElement',
-  'Node',
-  'Window',
-]
+reqwest = { version = "0.10", features = ["json"] }
+fantoccini = "0.13.1"
+tokio = { version = "0.2", features = ["full"] }
 
 
 [dependencies.web-sys]
