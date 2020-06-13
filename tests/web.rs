@@ -23,6 +23,7 @@ async fn test_browser() {
     let joinable_two = thread::spawn(move || {
         let _process = match Command::new("geckodriver")
             .args(&["--port=4444"])
+            .env("DISPLAY", ":99")
             .spawn()
         {
             Ok(process) => process,
