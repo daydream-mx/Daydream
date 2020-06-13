@@ -34,6 +34,6 @@ matrix:
         - cargo +nightly install --git https://github.com/MTRNord/matrixclient-testsuite
       script:
         - source emsdk-master/emsdk_env.sh && yarn run build:dev
-        - mxctest &
+        - ROCKET_PORT=8448 mxctest &
         - cargo test --all --locked
 
