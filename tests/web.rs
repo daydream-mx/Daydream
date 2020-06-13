@@ -41,7 +41,7 @@ async fn test_browser() {
     c.goto("http://localhost:8000").await.unwrap();
 
     let url = c.current_url().await.unwrap();
-    assert_eq!(url.as_ref(), "http://localhost:8000");
+    assert_eq!(url.as_ref(), "http://localhost:8888");
 
     println!("Select Hostname Field");
     c.find(Locator::Css("input#homeserver"))
