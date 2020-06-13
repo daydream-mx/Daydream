@@ -50,4 +50,6 @@ jobs:
           mxctest &
 
       - name: Run tests
-        run: cargo test
+        run: |
+          export DISPLAY=:99
+          cargo test
