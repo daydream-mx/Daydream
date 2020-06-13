@@ -7,7 +7,7 @@ use matrix_sdk::{
     Client, SyncSettings,
 };
 use yew::Callback;
-
+use log::*;
 use crate::app::matrix::types::{get_media_download_url, get_video_media_download_url};
 use crate::app::matrix::Response;
 
@@ -18,16 +18,19 @@ pub struct Sync {
 
 impl Sync {
     pub async fn start_sync(&self) {
+        debug!("start sync!");
         let client = self.matrix_client.clone();
         let settings = SyncSettings::default().timeout(Duration::from_secs(30));
         //.full_state(true);
 
+        debug!("start sync_forever!");
         client
             .sync_forever(settings, |response| self.on_sync_response(response))
             .await;
     }
 
     async fn on_sync_response(&self, response: SyncResponse) {
+        info!("got sync!");
         for (room_id, room) in response.rooms.join {
             // FIXME: Is there a smarter way?
             let resp = Response::SyncPing;

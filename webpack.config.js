@@ -13,7 +13,7 @@ module.exports = (env, argv) => {
             port: 8888,
             historyApiFallback: true
         },
-        entry: './bootstrap.js',
+        entry: ['./bootstrap.js'],
         output: {
             path: distPath,
             filename: "daydream.js",

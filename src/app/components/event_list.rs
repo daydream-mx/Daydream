@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-
 use log::*;
 use matrix_sdk::{
     events::room::message::{MessageEvent, MessageEventContent},
