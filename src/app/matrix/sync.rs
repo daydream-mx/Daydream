@@ -30,7 +30,7 @@ impl Sync {
     }
 
     async fn on_sync_response(&self, response: SyncResponse) {
-        info!("got sync!");
+        debug!("got sync!");
         for (room_id, room) in response.rooms.join {
             // FIXME: Is there a smarter way?
             let resp = Response::SyncPing;
