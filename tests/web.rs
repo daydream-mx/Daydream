@@ -21,8 +21,8 @@ async fn test_browser() {
         };
     });
     let joinable_two = thread::spawn(move || {
-        let _process = match Command::new("chromium-browser")
-            .args(&["--no-sandbox", "--headless", "--port=4444"])
+        let _process = match Command::new("geckodriver")
+            .args(&["--port=4444"])
             .spawn()
         {
             Ok(process) => process,

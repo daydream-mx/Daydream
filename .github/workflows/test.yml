@@ -49,8 +49,5 @@ jobs:
           cargo +nightly install --git https://github.com/MTRNord/matrixclient-testsuite
           mxctest &
 
-      - name: Run geckodriver (firefox)
-        run: geckodriver --port 4444 &
-
       - name: Run tests
         run: cargo test
