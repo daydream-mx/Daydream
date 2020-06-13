@@ -36,7 +36,7 @@ jobs:
       - uses: cypress-io/github-action@v1
         with:
           browser: firefox
-          command: npm run test
+          command: npm run test:firefox
       # after the test run completes
       # store videos and any screenshots
       # NOTE: screenshots will be generated only if E2E test failed
