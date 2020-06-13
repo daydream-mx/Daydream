@@ -20,16 +20,6 @@ async fn test_browser() {
             Err(err) => panic!("Running process error: {}", err),
         };
     });
-    let joinable_two = thread::spawn(move || {
-        let _process = match Command::new("geckodriver")
-            .args(&["--port=4444"])
-            .env("DISPLAY", ":99")
-            .spawn()
-        {
-            Ok(process) => process,
-            Err(err) => panic!("Running process error: {}", err),
-        };
-    });
 
     println!("Waiting 2min...");
     sleep(Duration::from_secs(120));
@@ -113,7 +103,6 @@ async fn test_browser() {
 
     fs::write("tests/main_view.jpg", &jpeg_data).unwrap();
     joinable.join();
-    joinable_two.join();
     Command::new("bash")
         .args(&["-c", "\"pkill -f npm\""])
         .spawn()
