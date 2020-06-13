@@ -3,8 +3,7 @@
   "scripts": {
     "test": "yarn run test:chrome",
     "test:chrome": "start-server-and-test start http-get://localhost:8888 cy:run",
-    "test:firefox": "start-server-and-test dummy http-get://localhost:8888 cy:run:firefox",
-    "dummy": "date",
+    "test:firefox": "start-server-and-test start http-get://localhost:8888 cy:run:firefox",
     "build:dev": "webpack --mode development",
     "build": "webpack --mode production",
     "start:dev": "webpack-dev-server --mode development",
