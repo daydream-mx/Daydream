@@ -195,23 +195,6 @@ impl EventList {
     fn get_event(&self, prev_event: Option<MessageEvent>, event: &MessageEvent) -> Html {
         // TODO make encryption supported
 
-        let new_user = if prev_event.is_some() {
-            prev_event.clone().unwrap().sender != event.sender
-        } else {
-            true
-        };
-
-        let sender_displayname = {
-            let room = self.props.current_room.as_ref().unwrap();
-            match room.members.get(&event.sender) {
-                None => event.sender.to_string(),
-                Some(member) => member
-                    .display_name
-                    .as_ref()
-                    .map(ToString::to_string)
-                    .unwrap_or_else(|| event.sender.to_string()),
-            }
-        };
         match &event.content {
             MessageEventContent::Text(text_event) => {
                 html! {
