@@ -22,7 +22,7 @@ module.exports = (env, argv) => {
         module: {
             rules: [
                 {
-                    test: /\.(png|jpe?g|gif)$/i,
+                    test: /\.(png|jpe?g|gif|webp)$/i,
                     loader: 'file-loader',
                     options: {
                         name: '[name].[ext]',

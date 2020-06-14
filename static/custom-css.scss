@@ -162,12 +162,18 @@ li {
   width: 100vw;
   height: 100vh;
 
-  background: url(images/login_bg.jpg) no-repeat center center fixed;
+  background: url(images/login_bg.webp) no-repeat center center fixed;
   -webkit-background-size: cover;
   -moz-background-size: cover;
   -o-background-size: cover;
   background-size: cover;
   filter: blur(5px);
+}
+
+/* Safari 7.1+ */
+
+_::-webkit-full-page-media, _:future, :root .login-page-bg {
+  background: url(images/login_bg.jpg) no-repeat center center fixed;
 }
 
 .login-bg {
@@ -289,7 +295,7 @@ input.login-input {
   font-size: 24px !important;
   color: white;
   position: absolute;
-  bottom: calc(50% - 19px*2);
+  bottom: calc(50% - 19px * 2);
   left: 16px;
 }
 
