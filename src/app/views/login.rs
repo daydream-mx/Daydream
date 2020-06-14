@@ -132,7 +132,7 @@ impl Component for Login {
 
     //noinspection RsTypeCheck
     fn view(&self) -> Html {
-        let mut homeserver_classes = "login-input";
+        let mut homeserver_classes = "login-input login-input-first";
         let mut mxid_classes = "login-input";
         let mut password_classes = "login-input";
         match self.state.error_field.as_ref() {
@@ -197,7 +197,7 @@ impl Component for Login {
                                             <input
                                                 class=homeserver_classes
                                                 type="url"
-                                                id="homeserver first"
+                                                id="homeserver"
                                                 name="homeserver"
                                                 placeholder=
                                                 {
