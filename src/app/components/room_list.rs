@@ -153,7 +153,7 @@ impl Component for RoomList {
                 <div class="container roomlist uk-flex uk-flex-column uk-width-1-6" style="height: 100%">
                     <div class="uk-padding uk-padding-remove-bottom" style="height: 50px">
                         <form class="uk-search uk-search-default">
-                            <span uk-search-icon=""></span>
+                            <span class="material-icons" id ="ma-icon">{"search"}</span>
                             <input
                                 class="uk-search-input"
                                 type="search"

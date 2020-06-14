@@ -175,7 +175,7 @@ impl Component for EventList {
                     })>
                     <div>
                         <div class="uk-inline" style="display: block !important;">
-                            <span class="uk-form-icon" uk-icon="icon: pencil"></span>
+                            <span class="material-icons" id="ma-icon">{"create"}</span>
                             <input class="uk-input" type="text"
                                 value=&self.state.message.as_ref().unwrap_or(&"".to_string())
                                 oninput=self.link.callback(|e: InputData| Msg::SetMessage(e.value))
