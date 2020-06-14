@@ -1,7 +1,7 @@
 .scrollable {
   overflow-y: auto !important;
   overflow-x: hidden !important;
-  height: 100% !important;
+  height: 100vh;
   scrollbar-width: thin;
   scrollbar-color: $scrollbar-color $scrollbar-bg-color;
 }
@@ -11,14 +11,6 @@
   overflow-anchor: none;
 }
 
-#anchor {
-  /* allow the final child to be selected as an anchor node */
-  overflow-anchor: auto;
-
-  /* anchor nodes are required to have non-zero area */
-  height: 1px;
-}
-
 .scrollable::-webkit-scrollbar {
   width: 5px;
   background: $scrollbar-bg-color;
@@ -26,6 +18,14 @@
 
 .scrollable::-webkit-scrollbar-thumb {
   background: $scrollbar-color;
+}
+
+#anchor {
+  /* allow the final child to be selected as an anchor node */
+  overflow-anchor: auto;
+
+  /* anchor nodes are required to have non-zero area */
+  height: 1px;
 }
 
 .non-scrollable-container {
@@ -42,16 +42,6 @@
 }
 
 .h-100 {
-  height: 100% !important;
-}
-
-html {
-  overflow: hidden !important;
-  height: 100% !important;
-}
-
-body {
-  overflow: hidden !important;
   height: 100% !important;
 }
 
@@ -102,9 +92,9 @@ em {
   text-indent: 30px;
 }
 
-.uk-search #ma-icon, .uk-inline #ma-icon {
+.uk-search > #ma-icon, .uk-inline > #ma-icon {
   position: absolute;
-  top: 14px;
+  top: 12px;
   left: 13px;
   font-size: 18px;
 }
@@ -140,3 +130,185 @@ li {
 
 @import "sun-loading-animation.scss";
 @import "lightbox.scss";
+@import "fonts.scss";
+
+.daydream-title {
+  font-family: 'Dancing Script', cursive;
+  position: relative;
+  margin-left: calc(50% - 381px / 2 - 0.5px);
+  margin-top: 48px;
+
+  font-style: normal;
+  font-weight: bold;
+  font-size: 96px;
+  line-height: 115px;
+  display: flex;
+  align-items: center;
+  text-align: center;
+
+  /* Daydrean Red */
+
+  color: #B80B0B;
+  /* 6dp — Elevation */
+
+  text-shadow: 0 3px 5px rgba(0, 0, 0, 0.2), 0 1px 18px rgba(0, 0, 0, 0.12), 0 6px 10px rgba(0, 0, 0, 0.14);
+}
+
+.login-page-bg {
+  transform: scale(1.03);
+  position: absolute;
+  top: calc(50% - 100vh / 2);
+  left: calc(50% - 100vw / 2);
+  width: 100vw;
+  height: 100vh;
+
+  background: url(images/login_bg.jpg) no-repeat center center fixed;
+  -webkit-background-size: cover;
+  -moz-background-size: cover;
+  -o-background-size: cover;
+  background-size: cover;
+  filter: blur(5px);
+}
+
+.login-bg {
+  position: relative;
+  width: 481px;
+  margin-left: calc(50% - 481px / 2 + 0.5px);
+  margin-top: 48px;
+  height: calc(100% - 48px);
+  box-sizing: border-box;
+
+  /* 4dp — Elevation */
+  box-shadow: 0 1px 10px rgba(0, 0, 0, 0.2), 0 4px 5px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.14);
+  border-radius: 25px;
+
+  padding: 48px 56px 48px 56px;
+}
+
+.login-bg::before {
+  content: "";
+  display: block;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  background: #1A1A1A;
+  opacity: 0.5;
+  mix-blend-mode: multiply;
+  border-radius: 25px;
+}
+
+.login-content {
+  position: relative;
+}
+
+.login-title {
+  font-family: Roboto;
+  font-style: normal;
+  font-weight: bold;
+  font-size: 48px;
+  line-height: 56px;
+  display: flex;
+  align-items: center;
+  text-align: center;
+  letter-spacing: 0.02em;
+  font-feature-settings: 'ordn' on;
+
+  color: #FFFFFF;
+
+  /* 6dp — Elevation */
+
+  text-shadow: 0 3px 5px rgba(0, 0, 0, 0.2), 0 1px 18px rgba(0, 0, 0, 0.12), 0 6px 10px rgba(0, 0, 0, 0.14);
+}
+
+.login-button {
+  border: none;
+  width: 100%;
+  height: 61px;
+  margin-top: 56px;
+
+  background: #6E992E;
+  /* 4dp — Elevation */
+
+  box-shadow: 0 1px 10px rgba(0, 0, 0, 0.2), 0 4px 5px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.14);
+  transition: all 0.3s ease 0s;
+  border-radius: 45px;
+
+  font-family: Roboto;
+  font-style: normal;
+  font-weight: normal;
+  font-size: 24px;
+  line-height: 24px;
+
+  text-align: center;
+  letter-spacing: 0.15px;
+
+  /* Background */
+
+  color: #FFFFFF;
+}
+
+.login-button:hover {
+  box-shadow: 0 15px 20px rgba(0, 0, 0, 0.4);
+  transform: translateY(-7px);
+}
+
+input.login-input#first {
+  margin-top: 0;
+}
+
+input.login-input {
+  //height: 48px;
+  width: 100%;
+  background: rgba(0, 0, 0, 0.65);
+  border-radius: 15px 15px 0 0;
+  border: none;
+  padding-left: 16px;
+  padding-top: 12px;
+  padding-bottom: 12px;
+
+  border-bottom: 2px solid #FFFFFF;
+  box-sizing: border-box;
+  margin-top: 48px;
+
+  /* Subtitle 1 / Roboto Regular */
+
+  font-family: Roboto;
+  font-style: normal;
+  font-weight: normal;
+  font-size: 16px;
+  line-height: 24px;
+
+  /* Gray 4 */
+
+  color: #BDBDBD;
+}
+
+.login-icons {
+  font-size: 24px !important;
+  color: white;
+  position: absolute;
+  bottom: calc(50% - 19px*2);
+  left: 16px;
+}
+
+.login-inline {
+  position: relative;
+}
+
+.login-inline > input {
+  padding-left: 64px;
+}
+
+html {
+  overflow: hidden;
+  height: 100vh;
+  width: 100vw;
+}
+
+body {
+  overflow: hidden;
+  height: 100vh;
+  width: 100vw;
+}

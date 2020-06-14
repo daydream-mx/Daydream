@@ -1,19 +1,5 @@
 @at-root {@import "./globals.scss";}
 
-// Custom component colors
-$scrollbar-color: var(--global-scrollbar-color);
-$scrollbar-bg-color: var(--global-scrollbar-bg-color);
-
-// UIKit Colors
-$global-background: var(--global-background);
-$global-emphasis-color: var(--global-emphasis-color);
-$global-color: var(--global-color);
-$icon-link-active-color: var(--icon-link-active-color);
-$active-menu: var(--active-menu);
-
 .uk-input, .uk-search-input {
   border: 1px solid $global-emphasis-color;
 }
-
-
-@import "../../node_modules/uikit/src/scss/variables-theme.scss";

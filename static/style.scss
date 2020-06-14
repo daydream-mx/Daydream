@@ -1,4 +1,11 @@
+@import "normalize.css";
 @import "theme_slider.scss";
+
+
+@import "./variable-ovewrites.scss";
+@import "./custom-css.scss";
+@import "../node_modules/uikit/src/scss/mixins-theme.scss";
+@import "../node_modules/uikit/src/scss/uikit-theme.scss";
 
 [data-theme="dark"] {
   @import "dark_theme/variables";
@@ -8,13 +15,7 @@
     color: white;
   }
 
-  @at-root {
-    @import "./custom-css.scss";
-  }
-  @at-root {
-    @import "../node_modules/uikit/src/scss/mixins-theme.scss";
-    @import "../node_modules/uikit/src/scss/uikit-theme.scss";
-  }
+
 }
 
 [data-theme="light"] {
@@ -24,13 +25,4 @@
     background-color: var(--global-background);
     color: black;
   }
-
-  @at-root {
-    @import "custom-css.scss";
-  }
-  @at-root {
-    @import "../node_modules/uikit/src/scss/mixins-theme.scss";
-    @import "../node_modules/uikit/src/scss/uikit-theme.scss";
-  }
 }
-

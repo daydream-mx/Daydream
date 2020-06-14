@@ -22,6 +22,13 @@ module.exports = (env, argv) => {
         module: {
             rules: [
                 {
+                    test: /\.(png|jpe?g|gif)$/i,
+                    loader: 'file-loader',
+                    options: {
+                        name: '[name].[ext]',
+                    },
+                },
+                {
                     test: /\.s[ac]ss$/i,
                     include: [path.resolve(__dirname, "static"), path.resolve(__dirname, "node_modules")],
                     use: [

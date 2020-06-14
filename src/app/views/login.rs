@@ -132,14 +132,14 @@ impl Component for Login {
 
     //noinspection RsTypeCheck
     fn view(&self) -> Html {
-        let mut homeserver_classes = "uk-input";
-        let mut mxid_classes = "uk-input";
-        let mut password_classes = "uk-input";
+        let mut homeserver_classes = "login-input";
+        let mut mxid_classes = "login-input";
+        let mut password_classes = "login-input";
         match self.state.error_field.as_ref() {
             Some(v) => match v {
-                Field::Homeserver => homeserver_classes = "uk-input uk-form-danger",
-                Field::MXID => mxid_classes = "uk-input uk-form-danger",
-                Field::Password => password_classes = "uk-input uk-form-danger",
+                Field::Homeserver => homeserver_classes = "login-input uk-form-danger",
+                Field::MXID => mxid_classes = "login-input uk-form-danger",
+                Field::Password => password_classes = "login-input uk-form-danger",
             },
             _ => {}
         }
@@ -154,135 +154,112 @@ impl Component for Login {
             }
         } else {
             html! {
-                <div class="container">
-                    <div class="uk-position-center uk-padding">
-                        <h1 class="title">
-                            {
-                                tr!(
-                                    // The Login Button of the Login page
-                                    "Login"
-                                )
-                            }
-                        </h1>
-                        {
-                            match &self.state.error {
-                                Some(v) => {
-                                    html! {
-                                        <h3 class="error">
+                <>
+                    <div class="login-page-bg"></div>
+                    <div class="scrollable" style="width:100vw; padding:2px;">
+                        <div>
+                            <p class="daydream-title">{"Daydream"}</p>
+                            <div class="login-bg">
+                                <div class="login-content">
+                                    <h1 class="login-title">
+                                        {
+                                            tr!(
+                                                // The Login Button of the Login page
+                                                "Login"
+                                            )
+                                        }
+                                    </h1>
+                                    {
+                                        match &self.state.error {
+                                            Some(v) => {
+                                                html! {
+                                                    <h3 class="error">
+                                                        {
+                                                            tr!(
+                                                                // {0} is the Error that happened on login
+                                                                // The error message of the Login page
+                                                                "Error: {0}",
+                                                                v
+                                                            )
+                                                        }
+                                                    </h3>
+                                                }
+                                            }
+                                            None => {
+                                                html!{}
+                                            }
+                                        }
+                                    }
+
+                                    <form id="login_form" onsubmit=self.link.callback(|e: FocusEvent| {e.prevent_default();  Msg::Login})>
+                                        <div class="login-inline">
+                                           <span class="material-icons login-icons" id="ma-icon" style="font-size: 28px !important;">{"http"}</span>
+                                            <input
+                                                class=homeserver_classes
+                                                type="url"
+                                                id="homeserver first"
+                                                name="homeserver"
+                                                placeholder=
+                                                {
+                                                    tr!(
+                                                        // The URL Field of the Login page
+                                                        "Homeserver URL"
+                                                    )
+                                                }
+                                                value=&self.state.homeserver
+                                                oninput=self.link.callback(|e: InputData| Msg::SetHomeserver(e.value))
+                                            />
+                                        </div>
+                                        <div class="login-inline">
+                                           <span class="material-icons login-icons" id="ma-icon">{"person"}</span>
+                                            <input
+                                                class=mxid_classes
+                                                id="username"
+                                                name="username"
+                                                placeholder=
+                                                {
+                                                    tr!(
+                                                        // The Matrix ID Field of the Login page
+                                                        "MXID"
+                                                    )
+                                                }
+                                                value=&self.state.username
+                                                oninput=self.link.callback(|e: InputData| Msg::SetUsername(e.value))
+                                            />
+                                        </div>
+                                        <div class="login-inline">
+                                           <span class="material-icons login-icons" id="ma-icon">{"vpn_key"}</span>
+                                            <input
+                                                class=password_classes
+                                                type="password"
+                                                id="password"
+                                                name="password"
+                                                placeholder=
+                                                {
+                                                    tr!(
+                                                        // The Password Field of the Login page
+                                                        "Password"
+                                                    )
+                                                }
+                                                value=&self.state.password
+                                                oninput=self.link.callback(|e: InputData| Msg::SetPassword(e.value))
+                                            />
+                                        </div>
+
+                                        <button class="login-button">
                                             {
                                                 tr!(
-                                                    // {0} is the Error that happened on login
-                                                    // The error message of the Login page
-                                                    "Error: {0}",
-                                                    v
+                                                    // The Login Button of the Login page
+                                                    "Login"
                                                 )
                                             }
-                                        </h3>
-                                    }
-                                }
-                                None => {
-                                    html!{}
-                                }
-                            }
-                        }
-
-                        <form class="uk-form-stacked uk-margin" id="login_form" onsubmit=self.link.callback(|e: FocusEvent| {e.prevent_default();  Msg::Login})>
-                            <div class="uk-margin">
-                                <label for="homeserver" class="uk-form-label">
-                                    {
-                                        tr!(
-                                            // The URL Field of the Login page
-                                            "Homeserver URL"
-                                        )
-                                    }
-                                </label>
-                                <div class="uk-form-controls">
-                                    <input
-                                        class=homeserver_classes
-                                        type="url"
-                                        id="homeserver"
-                                        name="homeserver"
-                                        placeholder=
-                                        {
-                                            tr!(
-                                                // The URL Field of the Login page
-                                                "Homeserver URL"
-                                            )
-                                        }
-                                        value=&self.state.homeserver
-                                        oninput=self.link.callback(|e: InputData| Msg::SetHomeserver(e.value))
-                                    />
+                                        </button>
+                                    </form>
                                 </div>
                             </div>
-                            <div class="uk-margin">
-                                <label for="username" class="uk-form-label">
-                                    {
-                                        tr!(
-                                            // The Matrix ID Field of the Login page
-                                            "MXID"
-                                        )
-                                    }
-                                </label>
-                                <div class="uk-form-controls">
-                                    <input
-                                        class=mxid_classes
-                                        id="username"
-                                        name="username"
-                                        placeholder=
-                                        {
-                                            tr!(
-                                                // The Matrix ID Field of the Login page
-                                                "MXID"
-                                            )
-                                        }
-                                        value=&self.state.username
-                                        oninput=self.link.callback(|e: InputData| Msg::SetUsername(e.value))
-                                    />
-                                </div>
-                            </div>
-                            <div class="uk-margin">
-                                <label for="password" class="uk-form-label">
-                                    {
-                                        tr!(
-                                            // The Password Field of the Login page
-                                            "Password"
-                                        )
-                                    }
-                                </label>
-                                <div class="uk-form-controls">
-                                    <input
-                                        class=password_classes
-                                        type="password"
-                                        id="password"
-                                        name="password"
-                                        placeholder=
-                                        {
-                                            tr!(
-                                                // The Password Field of the Login page
-                                                "Password"
-                                            )
-                                        }
-                                        value=&self.state.password
-                                        oninput=self.link.callback(|e: InputData| Msg::SetPassword(e.value))
-                                    />
-                                </div>
-                            </div>
-
-                            <div class="uk-margin">
-                                <div class="uk-form-controls">
-                                    <button class="uk-button uk-button-primary" id="login_button">
-                                    {
-                                        tr!(
-                                            // The Login Button of the Login page
-                                            "Login"
-                                        )
-                                    }
-                                    </button>
-                                </div>
-                            </div>
-                        </form>
+                        </div>
                     </div>
-                </div>
+                </>
             }
         }
     }
