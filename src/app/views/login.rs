@@ -185,7 +185,7 @@ impl Component for Login {
 
                         <form class="uk-form-stacked uk-margin" id="login_form" onsubmit=self.link.callback(|e: FocusEvent| {e.prevent_default();  Msg::Login})>
                             <div class="uk-margin">
-                                <label class="uk-form-label">
+                                <label for="homeserver" class="uk-form-label">
                                     {
                                         tr!(
                                             // The URL Field of the Login page
@@ -212,7 +212,7 @@ impl Component for Login {
                                 </div>
                             </div>
                             <div class="uk-margin">
-                                <label class="uk-form-label">
+                                <label for="username" class="uk-form-label">
                                     {
                                         tr!(
                                             // The Matrix ID Field of the Login page
@@ -238,7 +238,7 @@ impl Component for Login {
                                 </div>
                             </div>
                             <div class="uk-margin">
-                                <label class="uk-form-label">
+                                <label for="password" class="uk-form-label">
                                     {
                                         tr!(
                                             // The Password Field of the Login page
