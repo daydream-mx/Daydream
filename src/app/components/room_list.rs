@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::include_str;
 
 use matrix_sdk::{identifiers::RoomId, js_int::UInt, Room};
 use serde::{Deserialize, Serialize};
@@ -11,6 +12,7 @@ use yewtil::NeqAssign;
 
 use tr::tr;
 
+use crate::app::components::raw_html::RawHTML;
 use crate::app::matrix::{MatrixAgent, Request, Response};
 
 pub struct RoomList {
@@ -142,7 +144,7 @@ impl Component for RoomList {
             html! {
                 <div class="container">
                     <div class="uk-position-center uk-padding">
-                        <span uk-spinner="ratio: 4.5"></span>
+                        <RawHTML inner_html=include_str!("../svgs/loading_animation.svg")/>
                     </div>
                 </div>
             }

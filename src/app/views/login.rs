@@ -1,13 +1,16 @@
+use std::include_str;
+use std::thread::sleep;
+use std::time::Duration;
+
 use log::*;
 use serde::{Deserialize, Serialize};
 use yew::prelude::*;
 
 use tr::tr;
 
+use crate::app::components::raw_html::RawHTML;
 use crate::app::matrix::{MatrixAgent, Request, Response};
 use crate::errors::{Field, MatrixError};
-use wasm_bindgen::__rt::core::time::Duration;
-use wasm_bindgen::__rt::std::thread::sleep;
 
 pub struct Login {
     link: ComponentLink<Self>,
@@ -145,7 +148,7 @@ impl Component for Login {
             html! {
                 <div class="container">
                     <div class="uk-position-center uk-padding">
-                        <span uk-spinner="ratio: 4.5"></span>
+                        <RawHTML inner_html=include_str!("../svgs/loading_animation.svg")/>
                     </div>
                 </div>
             }

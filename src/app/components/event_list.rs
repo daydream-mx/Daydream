@@ -1,10 +1,10 @@
-use std::collections::HashMap;
 use log::*;
 use matrix_sdk::{
     events::room::message::{MessageEvent, MessageEventContent},
     identifiers::RoomId,
     Room,
 };
+use std::collections::HashMap;
 use yew::prelude::*;
 
 use crate::app::components::events::{image::Image, notice::Notice, text::Text, video::Video};

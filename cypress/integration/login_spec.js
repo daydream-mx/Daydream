@@ -17,9 +17,9 @@ describe('LoginPage', () => {
     it('Does login', () => {
         login()
         // First show spinner
-        cy.get('span[uk-spinner]').should('be.visible');
+        cy.get('svg#loading').should('be.visible');
         // Now it should be gone and instead we see the roomlist
-        cy.get('span[uk-spinner]').should('not.be.visible');
+        cy.get('svg#loading').should('not.be.visible');
         cy.get('ul.scrollable').should('be.visible');
     })
 })
