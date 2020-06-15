@@ -77,7 +77,18 @@ em {
 }
 
 .error {
-  color: red;
+  color: #992E2E;
+  font-family: Roboto;
+  font-style: normal;
+  font-weight: 500;
+  font-size: 16px;
+  line-height: 56px;
+  display: flex;
+  align-items: center;
+  text-align: center;
+  letter-spacing: 0.02em;
+  font-feature-settings: 'ordn' on;
+  margin: 0;
 }
 
 .roomlist {
@@ -260,8 +271,12 @@ _::-webkit-full-page-media, _:future, :root .login-page-bg {
   transform: translateY(-7px);
 }
 
-input.login-input-first {
-  margin-top: 0;
+.login-input-first > input.login-input {
+  margin-top: 0 !important;
+}
+
+.login-input-first > .login-icons {
+  bottom: calc(50% - 6px * 2);
 }
 
 input.login-input {

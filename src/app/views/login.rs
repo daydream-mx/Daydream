@@ -132,7 +132,7 @@ impl Component for Login {
 
     //noinspection RsTypeCheck
     fn view(&self) -> Html {
-        let mut homeserver_classes = "login-input login-input-first";
+        let mut homeserver_classes = "login-input";
         let mut mxid_classes = "login-input";
         let mut password_classes = "login-input";
         match self.state.error_field.as_ref() {
@@ -173,7 +173,7 @@ impl Component for Login {
                                         match &self.state.error {
                                             Some(v) => {
                                                 html! {
-                                                    <h3 class="error">
+                                                    <h4 class="error">
                                                         {
                                                             tr!(
                                                                 // {0} is the Error that happened on login
@@ -182,7 +182,7 @@ impl Component for Login {
                                                                 v
                                                             )
                                                         }
-                                                    </h3>
+                                                    </h4>
                                                 }
                                             }
                                             None => {
@@ -192,7 +192,7 @@ impl Component for Login {
                                     }
 
                                     <form id="login_form" onsubmit=self.link.callback(|e: FocusEvent| {e.prevent_default();  Msg::Login})>
-                                        <div class="login-inline">
+                                        <div class="login-inline login-input-first">
                                            <span class="material-icons login-icons" id="ma-icon" style="font-size: 28px !important;">{"http"}</span>
                                             <input
                                                 pattern="^https:\\/\\/.*$"
