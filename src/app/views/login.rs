@@ -195,6 +195,8 @@ impl Component for Login {
                                         <div class="login-inline">
                                            <span class="material-icons login-icons" id="ma-icon" style="font-size: 28px !important;">{"http"}</span>
                                             <input
+                                                pattern="^https:\\/\\/.*$"
+                                                required=true
                                                 class=homeserver_classes
                                                 type="url"
                                                 id="homeserver"
@@ -213,6 +215,8 @@ impl Component for Login {
                                         <div class="login-inline">
                                            <span class="material-icons login-icons" id="ma-icon">{"person"}</span>
                                             <input
+                                                required=true
+                                                pattern="^(@[\x21-\x39\x3B-\x7E]+:.*|[\x21-\x39\x3B-\x7E]+)$"
                                                 class=mxid_classes
                                                 id="username"
                                                 name="username"
@@ -230,6 +234,7 @@ impl Component for Login {
                                         <div class="login-inline">
                                            <span class="material-icons login-icons" id="ma-icon">{"vpn_key"}</span>
                                             <input
+                                                required=true
                                                 class=password_classes
                                                 type="password"
                                                 id="password"

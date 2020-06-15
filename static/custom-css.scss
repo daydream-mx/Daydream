@@ -291,6 +291,15 @@ input.login-input {
   color: #BDBDBD;
 }
 
+input:placeholder-shown {
+  border: none;
+  border-bottom: 2px solid #FFFFFF;
+}
+
+input.login-input:invalid {
+  border-bottom: 2px solid red;
+}
+
 .login-icons {
   font-size: 24px !important;
   color: white;
