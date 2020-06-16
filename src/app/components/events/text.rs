@@ -1,4 +1,5 @@
 use crate::app::components::events::{get_sender_displayname, is_new_user};
+use linkify::LinkFinder;
 use matrix_sdk::{
     events::room::message::{MessageEvent, TextMessageEventContent},
     Room,
@@ -59,6 +60,22 @@ impl Component for Text {
         } else {
             "".to_string()
         };
+
+        let mut pure_content = self.props.text_event.clone().unwrap().body.clone();
+        let finder = LinkFinder::new();
+        let pure_content_clone = pure_content.clone();
+        let links: Vec<_> = finder.links(&pure_content_clone).collect();
+
+        let content = if !links.is_empty() {
+            for link in links {
+                let html_link = format!("<a href={}>{}</a>", link.as_str(), link.as_str());
+                pure_content.replace_range(link.start()..link.end(), &html_link);
+            }
+            pure_content.clone()
+        } else {
+            pure_content
+        };
+
         if self.props.text_event.clone().unwrap().formatted.is_some() {
             let message = if new_user {
                 format!(
@@ -94,13 +111,37 @@ impl Component for Text {
             let node = Node::from(js_text_event);
             VNode::VRef(node)
         } else if new_user {
-            html! {
-               <p><displayname>{sender_displayname}{": "}</displayname>{self.props.text_event.clone().unwrap().body.clone()}</p>
-            }
+            let full_html = format!(
+                "<p><displayname>{}: </displayname>{}</p>",
+                sender_displayname,
+                content.clone()
+            );
+            let js_text_event = {
+                let div = web_sys::window()
+                    .unwrap()
+                    .document()
+                    .unwrap()
+                    .create_element("p")
+                    .unwrap();
+                div.set_inner_html(full_html.as_str());
+                div
+            };
+            let node = Node::from(js_text_event);
+            VNode::VRef(node)
         } else {
-            html! {
-               <p>{self.props.text_event.clone().unwrap().body.clone()}</p>
-            }
+            let full_html = format!("<p>{}</p>", content.clone());
+            let js_text_event = {
+                let div = web_sys::window()
+                    .unwrap()
+                    .document()
+                    .unwrap()
+                    .create_element("p")
+                    .unwrap();
+                div.set_inner_html(full_html.as_str());
+                div
+            };
+            let node = Node::from(js_text_event);
+            VNode::VRef(node)
         }
     }
 }

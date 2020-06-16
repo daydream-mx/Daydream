@@ -60,18 +60,26 @@ impl Sync {
                 let client = self.matrix_client.clone();
                 let local_room_id = room_id.clone();
                 spawn_local(async move {
-                    let room: Arc<RwLock<Room>> = client.clone()
-                        .get_joined_room(&local_room_id.clone())
-                        .await
-                        .unwrap();
-                    let read_clone = room.read().await;
-                    let clean_room = (*read_clone).clone();
-                    let avatar_url =
-                        get_sender_avatar(homeserver_url, clean_room.clone(), cloned_event.clone());
-                    let displayname = get_sender_displayname(clean_room.clone(), cloned_event.clone());
-                    let notification =
-                        Notifications::new(avatar_url, displayname, text_event.body.clone());
-                    notification.show();
+                    if Notifications::browser_support() {
+                        let room: Arc<RwLock<Room>> = client
+                            .clone()
+                            .get_joined_room(&local_room_id.clone())
+                            .await
+                            .unwrap();
+                        let read_clone = room.read().await;
+                        let clean_room = (*read_clone).clone();
+                        let avatar_url = get_sender_avatar(
+                            homeserver_url,
+                            clean_room.clone(),
+                            cloned_event.clone(),
+                        );
+                        let displayname =
+                            get_sender_displayname(clean_room.clone(), cloned_event.clone());
+
+                        let notification =
+                            Notifications::new(avatar_url, displayname, text_event.body.clone());
+                        notification.show();
+                    }
                 });
             }
             if let MessageEventContent::Image(mut image_event) = event.clone().content {

@@ -1,8 +1,11 @@
+use linkify::LinkFinder;
 use matrix_sdk::{
     events::room::message::{MessageEvent, NoticeMessageEventContent},
     Room,
 };
+use web_sys::Node;
 use yew::prelude::*;
+use yew::virtual_dom::VNode;
 
 use crate::app::components::events::{get_sender_displayname, is_new_user};
 
@@ -59,28 +62,53 @@ impl Component for Notice {
             "".to_string()
         };
 
-        if new_user {
-            html! {
-                <p style="opacity: .6;"><displayname>{sender_displayname}{": "}</displayname>
-                    {
-                        self.props
-                            .notice_event
-                            .clone()
-                            .unwrap().body.clone()
-                    }
-                </p>
+        let mut pure_content = self.props.notice_event.clone().unwrap().body.clone();
+        let finder = LinkFinder::new();
+        let pure_content_clone = pure_content.clone();
+        let links: Vec<_> = finder.links(&pure_content_clone).collect();
+
+        let content = if !links.is_empty() {
+            for link in links {
+                let html_link = format!("<a href={}>{}</a>", link.as_str(), link.as_str());
+                pure_content.replace_range(link.start()..link.end(), &html_link);
             }
+            pure_content.clone()
         } else {
-            html! {
-                <p style="opacity: .6;">
-                    {
-                        self.props
-                            .notice_event
-                            .clone()
-                            .unwrap().body.clone()
-                    }
-                </p>
-            }
+            pure_content
+        };
+
+        if new_user {
+            let full_html = format!(
+                "<p style=\"opacity: .6;\"><displayname>{}: </displayname>{}</p>",
+                sender_displayname,
+                content.clone()
+            );
+            let js_text_event = {
+                let div = web_sys::window()
+                    .unwrap()
+                    .document()
+                    .unwrap()
+                    .create_element("p")
+                    .unwrap();
+                div.set_inner_html(full_html.as_str());
+                div
+            };
+            let node = Node::from(js_text_event);
+            VNode::VRef(node)
+        } else {
+            let full_html = format!("<p style=\"opacity: .6;\">{}</p>", content.clone());
+            let js_text_event = {
+                let div = web_sys::window()
+                    .unwrap()
+                    .document()
+                    .unwrap()
+                    .create_element("p")
+                    .unwrap();
+                div.set_inner_html(full_html.as_str());
+                div
+            };
+            let node = Node::from(js_text_event);
+            VNode::VRef(node)
         }
     }
 }

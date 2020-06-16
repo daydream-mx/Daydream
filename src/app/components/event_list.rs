@@ -7,11 +7,8 @@ use matrix_sdk::{
 use std::collections::HashMap;
 use yew::prelude::*;
 
-use crate::app::components::events::{
-    get_sender_avatar, image::Image, notice::Notice, text::Text, video::Video,
-};
+use crate::app::components::events::{image::Image, notice::Notice, text::Text, video::Video};
 use crate::app::matrix::{MatrixAgent, Request, Response};
-use crate::utils::notifications::Notifications;
 
 pub struct EventList {
     link: ComponentLink<Self>,

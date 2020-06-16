@@ -1,10 +1,9 @@
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
-use web_sys::{window, Notification, NotificationOptions, NotificationPermission, Window};
+use web_sys::{window, Notification, NotificationOptions, NotificationPermission};
 
 #[derive(Clone)]
 pub(crate) struct Notifications {
-    window: Option<Window>,
     avatar: Option<String>,
     displayname: String,
     content: String,
@@ -13,30 +12,19 @@ pub(crate) struct Notifications {
 impl Notifications {
     pub fn new(avatar: Option<String>, displayname: String, content: String) -> Self {
         Notifications {
-            window: None,
             avatar,
             displayname,
             content,
         }
     }
-    fn browser_support(&mut self) -> bool {
-        return match &self.window {
-            None => match window() {
-                Some(v) => {
-                    self.window = window();
-                    match v.get("Notification") {
-                        Some(_) => true,
-                        _ => false,
-                    }
-                }
-
-                _ => false,
-            },
+    pub fn browser_support() -> bool {
+        match window() {
             Some(v) => match v.get("Notification") {
                 Some(_) => true,
                 _ => false,
             },
-        };
+            _ => false,
+        }
     }
 
     fn notifications_allowed(&self) -> bool {
@@ -64,7 +52,7 @@ impl Notifications {
 
     fn show_actual(&self) {
         let mut options = NotificationOptions::new() as NotificationOptions;
-        let mut options = options.body(&self.content).tag("daydream") as &mut NotificationOptions;
+        let options = options.body(&self.content).tag("daydream") as &mut NotificationOptions;
         let options = if self.avatar.is_some() {
             options.icon(self.avatar.as_ref().unwrap())
         } else {

@@ -1,4 +1,3 @@
-use matrix_sdk::Client;
 use url::Url;
 
 pub fn get_media_download_url(homeserver: &Url, mxc_url: String) -> String {
