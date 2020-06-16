@@ -24,20 +24,10 @@ pub enum Msg {
     NewMessage(Response),
 }
 pub struct App {
-    matrix_agent: Box<dyn Bridge<MatrixAgent>>,
-    link: ComponentLink<Self>,
     route: Option<Route<()>>,
     route_agent: Box<dyn Bridge<RouteAgent<()>>>,
 }
 
-impl App {
-    fn change_route(&self, app_route: AppRoute) -> Callback<MouseEvent> {
-        self.link.callback(move |_| {
-            let route = app_route.clone();
-            Msg::ChangeRoute(route)
-        })
-    }
-}
 impl Component for App {
     type Message = Msg;
     type Properties = ();
@@ -47,10 +37,8 @@ impl Component for App {
         let mut matrix_agent = MatrixAgent::bridge(link.callback(Msg::NewMessage));
         matrix_agent.send(matrix::Request::GetLoggedIn);
         App {
-            matrix_agent,
             route_agent,
-            route: None,
-            link,
+            route: None
         }
     }
 

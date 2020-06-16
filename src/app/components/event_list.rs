@@ -14,7 +14,6 @@ use crate::app::components::{
 use crate::app::matrix::{MatrixAgent, Request, Response};
 
 pub struct EventList {
-    link: ComponentLink<Self>,
     on_submit: Callback<String>,
     state: State,
     matrix_agent: Box<dyn Bridge<MatrixAgent>>,
@@ -62,7 +61,6 @@ impl Component for EventList {
         EventList {
             on_submit: link.callback(Msg::SendMessage),
             props,
-            link,
             matrix_agent,
             state,
         }
@@ -125,7 +123,7 @@ impl Component for EventList {
 
     fn change(&mut self, props: Self::Properties) -> bool {
         if self.props != props {
-            if props.clone().current_room.is_some() {
+            if props.current_room.is_some() {
                 let room_id = props.clone().current_room.unwrap().room_id;
                 if !self.state.events.contains_key(&room_id) {
                     self.matrix_agent

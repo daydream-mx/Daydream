@@ -74,7 +74,7 @@ impl Sync {
                             cloned_event.clone(),
                         );
                         let displayname =
-                            get_sender_displayname(clean_room.clone(), cloned_event.clone());
+                            get_sender_displayname(clean_room, cloned_event.clone());
 
                         let notification =
                             Notifications::new(avatar_url, displayname, text_event.body.clone());

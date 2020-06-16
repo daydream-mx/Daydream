@@ -67,32 +67,31 @@ impl Component for MainView {
                     </div>
                 </div>
             }
+        } else if self.state.current_room.as_ref().unwrap().is_encrypted() {
+            html! {
+                <div class="uk-flex auto-scrollable-container" style="height: 100%">
+                    <RoomList change_room_callback=self.link.callback(Msg::ChangeRoom)/>
+                    <div class="container uk-flex uk-flex-column uk-width-5-6 uk-padding uk-padding-remove-bottom" style="height: 100%">
+                        <h1>{ self.state.current_room.as_ref().unwrap().display_name() }</h1>
+                        <h4>
+                            {
+                                tr!(
+                                    // A warning for encrypted rooms
+                                    "Daydream currently does not support encryption."
+                                )
+                            }
+                        </h4>
+                    </div>
+                </div>
+            }
         } else {
-            if self.state.current_room.as_ref().unwrap().is_encrypted() {
-                html! {
-                    <div class="uk-flex auto-scrollable-container" style="height: 100%">
-                        <RoomList change_room_callback=self.link.callback(Msg::ChangeRoom)/>
-                        <div class="container uk-flex uk-flex-column uk-width-5-6 uk-padding uk-padding-remove-bottom" style="height: 100%">
-                            <h1>{ self.state.current_room.as_ref().unwrap().display_name() }</h1>
-                            <h4>
-                                {
-                                    tr!(
-                                        // A warning for encrypted rooms
-                                        "Daydream currently does not support encryption."
-                                    )
-                                }
-                            </h4>
-                        </div>
-                    </div>
-                }
-            } else {
-                html! {
-                    <div class="uk-flex auto-scrollable-container" style="height: 100%">
-                        <RoomList change_room_callback=self.link.callback(Msg::ChangeRoom)/>
-                        <EventList current_room=self.state.current_room.as_ref().unwrap() />
-                    </div>
-                }
+            html! {
+                <div class="uk-flex auto-scrollable-container" style="height: 100%">
+                    <RoomList change_room_callback=self.link.callback(Msg::ChangeRoom)/>
+                    <EventList current_room=self.state.current_room.as_ref().unwrap() />
+                </div>
             }
         }
     }
 }
+

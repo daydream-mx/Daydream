@@ -59,7 +59,7 @@ impl Component for Video {
             "".to_string()
         };
 
-        let caption = format!(
+        let _caption = format!(
             "{}: {}",
             sender_displayname,
             self.props.video_event.as_ref().unwrap().body

@@ -135,13 +135,12 @@ impl Component for Login {
         let mut homeserver_classes = "login-input";
         let mut mxid_classes = "login-input";
         let mut password_classes = "login-input";
-        match self.state.error_field.as_ref() {
-            Some(v) => match v {
+        if let Some(v) = self.state.error_field.as_ref() {
+            match v {
                 Field::Homeserver => homeserver_classes = "login-input uk-form-danger",
                 Field::MXID => mxid_classes = "login-input uk-form-danger",
                 Field::Password => password_classes = "login-input uk-form-danger",
-            },
-            _ => {}
+            }
         }
 
         if self.state.loading {

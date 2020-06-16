@@ -62,7 +62,7 @@ impl Component for Notice {
             "".to_string()
         };
 
-        let mut pure_content = self.props.notice_event.clone().unwrap().body.clone();
+        let mut pure_content = self.props.notice_event.clone().unwrap().body;
         let finder = LinkFinder::new();
         let pure_content_clone = pure_content.clone();
         let links: Vec<_> = finder.links(&pure_content_clone).collect();
@@ -72,7 +72,7 @@ impl Component for Notice {
                 let html_link = format!("<a href={}>{}</a>", link.as_str(), link.as_str());
                 pure_content.replace_range(link.start()..link.end(), &html_link);
             }
-            pure_content.clone()
+            pure_content
         } else {
             pure_content
         };
@@ -81,7 +81,7 @@ impl Component for Notice {
             let full_html = format!(
                 "<p style=\"opacity: .6;\"><displayname>{}: </displayname>{}</p>",
                 sender_displayname,
-                content.clone()
+                content
             );
             let js_text_event = {
                 let div = web_sys::window()
@@ -96,7 +96,7 @@ impl Component for Notice {
             let node = Node::from(js_text_event);
             VNode::VRef(node)
         } else {
-            let full_html = format!("<p style=\"opacity: .6;\">{}</p>", content.clone());
+            let full_html = format!("<p style=\"opacity: .6;\">{}</p>", content);
             let js_text_event = {
                 let div = web_sys::window()
                     .unwrap()
