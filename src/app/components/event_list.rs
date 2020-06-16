@@ -7,11 +7,15 @@ use matrix_sdk::{
 use std::collections::HashMap;
 use yew::prelude::*;
 
-use crate::app::components::events::{image::Image, notice::Notice, text::Text, video::Video};
+use crate::app::components::{
+    events::{image::Image, notice::Notice, text::Text, video::Video},
+    input::Input,
+};
 use crate::app::matrix::{MatrixAgent, Request, Response};
 
 pub struct EventList {
     link: ComponentLink<Self>,
+    on_submit: Callback<String>,
     state: State,
     matrix_agent: Box<dyn Bridge<MatrixAgent>>,
     props: Props,
@@ -21,14 +25,12 @@ pub struct EventList {
 pub struct State {
     // TODO handle all events
     pub events: HashMap<RoomId, Vec<MessageEvent>>,
-    pub message: Option<String>,
 }
 
 #[allow(clippy::large_enum_variant)]
 pub enum Msg {
     NewMessage(Response),
-    SetMessage(String),
-    SendMessage,
+    SendMessage(String),
     Nope,
 }
 
@@ -48,7 +50,6 @@ impl Component for EventList {
 
         let state = State {
             events: Default::default(),
-            message: None,
         };
 
         if props.current_room.is_some() {
@@ -59,6 +60,7 @@ impl Component for EventList {
         }
 
         EventList {
+            on_submit: link.callback(Msg::SendMessage),
             props,
             link,
             matrix_agent,
@@ -109,21 +111,13 @@ impl Component for EventList {
                     _ => false,
                 }
             }
-            Msg::SetMessage(message) => {
-                self.state.message = Some(message);
-                true
-            }
-            Msg::SendMessage => {
+            Msg::SendMessage(message) => {
                 info!("Sending Message");
-                if self.state.message.is_some() {
-                    self.matrix_agent.send(Request::SendMessage((
-                        self.props.current_room.clone().unwrap().room_id,
-                        self.state.message.clone().unwrap(),
-                    )));
-                    self.state.message = None;
-                }
-
-                true
+                self.matrix_agent.send(Request::SendMessage((
+                    self.props.current_room.clone().unwrap().room_id,
+                    message,
+                )));
+                false
             }
             Msg::Nope => false,
         }
@@ -168,21 +162,9 @@ impl Component for EventList {
                     }
                     <div id="anchor"></div>
                 </div>
-                <form class="uk-margin"
-                    onsubmit=self.link.callback(|e: FocusEvent| {e.prevent_default();  Msg::Nope})
-                    onkeypress=self.link.callback(|e: KeyboardEvent| {
-                        if e.key() == "Enter" { Msg::SendMessage } else { Msg::Nope }
-                    })>
-                    <div>
-                        <div class="uk-inline" style="display: block !important;">
-                            <span class="material-icons" id="ma-icon">{"create"}</span>
-                            <input class="uk-input" type="text"
-                                value=&self.state.message.as_ref().unwrap_or(&"".to_string())
-                                oninput=self.link.callback(|e: InputData| Msg::SetMessage(e.value))
-                            />
-                        </div>
-                    </div>
-                </form>
+                <div class="uk-margin">
+                    <Input on_submit=&self.on_submit/>
+                </div>
             </div>
         };
     }
