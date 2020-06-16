@@ -3,8 +3,8 @@ use matrix_sdk::{
     events::room::message::{ImageMessageEventContent, MessageEvent},
     Room,
 };
-use yew::prelude::*;
 use rand::random;
+use yew::prelude::*;
 
 pub(crate) struct Image {
     props: Props,

@@ -48,7 +48,11 @@ version = "0.3"
 features = [
   'KeyboardEvent',
   'HtmlElement',
-  'DomStringMap'
+  'DomStringMap',
+  'Notification',
+  'NotificationPermission',
+  'NotificationOptions',
+  'Window'
 ]
 
 [patch.crates-io]

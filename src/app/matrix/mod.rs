@@ -334,13 +334,14 @@ impl Agent for MatrixAgent {
                         oks.into_iter().map(Result::unwrap).collect();
 
                     for event in deserialized_events.into_iter().rev() {
+                        // TODO deduplicate betweeen this and sync
                         if let RoomEvent::RoomMessage(mut event) = event {
                             if let MessageEventContent::Image(mut image_event) =
                                 event.clone().content
                             {
                                 if image_event.url.is_some() {
                                     let new_url = Some(get_media_download_url(
-                                        agent.matrix_client.clone().unwrap(),
+                                        agent.matrix_client.clone().unwrap().homeserver(),
                                         image_event.url.unwrap(),
                                     ));
                                     image_event.url = new_url;
@@ -349,7 +350,7 @@ impl Agent for MatrixAgent {
                                     let mut info = image_event.info.unwrap();
                                     if info.thumbnail_url.is_some() {
                                         let new_url = Some(get_media_download_url(
-                                            agent.matrix_client.clone().unwrap(),
+                                            agent.matrix_client.clone().unwrap().homeserver(),
                                             info.thumbnail_url.unwrap(),
                                         ));
                                         info.thumbnail_url = new_url;
@@ -361,7 +362,7 @@ impl Agent for MatrixAgent {
                             if let MessageEventContent::Video(mut video_event) = event.content {
                                 if video_event.url.is_some() {
                                     let new_url = Some(get_video_media_download_url(
-                                        agent.matrix_client.clone().unwrap(),
+                                        agent.matrix_client.clone().unwrap().homeserver(),
                                         video_event.url.unwrap(),
                                     ));
                                     video_event.url = new_url;
@@ -370,7 +371,7 @@ impl Agent for MatrixAgent {
                                     let mut info = video_event.info.unwrap();
                                     if info.thumbnail_url.is_some() {
                                         let new_url = Some(get_media_download_url(
-                                            agent.matrix_client.clone().unwrap(),
+                                            agent.matrix_client.clone().unwrap().homeserver(),
                                             info.thumbnail_url.unwrap(),
                                         ));
                                         info.thumbnail_url = new_url;

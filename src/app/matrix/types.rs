@@ -1,6 +1,7 @@
 use matrix_sdk::Client;
+use url::Url;
 
-pub fn get_media_download_url(client: Client, mxc_url: String) -> String {
+pub fn get_media_download_url(homeserver: &Url, mxc_url: String) -> String {
     let url_parts_raw = mxc_url.replace("mxc://", "");
     let url_parts: Vec<&str> = url_parts_raw.split('/').collect();
     let server_name = (*url_parts.first().unwrap()).to_string();
@@ -9,12 +10,12 @@ pub fn get_media_download_url(client: Client, mxc_url: String) -> String {
         "_matrix/media/r0/download/{}/{}/fix.jpg",
         server_name, media_id,
     );
-    let mut new_url = client.homeserver().clone();
+    let mut new_url = homeserver.clone();
     new_url.set_path(new_path.as_str());
     new_url.to_string()
 }
 
-pub fn get_video_media_download_url(client: Client, mxc_url: String) -> String {
+pub fn get_video_media_download_url(homeserver: &Url, mxc_url: String) -> String {
     let url_parts_raw = mxc_url.replace("mxc://", "");
     let url_parts: Vec<&str> = url_parts_raw.split('/').collect();
     let server_name = (*url_parts.first().unwrap()).to_string();
@@ -23,7 +24,7 @@ pub fn get_video_media_download_url(client: Client, mxc_url: String) -> String {
         "_matrix/media/r0/download/{}/{}/fix.mp4",
         server_name, media_id,
     );
-    let mut new_url = client.homeserver().clone();
+    let mut new_url = homeserver.clone();
     new_url.set_path(new_path.as_str());
     new_url.to_string()
 }

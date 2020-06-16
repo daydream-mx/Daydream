@@ -10,6 +10,7 @@ use wasm_bindgen::prelude::*;
 pub mod app;
 mod constants;
 mod errors;
+pub mod utils;
 
 #[derive(RustEmbed, I18nEmbed)]
 #[folder = "i18n/mo"] // path to the compiled localization resources

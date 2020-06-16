@@ -3,8 +3,8 @@ use matrix_sdk::{
     events::room::message::{MessageEvent, VideoMessageEventContent},
     Room,
 };
-use yew::prelude::*;
 use rand::random;
+use yew::prelude::*;
 
 pub(crate) struct Video {
     props: Props,
