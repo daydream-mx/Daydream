@@ -71,8 +71,8 @@ impl Component for MainView {
             html! {
                 <div class="uk-flex auto-scrollable-container" style="height: 100%">
                     <RoomList change_room_callback=self.link.callback(Msg::ChangeRoom)/>
-                    <div class="container uk-flex uk-flex-column uk-width-5-6 uk-padding uk-padding-remove-bottom" style="height: 100%">
-                        <div class="room-title"><h1>{ self.state.current_room.as_ref().unwrap().display_name() }</h1></div>
+                    <div class="event-list container uk-flex uk-flex-column uk-width-5-6">
+                        <div class="room-title"><div><h1>{ self.state.current_room.as_ref().unwrap().display_name() }</h1></div></div>
                         <h4>
                             {
                                 tr!(
