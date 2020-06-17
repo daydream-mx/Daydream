@@ -27,7 +27,7 @@ yew-router = { git = "https://github.com/yewstack/yew" }
 yewtil = { git = "https://github.com/yewstack/yew" }
 
 # Matrix
-matrix-sdk = { version = "0.1.0", git = "https://github.com/MTRNord/matrix-rust-sdk", branch = "expose-send-rebased", default-features = false, rev = "9a67e62002398974c5b73349081ad00686f57b7f"}# features = ["encryption"]}
+matrix-sdk = { version = "0.1.0", git = "https://github.com/MTRNord/matrix-rust-sdk", branch = "daydream", default-features = false}# features = ["encryption"]}
 url = "2.1.1"
 thiserror = "1.0"
 futures-locks = { git = "https://github.com/asomers/futures-locks", default-features = false }

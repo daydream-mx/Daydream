@@ -140,7 +140,7 @@ impl Component for EventList {
     fn view(&self) -> Html {
         return html! {
             <div class="container uk-flex uk-flex-column uk-width-5-6 uk-padding uk-padding-remove-bottom" style="height: 100%">
-                <h1>{ self.props.current_room.as_ref().unwrap().display_name() }</h1>
+                <div class="room-title"><h1>{ self.props.current_room.as_ref().unwrap().display_name() }</h1></div>
                 <div class="scrollable" style="height: 100%">
                     {
                         if self.state.events.contains_key(&self.props.current_room.as_ref().unwrap().room_id) {

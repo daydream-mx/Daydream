@@ -66,7 +66,6 @@ pub enum Request {
     SetPassword(String),
     Login,
     GetLoggedIn,
-    GetUserdata,
     GetOldMessages((RoomId, Option<String>)),
     StartSync,
     GetJoinedRooms,
@@ -283,9 +282,6 @@ impl Agent for MatrixAgent {
                         agent.link.respond(*sub, resp);
                     }
                 });
-            }
-            Request::GetUserdata => {
-                // Noop
             }
             Request::GetOldMessages((room_id, from)) => {
                 let agent = self.clone();
