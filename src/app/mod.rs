@@ -4,6 +4,7 @@ use yew_router::{prelude::*, Switch};
 
 use crate::app::matrix::{MatrixAgent, Response};
 use crate::app::views::{login::Login, main_view::MainView};
+use log::*;
 
 pub mod components;
 mod matrix;
@@ -23,7 +24,10 @@ pub enum Msg {
     ChangeRoute(AppRoute),
     NewMessage(Response),
 }
+
 pub struct App {
+    // While unused this needs to stay :(
+    matrix_agent: Box<dyn Bridge<MatrixAgent>>,
     route: Option<Route<()>>,
     route_agent: Box<dyn Bridge<RouteAgent<()>>>,
 }
@@ -37,8 +41,9 @@ impl Component for App {
         let mut matrix_agent = MatrixAgent::bridge(link.callback(Msg::NewMessage));
         matrix_agent.send(matrix::Request::GetLoggedIn);
         App {
+            matrix_agent,
             route_agent,
-            route: None
+            route: None,
         }
     }
 
@@ -50,6 +55,7 @@ impl Component for App {
             Msg::ChangeRoute(route) => {
                 let route: Route = route.into();
                 self.route = Some(route.clone());
+                info!("{:?}", self.route);
                 self.route_agent.send(ChangeRoute(route));
             }
             Msg::NewMessage(response) => {

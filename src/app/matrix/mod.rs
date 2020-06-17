@@ -1,3 +1,7 @@
+use std::collections::{HashMap, HashSet};
+use std::convert::TryFrom;
+use std::sync::{Arc, Mutex};
+
 use log::*;
 use matrix_sdk::{
     api::r0::{filter::RoomEventFilter, message::get_message_events::Direction},
@@ -14,10 +18,8 @@ use matrix_sdk::{
     locks::RwLock,
     Client, ClientConfig, MessagesRequestBuilder, Room, Session,
 };
+use pulldown_cmark::{html, Options, Parser};
 use serde::{Deserialize, Serialize};
-use std::collections::{HashMap, HashSet};
-use std::convert::TryFrom;
-use std::sync::{Arc, Mutex};
 use url::Url;
 use wasm_bindgen_futures::spawn_local;
 use yew::format::Json;
@@ -27,12 +29,11 @@ use yew::worker::*;
 use crate::app::matrix::types::{get_media_download_url, get_video_media_download_url};
 use crate::constants::AUTH_KEY;
 use crate::errors::{Field, MatrixError};
-use pulldown_cmark::{html, Options, Parser};
 
 mod sync;
 pub mod types;
 
-#[derive(Serialize, Deserialize, Default, Clone, Debug)]
+#[derive(Default, Clone, Debug)]
 pub struct MatrixClient {
     pub(crate) homeserver: Option<String>,
     pub(crate) username: Option<String>,
@@ -58,7 +59,7 @@ pub struct MatrixAgent {
     session: Option<SessionStore>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Debug)]
 pub enum Request {
     SetHomeserver(String),
     SetUsername(String),
@@ -475,6 +476,7 @@ impl MatrixAgent {
             let client = Client::new_with_config(homeserver_url, client_config).unwrap();
             self.matrix_client = Some(client.clone());
 
+            info!("got client");
             // Also directly restore Login data
             let stored_session = self.session.clone().unwrap();
             let session = Session {
@@ -484,8 +486,11 @@ impl MatrixAgent {
                 device_id: stored_session.device_id,
             };
             let client_clone = client.clone();
+            info!("before restore");
             spawn_local(async move {
+                info!("before inner restore");
                 client_clone.restore_login(session).await;
+                info!("after restore");
             });
 
             Some(client)
