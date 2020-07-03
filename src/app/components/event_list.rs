@@ -84,7 +84,7 @@ impl Component for EventList {
                                     false
                                 }
                             } else {
-                                let mut msgs = vec![msg];
+                                let msgs = vec![msg];
                                 self.state.events.insert(room_id.clone(), msgs);
                                 room_id == self.props.current_room.clone().unwrap().room_id
                             }
@@ -92,7 +92,7 @@ impl Component for EventList {
                             false
                         }
                     }
-                    Response::OldMessages((room_id, mut messages)) => {
+                    Response::OldMessages((room_id, messages)) => {
                         let mut deserialized_messages: Vec<MessageEvent> = messages
                             .iter()
                             .map(|x| x.deserialize())

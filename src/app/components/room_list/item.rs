@@ -1,10 +1,6 @@
-use matrix_sdk::{events::room::message::MessageEventContent, js_int::UInt, Room};
-use rand::random;
+use matrix_sdk::{events::room::message::MessageEventContent, Room};
 use yew::prelude::*;
-
-use crate::app::components::events::{get_sender_avatar, get_sender_displayname, is_new_user};
-use crate::app::matrix::types::get_media_download_url;
-use url::Url;
+use yewtil::NeqAssign;
 
 pub(crate) struct RoomItem {
     props: Props,
@@ -15,7 +11,7 @@ pub enum Msg {
     ChangeRoom(Room),
 }
 
-#[derive(Clone, Properties, Debug)]
+#[derive(Clone, Properties, Debug, PartialEq)]
 pub struct Props {
     #[prop_or_default]
     pub room: Option<Room>,
@@ -42,13 +38,7 @@ impl Component for RoomItem {
     }
 
     fn change(&mut self, props: Self::Properties) -> bool {
-        // TODO fix the PartialEq hack
-        if format!("{:#?}", self.props) != format!("{:#?}", props) {
-            self.props = props;
-            true
-        } else {
-            false
-        }
+        self.props.neq_assign(props)
     }
 
     //noinspection RsTypeCheck
@@ -68,9 +58,8 @@ impl Component for RoomItem {
         {
             None => "".to_string(),
             Some(m) => {
-                let content = m.content.clone();
-                if let MessageEventContent::Text(text_event) = content {
-                    text_event.body
+                if let MessageEventContent::Text(text_event) = &m.content {
+                    text_event.clone().body
                 } else {
                     "".to_string()
                 }

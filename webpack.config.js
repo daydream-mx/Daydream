@@ -80,7 +80,8 @@ const appConfig = (env, argv) => {
         watch: process.env.WEBPACK_MODE !== 'production',
         watchOptions: {
             poll: true
-        }
+        },
+        devtool: 'inline-source-map'
     };
 };
 
@@ -95,7 +96,8 @@ const workerConfig = {
     output: {
         path: distPath,
         filename: "worker.js"
-    }
+    },
+    devtool: 'inline-source-map'
 };
 
 module.exports = (env, argv) => {

@@ -38,7 +38,7 @@ impl Component for Text {
 
     fn change(&mut self, props: Self::Properties) -> bool {
         // TODO fix the PartialEq hack
-        if format!("{:#?}", self.props) != format!("{:#?}", props) {
+        if format!("{:?}", self.props) != format!("{:?}", props) {
             self.props = props;
             true
         } else {

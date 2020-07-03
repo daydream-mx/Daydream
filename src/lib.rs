@@ -21,7 +21,6 @@ language_loader!(DaydreamLanguageLoader);
 //#[global_allocator]
 //static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 
-
 //====== Running the primary frontend ======//
 #[wasm_bindgen]
 pub fn run_app() -> Result<(), JsValue> {
@@ -49,6 +48,8 @@ use yew::agent::Threaded;
 /// We need to wrap it in wasm_bindgen so the worker knows the spin the the yew worker instance
 #[wasm_bindgen]
 pub fn init_worker() {
+    wasm_logger::init(wasm_logger::Config::default());
+
     // Spawning a yew component without StartApp requires initializing
     yew::initialize();
 

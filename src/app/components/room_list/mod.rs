@@ -84,6 +84,7 @@ impl Component for RoomList {
                     false
                 }
                 Response::JoinedRoom((room_id, room)) => {
+                    info!("Got JoinedRoom");
                     self.state.rooms.insert(room_id, room);
                     if self.state.loading {
                         self.state.loading = false;

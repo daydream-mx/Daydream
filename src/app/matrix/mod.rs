@@ -1,6 +1,6 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::{HashSet};
 use std::convert::TryFrom;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc};
 
 use log::*;
 use matrix_sdk::{
@@ -22,12 +22,9 @@ use pulldown_cmark::{html, Options, Parser};
 use serde::{Deserialize, Serialize};
 use url::Url;
 use wasm_bindgen_futures::spawn_local;
-use yew::format::Json;
-use yew::worker::*;
 use yew::worker::*;
 
 use crate::app::matrix::types::{get_media_download_url, get_video_media_download_url};
-use crate::constants::AUTH_KEY;
 use crate::errors::{Field, MatrixError};
 
 mod sync;
@@ -83,7 +80,7 @@ pub enum Response {
     SyncPing,
     OldMessages((RoomId, Vec<EventJson<MessageEvent>>)),
     JoinedRoom((RoomId, Room)),
-    SaveSession(SessionStore)
+    SaveSession(SessionStore),
 }
 
 #[derive(Debug, Clone)]
@@ -224,14 +221,7 @@ impl Agent for MatrixAgent {
                 });
             }
             Request::GetLoggedIn => {
-                let login_client = self.login();
-                if login_client.is_none() {
-                    for sub in self.subscribers.iter() {
-                        let resp = Response::Error(MatrixError::MissingClient);
-                        self.link.respond(*sub, resp);
-                    }
-                    return;
-                }
+                self.login();
 
                 // Always clone agent after having tried to login!
                 let agent = self.clone();
@@ -442,6 +432,9 @@ impl MatrixAgent {
 
     fn login(&mut self) -> Option<Client> {
         info!("preparing client");
+        if self.session.is_none() {
+            return None;
+        }
         if self.session.is_some() {
             info!("restoring login");
             let homeserver = self.session.clone().unwrap().homeserver_url;

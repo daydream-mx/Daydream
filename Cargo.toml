@@ -23,9 +23,9 @@ wasm-logger = "0.2"
 lazy_static = "1.4.0"
 
 # Yew
-yew = { git = "https://github.com/daydream-mx/yew.git", branch = "fix-webpack-worker", features = ["webpack"] }
-yew-router = { git = "https://github.com/daydream-mx/yew.git", branch = "fix-webpack-worker" }
-yewtil = { git = "https://github.com/daydream-mx/yew.git", branch = "fix-webpack-worker" }
+yew = { git = "https://github.com/daydream-mx/yew.git", branch = "MTRNord/daydream-no-bincode", features = ["webpack"] }
+yew-router = { git = "https://github.com/daydream-mx/yew.git", branch = "MTRNord/daydream-no-bincode" }
+yewtil = { git = "https://github.com/daydream-mx/yew.git", branch = "MTRNord/daydream-no-bincode" }
 
 # Matrix
 matrix-sdk = { version = "0.1.0", git = "https://github.com/MTRNord/matrix-rust-sdk", branch = "daydream", default-features = false, features = ["messages"]}# features = ["encryption"]}
@@ -63,6 +63,7 @@ features = [
 olm-sys = { git = "https://gitlab.gnome.org/stoically/olm-sys", branch = "wasm-target" }
 cjson = { git = "https://github.com/engineerd/cjson" }
 ruma-events = { git = "https://github.com/ruma/ruma-events", rev="3f74ba327093d4f32e11c2741aaa649e4ab733d9" }
+reqwest = { git = "https://github.com/daydream-mx/reqwest.git", branch = "MTRNord/wasm-worker-support"}
 
 [profile.release]
 # less code to include into binary

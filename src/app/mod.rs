@@ -4,12 +4,12 @@ use yew_router::{prelude::*, Switch};
 
 use crate::app::matrix::{MatrixAgent, Response, SessionStore};
 use crate::app::views::{login::Login, main_view::MainView};
+use crate::constants::AUTH_KEY;
 use log::*;
 use std::sync::{Arc, Mutex};
-use yew::services::StorageService;
-use yew::services::storage::Area;
-use crate::constants::AUTH_KEY;
 use yew::format::Json;
+use yew::services::storage::Area;
+use yew::services::StorageService;
 
 pub mod components;
 pub mod matrix;
@@ -88,7 +88,8 @@ impl Component for App {
                     Response::Error(_) => {}
                     Response::LoggedIn(logged_in) => {
                         if !logged_in && self.session.is_some() {
-                            self.matrix_agent.send(matrix::Request::SetSession(self.session.clone().unwrap()));
+                            self.matrix_agent
+                                .send(matrix::Request::SetSession(self.session.clone().unwrap()));
                             self.matrix_agent.send(matrix::Request::GetLoggedIn);
                             return false;
                         }

@@ -23,7 +23,6 @@ use crate::app::components::events::{get_sender_avatar, get_sender_displayname};
 use crate::app::matrix::types::{get_media_download_url, get_video_media_download_url};
 use crate::app::matrix::Response;
 use crate::utils::notifications::Notifications;
-use serde::Serialize;
 
 lazy_static! {
     static ref SYNC_NUMBER: Mutex<i32> = Mutex::new(0);
@@ -72,7 +71,7 @@ impl Sync {
     }
 
     async fn on_state_event(&self, room_id: &RoomId, event: StateEvent) {
-        if let StateEvent::RoomCreate(event) = event {
+        if let StateEvent::RoomCreate(_event) = event {
             info!("Sent JoinedRoomSync State");
             let resp = Response::JoinedRoomSync(room_id.clone());
             self.callback.emit(resp);
@@ -98,36 +97,30 @@ impl Sync {
                 let sync_number = SYNC_NUMBER.lock().unwrap();
                 if *sync_number == 1 {
                     spawn_local(async move {
-                        if Notifications::browser_support() {
-                            let room: Arc<RwLock<Room>> = client
-                                .clone()
-                                .get_joined_room(&local_room_id.clone())
-                                .await
-                                .unwrap();
-                            let read_clone = room.read().await;
-                            let clean_room = (*read_clone).clone();
-                            let avatar_url = get_sender_avatar(
-                                homeserver_url,
-                                clean_room.clone(),
-                                cloned_event.clone(),
-                            );
-                            let room_name = clean_room.display_name();
-                            let displayname =
-                                get_sender_displayname(clean_room, cloned_event.clone());
+                        let room: Arc<RwLock<Room>> = client
+                            .clone()
+                            .get_joined_room(&local_room_id.clone())
+                            .await
+                            .unwrap();
+                        let read_clone = room.read().await;
+                        let clean_room = (*read_clone).clone();
+                        let avatar_url = get_sender_avatar(
+                            homeserver_url,
+                            clean_room.clone(),
+                            cloned_event.clone(),
+                        );
+                        let room_name = clean_room.display_name();
+                        let displayname = get_sender_displayname(clean_room, cloned_event.clone());
 
-                            let mut title = "".to_string();
-                            if displayname == room_name {
-                                title = displayname;
-                            } else {
-                                title = format!("{} ({})", displayname, room_name);
-                            }
+                        let title = if displayname == room_name {
+                            displayname
+                        } else {
+                            format!("{} ({})", displayname, room_name)
+                        };
 
-                            /*
-                            TODO fix by moving it out of the worker
-                            let notification =
-                                Notifications::new(avatar_url, title, text_event.body.clone());
-                            notification.show();*/
-                        }
+                        let notification =
+                            Notifications::new(avatar_url, title, text_event.body.clone());
+                        notification.show();
                     });
                 }
             }
@@ -176,7 +169,7 @@ impl Sync {
 
             let serialized_event = EventJson::from(event.clone());
             let resp = Response::Sync((room_id.clone(), serialized_event));
-            self.callback.emit(resp);
+            //self.callback.emit(resp);
         }
     }
 }

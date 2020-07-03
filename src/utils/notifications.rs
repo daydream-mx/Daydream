@@ -1,6 +1,6 @@
-use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
-use web_sys::{window, Notification, NotificationOptions, NotificationPermission};
+use wasm_bindgen::prelude::*;
+use web_sys::{Notification, NotificationOptions, NotificationPermission};
 
 #[derive(Clone)]
 pub(crate) struct Notifications {
@@ -15,15 +15,6 @@ impl Notifications {
             avatar,
             displayname,
             content,
-        }
-    }
-    pub fn browser_support() -> bool {
-        match window() {
-            Some(v) => match v.get("Notification") {
-                Some(_) => true,
-                _ => false,
-            },
-            _ => false,
         }
     }
 
