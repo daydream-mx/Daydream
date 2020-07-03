@@ -19,12 +19,9 @@ pub(crate) struct Notice {
 pub struct Props {
     #[prop_or_default]
     pub prev_event: Option<MessageEvent>,
-    #[prop_or_default]
-    pub event: Option<MessageEvent>,
-    #[prop_or_default]
-    pub notice_event: Option<NoticeMessageEventContent>,
-    #[prop_or_default]
-    pub room: Option<Rc<Room>>,
+    pub event: MessageEvent,
+    pub notice_event: NoticeMessageEventContent,
+    pub room: Rc<Room>,
 }
 
 impl Component for Notice {
@@ -52,20 +49,14 @@ impl Component for Notice {
 
     //noinspection RsTypeCheck
     fn view(&self) -> Html {
-        let new_user = is_new_user(
-            self.props.prev_event.as_ref(),
-            self.props.event.as_ref().unwrap(),
-        );
+        let new_user = is_new_user(self.props.prev_event.as_ref(), &self.props.event);
         let sender_displayname = if new_user {
-            get_sender_displayname(
-                self.props.room.as_ref().unwrap(),
-                self.props.event.as_ref().unwrap(),
-            )
+            get_sender_displayname(&self.props.room, &self.props.event)
         } else {
             "".to_string()
         };
 
-        let mut pure_content = self.props.notice_event.as_ref().unwrap().body.clone();
+        let mut pure_content = self.props.notice_event.body.clone();
         let finder = LinkFinder::new();
         let pure_content_clone = pure_content.clone();
         let links: Vec<_> = finder.links(&pure_content_clone).collect();

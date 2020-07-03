@@ -15,8 +15,7 @@ pub enum Msg {
 
 #[derive(Clone, Properties, Debug, PartialEq)]
 pub struct Props {
-    #[prop_or_default]
-    pub room: Option<Rc<Room>>,
+    pub room: Rc<Room>,
 
     #[prop_or_default]
     pub change_room_callback: Callback<RoomId>,
@@ -45,7 +44,7 @@ impl Component for RoomItem {
 
     //noinspection RsTypeCheck
     fn view(&self) -> Html {
-        let room = self.props.room.clone().unwrap();
+        let room = self.props.room.clone();
 
         // TODO placeholder for encrypted rooms
         let last_message = match room.messages.iter().last() {

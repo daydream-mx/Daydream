@@ -16,12 +16,9 @@ pub(crate) struct Image {
 pub struct Props {
     #[prop_or_default]
     pub prev_event: Option<MessageEvent>,
-    #[prop_or_default]
-    pub event: Option<MessageEvent>,
-    #[prop_or_default]
-    pub image_event: Option<ImageMessageEventContent>,
-    #[prop_or_default]
-    pub room: Option<Rc<Room>>,
+    pub event: MessageEvent,
+    pub image_event: ImageMessageEventContent,
+    pub room: Rc<Room>,
 }
 
 impl Component for Image {
@@ -49,25 +46,17 @@ impl Component for Image {
 
     //noinspection RsTypeCheck
     fn view(&self) -> Html {
-        let new_user = is_new_user(
-            self.props.prev_event.as_ref(),
-            self.props.event.as_ref().unwrap(),
-        );
+        let new_user = is_new_user(self.props.prev_event.as_ref(), &self.props.event);
         let sender_displayname = if new_user {
-            get_sender_displayname(
-                self.props.room.as_ref().unwrap(),
-                self.props.event.as_ref().unwrap(),
-            )
+            get_sender_displayname(&self.props.room, &self.props.event)
         } else {
             "".to_string()
         };
 
-        if let Some(image_url) = &self.props.image_event.as_ref().unwrap().url {
+        if let Some(image_url) = &self.props.image_event.url {
             let thumbnail = self
                 .props
                 .image_event
-                .as_ref()
-                .unwrap()
                 .info
                 .as_ref()
                 .unwrap()

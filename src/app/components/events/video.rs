@@ -16,12 +16,9 @@ pub(crate) struct Video {
 pub struct Props {
     #[prop_or_default]
     pub prev_event: Option<MessageEvent>,
-    #[prop_or_default]
-    pub event: Option<MessageEvent>,
-    #[prop_or_default]
-    pub video_event: Option<VideoMessageEventContent>,
-    #[prop_or_default]
-    pub room: Option<Rc<Room>>,
+    pub event: MessageEvent,
+    pub video_event: VideoMessageEventContent,
+    pub room: Rc<Room>,
 }
 
 impl Component for Video {
@@ -49,31 +46,19 @@ impl Component for Video {
 
     //noinspection RsTypeCheck
     fn view(&self) -> Html {
-        let new_user = is_new_user(
-            self.props.prev_event.as_ref(),
-            self.props.event.as_ref().unwrap(),
-        );
+        let new_user = is_new_user(self.props.prev_event.as_ref(), &self.props.event);
         let sender_displayname = if new_user {
-            get_sender_displayname(
-                self.props.room.as_ref().unwrap(),
-                self.props.event.as_ref().unwrap(),
-            )
+            get_sender_displayname(&self.props.room, &self.props.event)
         } else {
             "".to_string()
         };
 
-        let _caption = format!(
-            "{}: {}",
-            sender_displayname,
-            self.props.video_event.as_ref().unwrap().body
-        );
+        let _caption = format!("{}: {}", sender_displayname, self.props.video_event.body);
 
-        if let Some(video_url) = self.props.video_event.as_ref().unwrap().url.as_ref() {
+        if let Some(video_url) = self.props.video_event.url.as_ref() {
             let thumbnail = self
                 .props
                 .video_event
-                .as_ref()
-                .unwrap()
                 .info
                 .as_ref()
                 .unwrap()

@@ -36,8 +36,7 @@ pub enum Msg {
 
 #[derive(Clone, PartialEq, Properties, Debug)]
 pub struct Props {
-    #[prop_or_default]
-    pub current_room: Option<Rc<Room>>,
+    pub current_room: Rc<Room>,
 }
 
 impl Component for EventList {
@@ -52,11 +51,9 @@ impl Component for EventList {
             events: Default::default(),
         };
 
-        if props.current_room.is_some() {
-            let room_id = props.current_room.as_ref().unwrap().room_id.clone();
-            if !state.events.contains_key(&room_id) {
-                matrix_agent.send(Request::GetOldMessages((room_id, None)));
-            }
+        let room_id = props.current_room.room_id.clone();
+        if !state.events.contains_key(&room_id) {
+            matrix_agent.send(Request::GetOldMessages((room_id, None)));
         }
 
         EventList {
@@ -80,15 +77,14 @@ impl Component for EventList {
                                     .any(|x| x.event_id == msg.event_id))
                                 {
                                     self.state.events.get_mut(&room_id).unwrap().push(msg);
-                                    room_id
-                                        == self.props.current_room.as_ref().unwrap().room_id
+                                    room_id == self.props.current_room.room_id
                                 } else {
                                     false
                                 }
                             } else {
                                 let msgs = vec![msg];
                                 self.state.events.insert(room_id.clone(), msgs);
-                                room_id == self.props.current_room.as_ref().unwrap().room_id
+                                room_id == self.props.current_room.room_id
                             }
                         } else {
                             false
@@ -121,7 +117,7 @@ impl Component for EventList {
             Msg::SendMessage(message) => {
                 info!("Sending Message");
                 self.matrix_agent.send(Request::SendMessage((
-                    self.props.current_room.as_ref().unwrap().room_id.clone(),
+                    self.props.current_room.room_id.clone(),
                     message,
                 )));
                 false
@@ -132,13 +128,12 @@ impl Component for EventList {
 
     fn change(&mut self, props: Self::Properties) -> bool {
         if self.props != props {
-            if props.current_room.is_some() {
-                let room_id = props.current_room.as_ref().unwrap().room_id.clone();
-                if !self.state.events.contains_key(&room_id) {
-                    self.matrix_agent
-                        .send(Request::GetOldMessages((room_id, None)));
-                }
+            let room_id = props.current_room.room_id.clone();
+            if !self.state.events.contains_key(&room_id) {
+                self.matrix_agent
+                    .send(Request::GetOldMessages((room_id, None)));
             }
+
             self.props = props;
             true
         } else {
@@ -149,14 +144,14 @@ impl Component for EventList {
     fn view(&self) -> Html {
         return html! {
             <div class="event-list">
-                <div class="room-title"><h1>{ self.props.current_room.as_ref().unwrap().display_name() }</h1></div>
+                <div class="room-title"><h1>{ self.props.current_room.display_name() }</h1></div>
                 <div class="scrollable" style="height: auto; flex-grow: 1;">
                     <div class="message-container">
                         {
-                            if self.state.events.contains_key(&self.props.current_room.as_ref().unwrap().room_id) {
-                                let events = self.state.events[&self.props.current_room.as_ref().unwrap().room_id].clone();
+                            if self.state.events.contains_key(&self.props.current_room.room_id) {
+                                let events = self.state.events[&self.props.current_room.room_id].clone();
                                 let mut elements: Vec<Html> = Vec::new();
-                                for (pos, event) in self.state.events[&self.props.current_room.as_ref().unwrap().room_id].iter().enumerate() {
+                                for (pos, event) in self.state.events[&self.props.current_room.room_id].iter().enumerate() {
                                     if pos == 0 {
                                         elements.push(self.get_event(None, event));
                                     } else {
@@ -188,9 +183,9 @@ impl EventList {
                 html! {
                     <Text
                         prev_event=prev_event.clone()
-                        event=Some(event.clone())
-                        room=Some(self.props.current_room.clone().unwrap())
-                        text_event=Some(text_event.clone())
+                        event=event.clone()
+                        room=self.props.current_room.clone()
+                        text_event=text_event.clone()
                     />
                 }
             }
@@ -198,9 +193,9 @@ impl EventList {
                 html! {
                     <Notice
                         prev_event=prev_event.clone()
-                        event=Some(event.clone())
-                        room=Some(self.props.current_room.clone().unwrap())
-                        notice_event=Some(notice_event.clone())
+                        event=event.clone()
+                        room=self.props.current_room.clone()
+                        notice_event=notice_event.clone()
                     />
                 }
             }
@@ -208,9 +203,9 @@ impl EventList {
                 html! {
                     <Image
                         prev_event=prev_event.clone()
-                        event=Some(event.clone())
-                        room=Some(self.props.current_room.clone().unwrap())
-                        image_event=Some(image_event.clone())
+                        event=event.clone()
+                        room=self.props.current_room.clone()
+                        image_event=image_event.clone()
                     />
                 }
             }
@@ -218,9 +213,9 @@ impl EventList {
                 html! {
                     <Video
                         prev_event=prev_event.clone()
-                        event=Some(event.clone())
-                        room=Some(self.props.current_room.clone().unwrap())
-                        video_event=Some(video_event.clone())
+                        event=event.clone()
+                        room=self.props.current_room.clone()
+                        video_event=video_event.clone()
                     />
                 }
             }
