@@ -8,7 +8,7 @@ pub mod notice;
 pub mod text;
 pub mod video;
 
-pub fn is_new_user(prev_event: Option<MessageEvent>, event: MessageEvent) -> bool {
+pub fn is_new_user(prev_event: Option<&MessageEvent>, event: &MessageEvent) -> bool {
     if let Some(prev_event) = prev_event {
         prev_event.sender != event.sender
     } else {
@@ -16,7 +16,7 @@ pub fn is_new_user(prev_event: Option<MessageEvent>, event: MessageEvent) -> boo
     }
 }
 
-pub fn get_sender_displayname(room: Room, event: MessageEvent) -> String {
+pub fn get_sender_displayname(room: &Room, event: &MessageEvent) -> String {
     match room.members.get(&event.sender) {
         None => event.sender.to_string(),
         Some(member) => member
@@ -27,7 +27,7 @@ pub fn get_sender_displayname(room: Room, event: MessageEvent) -> String {
     }
 }
 
-pub fn get_sender_avatar(homeserver_url: Url, room: Room, event: MessageEvent) -> Option<String> {
+pub fn get_sender_avatar(homeserver_url: Url, room: &Room, event: &MessageEvent) -> Option<String> {
     room.members.get(&event.sender).and_then(|member| {
         member
             .avatar_url

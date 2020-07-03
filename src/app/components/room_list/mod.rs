@@ -144,6 +144,27 @@ impl Component for RoomList {
                 </div>
             }
         } else {
+            let rooms = if self.state.search_query.is_none()
+                || (self.state.search_query.as_ref().unwrap_or(&"".to_string()) == &"".to_string())
+            {
+                self.state
+                    .rooms
+                    .iter()
+                    .map(|(_, room)| self.get_room(room))
+                    .collect::<Html>()
+            } else {
+                self.state
+                    .rooms
+                    .iter()
+                    .filter(|(_, room)| {
+                        room.display_name()
+                            .to_lowercase()
+                            .contains(&self.state.search_query.as_ref().unwrap().to_lowercase())
+                    })
+                    .map(|(_, room)| self.get_room(room))
+                    .collect::<Html>()
+            };
+
             html! {
                 <div class="roomlist" style="height: 100%">
                     <div class="top-bar">
@@ -166,16 +187,7 @@ impl Component for RoomList {
                             </div>
                         </div>
                     </div>
-
-                    <div class="scrollable list">
-                        {
-                            if self.state.search_query.is_none() || (self.state.search_query.as_ref().unwrap_or(&"".to_string()) == &"".to_string()) {
-                                self.state.rooms.iter().map(|(_, room)| self.get_room(room)).collect::<Html>()
-                            } else {
-                                self.state.rooms.iter().filter(|(_, room)| room.display_name().to_lowercase().contains(&self.state.search_query.as_ref().unwrap().to_lowercase())).map(|(_, room)| self.get_room(room)).collect::<Html>()
-                            }
-                        }
-                    </div>
+                    <div class="scrollable list">{rooms}</div>
                     <div class="bottom-bar">
                         <div class="toggleWrapper">
                             <input type="checkbox" class="dn" id="dn" checked=self.state.dark_theme value=self.state.dark_theme onclick=self.link.callback(|e: MouseEvent| {Msg::ToggleTheme})/>

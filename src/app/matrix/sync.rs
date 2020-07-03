@@ -89,7 +89,7 @@ impl Sync {
         }
 
         if let RoomEvent::RoomMessage(mut event) = event {
-            if let MessageEventContent::Text(text_event) = event.clone().content {
+            if let MessageEventContent::Text(text_event) = event.content.clone() {
                 let homeserver_url = self.matrix_client.clone().homeserver().clone();
 
                 let cloned_event = event.clone();
@@ -100,18 +100,19 @@ impl Sync {
                     spawn_local(async move {
                         let room: Arc<RwLock<Room>> = client
                             .clone()
-                            .get_joined_room(&local_room_id.clone())
+                            .get_joined_room(&local_room_id)
                             .await
                             .unwrap();
-                        let read_clone = room.read().await;
-                        let clean_room = (*read_clone).clone();
-                        let avatar_url = get_sender_avatar(
-                            homeserver_url,
-                            clean_room.clone(),
-                            cloned_event.clone(),
-                        );
-                        let room_name = clean_room.display_name();
-                        let displayname = get_sender_displayname(clean_room, cloned_event.clone());
+
+                        let (avatar_url, room_name, displayname) = {
+                            let room = room.read().await;
+
+                            (
+                                get_sender_avatar(homeserver_url, &room, &cloned_event),
+                                room.display_name(),
+                                get_sender_displayname(&room, &cloned_event),
+                            )
+                        };
 
                         let title = if displayname == room_name {
                             displayname

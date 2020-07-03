@@ -52,7 +52,7 @@ impl Component for EventList {
         };
 
         if props.current_room.is_some() {
-            let room_id = props.current_room.clone().unwrap().room_id;
+            let room_id = props.current_room.as_ref().unwrap().room_id.clone();
             if !state.events.contains_key(&room_id) {
                 matrix_agent.send(Request::GetOldMessages((room_id, None)));
             }
@@ -79,14 +79,15 @@ impl Component for EventList {
                                     .any(|x| x.event_id == msg.event_id))
                                 {
                                     self.state.events.get_mut(&room_id).unwrap().push(msg);
-                                    room_id == self.props.current_room.clone().unwrap().room_id
+                                    room_id
+                                        == self.props.current_room.as_ref().unwrap().room_id
                                 } else {
                                     false
                                 }
                             } else {
                                 let msgs = vec![msg];
                                 self.state.events.insert(room_id.clone(), msgs);
-                                room_id == self.props.current_room.clone().unwrap().room_id
+                                room_id == self.props.current_room.as_ref().unwrap().room_id
                             }
                         } else {
                             false
@@ -119,7 +120,7 @@ impl Component for EventList {
             Msg::SendMessage(message) => {
                 info!("Sending Message");
                 self.matrix_agent.send(Request::SendMessage((
-                    self.props.current_room.clone().unwrap().room_id,
+                    self.props.current_room.as_ref().unwrap().room_id.clone(),
                     message,
                 )));
                 false
@@ -131,7 +132,7 @@ impl Component for EventList {
     fn change(&mut self, props: Self::Properties) -> bool {
         if self.props != props {
             if props.current_room.is_some() {
-                let room_id = props.clone().current_room.unwrap().room_id;
+                let room_id = props.current_room.as_ref().unwrap().room_id.clone();
                 if !self.state.events.contains_key(&room_id) {
                     self.matrix_agent
                         .send(Request::GetOldMessages((room_id, None)));

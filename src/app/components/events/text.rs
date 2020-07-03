@@ -50,19 +50,19 @@ impl Component for Text {
     //noinspection RsTypeCheck
     fn view(&self) -> Html {
         let new_user = is_new_user(
-            self.props.prev_event.clone(),
-            self.props.event.clone().unwrap(),
+            self.props.prev_event.as_ref(),
+            self.props.event.as_ref().unwrap(),
         );
         let sender_displayname = if new_user {
             get_sender_displayname(
-                self.props.room.clone().unwrap(),
-                self.props.event.clone().unwrap(),
+                self.props.room.as_ref().unwrap(),
+                self.props.event.as_ref().unwrap(),
             )
         } else {
             "".to_string()
         };
 
-        let mut pure_content = self.props.text_event.clone().unwrap().body;
+        let mut pure_content = self.props.text_event.as_ref().unwrap().body.clone();
         let finder = LinkFinder::new();
         let pure_content_clone = pure_content.clone();
         let links: Vec<_> = finder.links(&pure_content_clone).collect();

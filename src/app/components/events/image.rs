@@ -48,48 +48,31 @@ impl Component for Image {
     //noinspection RsTypeCheck
     fn view(&self) -> Html {
         let new_user = is_new_user(
-            self.props.prev_event.clone(),
-            self.props.event.clone().unwrap(),
+            self.props.prev_event.as_ref(),
+            self.props.event.as_ref().unwrap(),
         );
         let sender_displayname = if new_user {
             get_sender_displayname(
-                self.props.room.clone().unwrap(),
-                self.props.event.clone().unwrap(),
+                self.props.room.as_ref().unwrap(),
+                self.props.event.as_ref().unwrap(),
             )
         } else {
             "".to_string()
         };
 
-        if self
-            .props
-            .image_event
-            .as_ref()
-            .unwrap()
-            .url
-            .clone()
-            .is_some()
-        {
-            let image_url = self
-                .props
-                .image_event
-                .as_ref()
-                .unwrap()
-                .url
-                .clone()
-                .unwrap();
-            let thumbnail = match self
+        if let Some(image_url) = &self.props.image_event.as_ref().unwrap().url {
+            let thumbnail = self
                 .props
                 .image_event
                 .as_ref()
                 .unwrap()
                 .info
-                .clone()
+                .as_ref()
                 .unwrap()
                 .thumbnail_url
-            {
-                None => image_url.clone(),
-                Some(v) => v,
-            };
+                .as_ref()
+                .unwrap_or(image_url);
+
             let lightbox_id: u8 = random();
             let lightbox_id_full = format!("image_{}", lightbox_id);
             let lightbox_href_full = format!("#image_{}", lightbox_id);
