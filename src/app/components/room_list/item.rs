@@ -1,4 +1,4 @@
-use matrix_sdk::{events::room::message::MessageEventContent, Room};
+use matrix_sdk::{events::room::message::MessageEventContent, Room, identifiers::RoomId};
 use yew::prelude::*;
 use yewtil::NeqAssign;
 
@@ -17,7 +17,7 @@ pub struct Props {
     pub room: Option<Room>,
 
     #[prop_or_default]
-    pub change_room_callback: Callback<Room>,
+    pub change_room_callback: Callback<RoomId>,
 }
 
 impl Component for RoomItem {
@@ -31,7 +31,7 @@ impl Component for RoomItem {
     fn update(&mut self, msg: Self::Message) -> bool {
         match msg {
             Msg::ChangeRoom(room) => {
-                self.props.change_room_callback.emit(room);
+                self.props.change_room_callback.emit(room.room_id);
             }
         }
         false

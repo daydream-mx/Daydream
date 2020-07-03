@@ -169,7 +169,7 @@ impl Sync {
 
             let serialized_event = EventJson::from(event.clone());
             let resp = Response::Sync((room_id.clone(), serialized_event));
-            //self.callback.emit(resp);
+            self.callback.emit(resp);
         }
     }
 }

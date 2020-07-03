@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::include_str;
 
 use log::*;
-use matrix_sdk::{identifiers::RoomId, js_int::UInt, Room};
+use matrix_sdk::{identifiers::RoomId, Room};
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::JsCast;
 use web_sys::HtmlElement;
@@ -29,7 +29,7 @@ pub struct RoomList {
 #[allow(clippy::large_enum_variant)]
 pub enum Msg {
     NewMessage(Response),
-    ChangeRoom(Room),
+    ChangeRoom(RoomId),
     SetFilter(String),
     ToggleTheme,
 }
@@ -37,7 +37,7 @@ pub enum Msg {
 #[derive(Serialize, Deserialize, Default)]
 pub struct State {
     rooms: HashMap<RoomId, Room>,
-    current_room: Option<Room>,
+    current_room: Option<RoomId>,
     loading: bool,
     search_query: Option<String>,
     dark_theme: bool,
@@ -93,14 +93,16 @@ impl Component for RoomList {
                 }
                 _ => false,
             },
-            Msg::ChangeRoom(room) => {
+            Msg::ChangeRoom(room_id) => {
                 if self.state.current_room.is_some()
-                    && self.state.current_room.as_ref().unwrap() == &room
+                    && self.state.current_room.as_ref().unwrap() == &room_id
                 {
                     return false;
                 }
-                self.props.change_room_callback.emit(room.clone());
-                self.state.current_room = Some(room);
+
+                let room = self.state.rooms[&room_id].clone();
+                self.props.change_room_callback.emit(room);
+                self.state.current_room = Some(room_id);
                 true
             }
             Msg::SetFilter(query) => {
