@@ -1,5 +1,4 @@
-use std::collections::HashMap;
-use std::include_str;
+use std::{collections::HashMap, rc::Rc};
 
 use log::*;
 use matrix_sdk::{identifiers::RoomId, Room};
@@ -36,7 +35,7 @@ pub enum Msg {
 
 #[derive(Serialize, Deserialize, Default)]
 pub struct State {
-    rooms: HashMap<RoomId, Room>,
+    rooms: HashMap<RoomId, Rc<Room>>,
     current_room: Option<RoomId>,
     loading: bool,
     search_query: Option<String>,
@@ -46,7 +45,7 @@ pub struct State {
 #[derive(Clone, PartialEq, Properties)]
 pub struct Props {
     #[prop_or_default]
-    pub change_room_callback: Callback<Room>,
+    pub change_room_callback: Callback<Rc<Room>>,
 }
 
 impl Component for RoomList {
@@ -85,7 +84,7 @@ impl Component for RoomList {
                 }
                 Response::JoinedRoom((room_id, room)) => {
                     info!("Got JoinedRoom");
-                    self.state.rooms.insert(room_id, room);
+                    self.state.rooms.insert(room_id, Rc::new(room));
                     if self.state.loading {
                         self.state.loading = false;
                     }
@@ -144,6 +143,27 @@ impl Component for RoomList {
                 </div>
             }
         } else {
+            let rooms = if self.state.search_query.is_none()
+                || (self.state.search_query.as_ref().unwrap_or(&"".to_string()) == &"".to_string())
+            {
+                self.state
+                    .rooms
+                    .iter()
+                    .map(|(_, room)| self.get_room(room))
+                    .collect::<Html>()
+            } else {
+                self.state
+                    .rooms
+                    .iter()
+                    .filter(|(_, room)| {
+                        room.display_name()
+                            .to_lowercase()
+                            .contains(&self.state.search_query.as_ref().unwrap().to_lowercase())
+                    })
+                    .map(|(_, room)| self.get_room(room))
+                    .collect::<Html>()
+            };
+
             html! {
                 <div class="roomlist" style="height: 100%">
                     <div class="top-bar">
@@ -166,16 +186,7 @@ impl Component for RoomList {
                             </div>
                         </div>
                     </div>
-
-                    <div class="scrollable list">
-                        {
-                            if self.state.search_query.is_none() || (self.state.search_query.as_ref().unwrap_or(&"".to_string()) == &"".to_string()) {
-                                self.state.rooms.iter().map(|(_, room)| self.get_room(room)).collect::<Html>()
-                            } else {
-                                self.state.rooms.iter().filter(|(_, room)| room.display_name().to_lowercase().contains(&self.state.search_query.as_ref().unwrap().to_lowercase())).map(|(_, room)| self.get_room(room)).collect::<Html>()
-                            }
-                        }
-                    </div>
+                    <div class="scrollable list">{rooms}</div>
                     <div class="bottom-bar">
                         <div class="toggleWrapper">
                             <input type="checkbox" class="dn" id="dn" checked=self.state.dark_theme value=self.state.dark_theme onclick=self.link.callback(|e: MouseEvent| {Msg::ToggleTheme})/>
@@ -201,10 +212,10 @@ impl Component for RoomList {
 }
 
 impl RoomList {
-    fn get_room(&self, matrix_room: &Room) -> Html {
+    fn get_room(&self, matrix_room: &Rc<Room>) -> Html {
         let room = matrix_room.clone();
         html! {
-            <RoomItem change_room_callback=self.link.callback(Msg::ChangeRoom) room=Some(room)/>
+            <RoomItem change_room_callback=self.link.callback(Msg::ChangeRoom) room=room.clone() />
         }
         /*html! {
             <li class=classes>

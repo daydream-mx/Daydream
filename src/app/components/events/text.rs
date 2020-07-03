@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use crate::app::components::events::{get_sender_displayname, is_new_user};
 use linkify::LinkFinder;
 use matrix_sdk::{
@@ -16,12 +18,9 @@ pub struct Text {
 pub struct Props {
     #[prop_or_default]
     pub prev_event: Option<MessageEvent>,
-    #[prop_or_default]
-    pub event: Option<MessageEvent>,
-    #[prop_or_default]
-    pub text_event: Option<TextMessageEventContent>,
-    #[prop_or_default]
-    pub room: Option<Room>,
+    pub event: MessageEvent,
+    pub text_event: TextMessageEventContent,
+    pub room: Rc<Room>,
 }
 
 impl Component for Text {
@@ -49,20 +48,14 @@ impl Component for Text {
 
     //noinspection RsTypeCheck
     fn view(&self) -> Html {
-        let new_user = is_new_user(
-            self.props.prev_event.clone(),
-            self.props.event.clone().unwrap(),
-        );
+        let new_user = is_new_user(self.props.prev_event.as_ref(), &self.props.event);
         let sender_displayname = if new_user {
-            get_sender_displayname(
-                self.props.room.clone().unwrap(),
-                self.props.event.clone().unwrap(),
-            )
+            get_sender_displayname(&self.props.room, &self.props.event)
         } else {
             "".to_string()
         };
 
-        let mut pure_content = self.props.text_event.clone().unwrap().body;
+        let mut pure_content = self.props.text_event.body.clone();
         let finder = LinkFinder::new();
         let pure_content_clone = pure_content.clone();
         let links: Vec<_> = finder.links(&pure_content_clone).collect();
@@ -77,27 +70,16 @@ impl Component for Text {
             pure_content
         };
 
-        if self.props.text_event.clone().unwrap().formatted.is_some() {
+        if let Some(formatted) = &self.props.text_event.formatted {
+            let format_slot;
             let message = if new_user {
-                format!(
+                format_slot = format!(
                     "<displayname>{}:</displayname> {}",
-                    sender_displayname,
-                    self.props
-                        .text_event
-                        .clone()
-                        .unwrap()
-                        .formatted
-                        .unwrap()
-                        .body
-                )
+                    sender_displayname, formatted.body
+                );
+                &format_slot
             } else {
-                self.props
-                    .text_event
-                    .clone()
-                    .unwrap()
-                    .formatted
-                    .unwrap()
-                    .body
+                &formatted.body
             };
             let js_text_event = {
                 let div = web_sys::window()

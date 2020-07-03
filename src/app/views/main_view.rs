@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use log::*;
 use matrix_sdk::Room;
 use serde::{Deserialize, Serialize};
@@ -15,12 +17,12 @@ pub struct MainView {
 }
 
 pub enum Msg {
-    ChangeRoom(Room),
+    ChangeRoom(Rc<Room>),
 }
 
 #[derive(Serialize, Deserialize, Default)]
 pub struct State {
-    pub current_room: Option<Room>,
+    pub current_room: Option<Rc<Room>>,
     pub current_room_displayname: String,
 }
 
@@ -55,8 +57,8 @@ impl Component for MainView {
 
     //noinspection RsTypeCheck
     fn view(&self) -> Html {
-        if self.state.current_room.is_none() {
-            html! {
+        match &self.state.current_room {
+            None => html! {
                 <div class="uk-flex auto-scrollable-container uk-background-default" style="height: 100%">
                     <RoomList change_room_callback=self.link.callback(Msg::ChangeRoom)/>
 
@@ -66,13 +68,12 @@ impl Component for MainView {
                         </div>
                     </div>
                 </div>
-            }
-        } else if self.state.current_room.as_ref().unwrap().is_encrypted() {
-            html! {
+            },
+            Some(room) if room.is_encrypted() => html! {
                 <div class="uk-flex auto-scrollable-container" style="height: 100%">
                     <RoomList change_room_callback=self.link.callback(Msg::ChangeRoom)/>
                     <div class="event-list">
-                        <div class="room-title"><h1>{ self.state.current_room.as_ref().unwrap().display_name() }</h1></div>
+                        <div class="room-title"><h1>{ room.display_name() }</h1></div>
                         <h4>
                             {
                                 tr!(
@@ -83,14 +84,13 @@ impl Component for MainView {
                         </h4>
                     </div>
                 </div>
-            }
-        } else {
-            html! {
+            },
+            Some(room) => html! {
                 <div class="uk-flex auto-scrollable-container" style="height: 100%">
                     <RoomList change_room_callback=self.link.callback(Msg::ChangeRoom)/>
-                    <EventList current_room=self.state.current_room.as_ref().unwrap() />
+                    <EventList current_room=room />
                 </div>
-            }
+            },
         }
     }
 }

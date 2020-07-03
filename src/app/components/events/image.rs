@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use crate::app::components::events::{get_sender_displayname, is_new_user};
 use matrix_sdk::{
     events::room::message::{ImageMessageEventContent, MessageEvent},
@@ -14,12 +16,9 @@ pub(crate) struct Image {
 pub struct Props {
     #[prop_or_default]
     pub prev_event: Option<MessageEvent>,
-    #[prop_or_default]
-    pub event: Option<MessageEvent>,
-    #[prop_or_default]
-    pub image_event: Option<ImageMessageEventContent>,
-    #[prop_or_default]
-    pub room: Option<Room>,
+    pub event: MessageEvent,
+    pub image_event: ImageMessageEventContent,
+    pub room: Rc<Room>,
 }
 
 impl Component for Image {
@@ -47,49 +46,24 @@ impl Component for Image {
 
     //noinspection RsTypeCheck
     fn view(&self) -> Html {
-        let new_user = is_new_user(
-            self.props.prev_event.clone(),
-            self.props.event.clone().unwrap(),
-        );
+        let new_user = is_new_user(self.props.prev_event.as_ref(), &self.props.event);
         let sender_displayname = if new_user {
-            get_sender_displayname(
-                self.props.room.clone().unwrap(),
-                self.props.event.clone().unwrap(),
-            )
+            get_sender_displayname(&self.props.room, &self.props.event)
         } else {
             "".to_string()
         };
 
-        if self
-            .props
-            .image_event
-            .as_ref()
-            .unwrap()
-            .url
-            .clone()
-            .is_some()
-        {
-            let image_url = self
+        if let Some(image_url) = &self.props.image_event.url {
+            let thumbnail = self
                 .props
                 .image_event
-                .as_ref()
-                .unwrap()
-                .url
-                .clone()
-                .unwrap();
-            let thumbnail = match self
-                .props
-                .image_event
-                .as_ref()
-                .unwrap()
                 .info
-                .clone()
+                .as_ref()
                 .unwrap()
                 .thumbnail_url
-            {
-                None => image_url.clone(),
-                Some(v) => v,
-            };
+                .as_ref()
+                .unwrap_or(image_url);
+
             let lightbox_id: u8 = random();
             let lightbox_id_full = format!("image_{}", lightbox_id);
             let lightbox_href_full = format!("#image_{}", lightbox_id);

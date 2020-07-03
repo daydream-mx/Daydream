@@ -308,7 +308,7 @@ impl Agent for MatrixAgent {
                             {
                                 if image_event.url.is_some() {
                                     let new_url = Some(get_media_download_url(
-                                        agent.matrix_client.clone().unwrap().homeserver(),
+                                        agent.matrix_client.as_ref().unwrap().homeserver(),
                                         image_event.url.unwrap(),
                                     ));
                                     image_event.url = new_url;
@@ -317,7 +317,7 @@ impl Agent for MatrixAgent {
                                     let mut info = image_event.info.unwrap();
                                     if info.thumbnail_url.is_some() {
                                         let new_url = Some(get_media_download_url(
-                                            agent.matrix_client.clone().unwrap().homeserver(),
+                                            agent.matrix_client.as_ref().unwrap().homeserver(),
                                             info.thumbnail_url.unwrap(),
                                         ));
                                         info.thumbnail_url = new_url;
@@ -329,7 +329,7 @@ impl Agent for MatrixAgent {
                             if let MessageEventContent::Video(mut video_event) = event.content {
                                 if video_event.url.is_some() {
                                     let new_url = Some(get_video_media_download_url(
-                                        agent.matrix_client.clone().unwrap().homeserver(),
+                                        agent.matrix_client.as_ref().unwrap().homeserver(),
                                         video_event.url.unwrap(),
                                     ));
                                     video_event.url = new_url;
@@ -338,7 +338,7 @@ impl Agent for MatrixAgent {
                                     let mut info = video_event.info.unwrap();
                                     if info.thumbnail_url.is_some() {
                                         let new_url = Some(get_media_download_url(
-                                            agent.matrix_client.clone().unwrap().homeserver(),
+                                            agent.matrix_client.as_ref().unwrap().homeserver(),
                                             info.thumbnail_url.unwrap(),
                                         ));
                                         info.thumbnail_url = new_url;
@@ -441,10 +441,10 @@ impl MatrixAgent {
         info!("preparing client");
         if self.session.is_some() {
             info!("restoring login");
-            let homeserver = self.session.clone().unwrap().homeserver_url;
+            let homeserver = &self.session.as_ref().unwrap().homeserver_url;
 
             let client_config = ClientConfig::new();
-            let homeserver_url = Url::parse(&homeserver).unwrap();
+            let homeserver_url = Url::parse(homeserver).unwrap();
             let client = Client::new_with_config(homeserver_url, client_config).unwrap();
             self.matrix_client = Some(client.clone());
 
