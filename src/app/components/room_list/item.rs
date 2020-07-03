@@ -46,25 +46,17 @@ impl Component for RoomItem {
         let room = self.props.room.clone().unwrap();
 
         // TODO placeholder for encrypted rooms
-        let last_message = match self
-            .props
-            .room
-            .as_ref()
-            .unwrap()
-            .messages
-            .clone()
-            .into_iter()
-            .last()
-        {
+        let last_message = match self.props.room.as_ref().unwrap().messages.iter().last() {
             None => "".to_string(),
             Some(m) => {
                 if let MessageEventContent::Text(text_event) = &m.content {
-                    text_event.clone().body
+                    text_event.body.clone()
                 } else {
                     "".to_string()
                 }
             }
         };
+
         html! {
             <div class="room-list-item">
                 <a onclick=self.link.callback(move |e: MouseEvent| Msg::ChangeRoom(room.clone()))>
