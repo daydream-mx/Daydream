@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use matrix_sdk::{events::room::message::MessageEventContent, identifiers::RoomId, Room};
 use yew::prelude::*;
 use yewtil::NeqAssign;
@@ -8,13 +10,13 @@ pub(crate) struct RoomItem {
 }
 
 pub enum Msg {
-    ChangeRoom(Room),
+    ChangeRoom(Rc<Room>),
 }
 
 #[derive(Clone, Properties, Debug, PartialEq)]
 pub struct Props {
     #[prop_or_default]
-    pub room: Option<Room>,
+    pub room: Option<Rc<Room>>,
 
     #[prop_or_default]
     pub change_room_callback: Callback<RoomId>,
@@ -31,7 +33,7 @@ impl Component for RoomItem {
     fn update(&mut self, msg: Self::Message) -> bool {
         match msg {
             Msg::ChangeRoom(room) => {
-                self.props.change_room_callback.emit(room.room_id);
+                self.props.change_room_callback.emit(room.room_id.clone());
             }
         }
         false

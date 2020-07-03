@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use crate::app::components::events::{get_sender_displayname, is_new_user};
 use linkify::LinkFinder;
 use matrix_sdk::{
@@ -21,7 +23,7 @@ pub struct Props {
     #[prop_or_default]
     pub text_event: Option<TextMessageEventContent>,
     #[prop_or_default]
-    pub room: Option<Room>,
+    pub room: Option<Rc<Room>>,
 }
 
 impl Component for Text {

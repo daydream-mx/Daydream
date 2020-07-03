@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use log::*;
 use matrix_sdk::Room;
 use serde::{Deserialize, Serialize};
@@ -15,12 +17,12 @@ pub struct MainView {
 }
 
 pub enum Msg {
-    ChangeRoom(Room),
+    ChangeRoom(Rc<Room>),
 }
 
 #[derive(Serialize, Deserialize, Default)]
 pub struct State {
-    pub current_room: Option<Room>,
+    pub current_room: Option<Rc<Room>>,
     pub current_room_displayname: String,
 }
 

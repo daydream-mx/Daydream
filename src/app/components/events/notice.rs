@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use linkify::LinkFinder;
 use matrix_sdk::{
     events::room::message::{MessageEvent, NoticeMessageEventContent},
@@ -22,7 +24,7 @@ pub struct Props {
     #[prop_or_default]
     pub notice_event: Option<NoticeMessageEventContent>,
     #[prop_or_default]
-    pub room: Option<Room>,
+    pub room: Option<Rc<Room>>,
 }
 
 impl Component for Notice {

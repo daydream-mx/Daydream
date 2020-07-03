@@ -1,10 +1,11 @@
+use std::{collections::HashMap, rc::Rc};
+
 use log::*;
 use matrix_sdk::{
     events::room::message::{MessageEvent, MessageEventContent},
     identifiers::RoomId,
     Room,
 };
-use std::collections::HashMap;
 use yew::prelude::*;
 
 use crate::app::components::{
@@ -36,7 +37,7 @@ pub enum Msg {
 #[derive(Clone, PartialEq, Properties, Debug)]
 pub struct Props {
     #[prop_or_default]
-    pub current_room: Option<Room>,
+    pub current_room: Option<Rc<Room>>,
 }
 
 impl Component for EventList {

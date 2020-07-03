@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use crate::app::components::events::{get_sender_displayname, is_new_user};
 use matrix_sdk::{
     events::room::message::{MessageEvent, VideoMessageEventContent},
@@ -19,7 +21,7 @@ pub struct Props {
     #[prop_or_default]
     pub video_event: Option<VideoMessageEventContent>,
     #[prop_or_default]
-    pub room: Option<Room>,
+    pub room: Option<Rc<Room>>,
 }
 
 impl Component for Video {
