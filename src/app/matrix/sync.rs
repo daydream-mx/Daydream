@@ -1,3 +1,4 @@
+use std::mem;
 use std::sync::Arc;
 use std::sync::Mutex;
 use std::time::Duration;
@@ -124,47 +125,43 @@ impl Sync {
                     });
                 }
             }
-            if let MessageEventContent::Image(mut image_event) = event.clone().content {
-                if image_event.url.is_some() {
-                    let new_url = Some(get_media_download_url(
+            if let MessageEventContent::Image(image_event) = &mut event.content {
+                if let Some(image_url) = &mut image_event.url {
+                    let old_image_url = mem::take(image_url);
+                    *image_url = get_media_download_url(
                         self.matrix_client.clone().homeserver(),
-                        image_event.url.unwrap(),
-                    ));
-                    image_event.url = new_url;
+                        old_image_url,
+                    );
                 }
-                if image_event.info.is_some() {
-                    let mut info = image_event.info.unwrap();
-                    if info.thumbnail_url.is_some() {
-                        let new_url = Some(get_media_download_url(
+
+                if let Some(info) = &mut image_event.info {
+                    if let Some(thumbnail_url) = &mut info.thumbnail_url {
+                        let old_thumbnail_url = mem::take(thumbnail_url);
+                        *thumbnail_url = get_media_download_url(
                             self.matrix_client.clone().homeserver(),
-                            info.thumbnail_url.unwrap(),
-                        ));
-                        info.thumbnail_url = new_url;
+                            old_thumbnail_url,
+                        );
                     }
-                    image_event.info = Some(info);
                 }
-                event.content = MessageEventContent::Image(image_event);
             }
-            if let MessageEventContent::Video(mut video_event) = event.content {
-                if video_event.url.is_some() {
-                    let new_url = Some(get_video_media_download_url(
+            if let MessageEventContent::Video(video_event) = &mut event.content {
+                if let Some(video_url) = &mut video_event.url {
+                    let old_video_url = mem::take(video_url);
+                    *video_url = get_video_media_download_url(
                         self.matrix_client.clone().homeserver(),
-                        video_event.url.unwrap(),
-                    ));
-                    video_event.url = new_url;
+                        old_video_url,
+                    );
                 }
-                if video_event.info.is_some() {
-                    let mut info = video_event.info.unwrap();
-                    if info.thumbnail_url.is_some() {
-                        let new_url = Some(get_media_download_url(
+
+                if let Some(info) = &mut video_event.info {
+                    if let Some(thumbnail_url) = &mut info.thumbnail_url {
+                        let old_thumbnail_url = mem::take(thumbnail_url);
+                        *thumbnail_url = get_media_download_url(
                             self.matrix_client.clone().homeserver(),
-                            info.thumbnail_url.unwrap(),
-                        ));
-                        info.thumbnail_url = new_url;
+                            old_thumbnail_url,
+                        );
                     }
-                    video_event.info = Some(info);
                 }
-                event.content = MessageEventContent::Video(video_event);
             }
 
             let serialized_event = EventJson::from(event);

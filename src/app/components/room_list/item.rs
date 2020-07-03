@@ -46,7 +46,7 @@ impl Component for RoomItem {
         let room = self.props.room.clone().unwrap();
 
         // TODO placeholder for encrypted rooms
-        let last_message = match self.props.room.as_ref().unwrap().messages.iter().last() {
+        let last_message = match room.messages.iter().last() {
             None => "".to_string(),
             Some(m) => {
                 if let MessageEventContent::Text(text_event) = &m.content {
@@ -57,6 +57,8 @@ impl Component for RoomItem {
             }
         };
 
+        let display_name = room.display_name();
+
         html! {
             <div class="room-list-item">
                 <a onclick=self.link.callback(move |e: MouseEvent| Msg::ChangeRoom(room.clone()))>
@@ -64,7 +66,7 @@ impl Component for RoomItem {
                         // TODO remove placeholder
                         <img class="avatar" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAoCAYAAACM/rhtAAAARUlEQVRYhe3OMQ0AIADAMBKUowmBoIKMo0f/jrnX+dmoA4KCdUBQsA4ICtYBQcE6IChYBwQF64CgYB0QFKwDgoJ1QPC1C8gY0kSgNLTWAAAAAElFTkSuQmCC"/>
                         <div>
-                            <h5 class="name">{self.props.room.as_ref().unwrap().display_name()}</h5>
+                            <h5 class="name">{display_name}</h5>
                             <p class="latest-msg">{last_message}</p>
                         </div>
                     </div>

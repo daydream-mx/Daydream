@@ -68,20 +68,17 @@ impl Component for Notice {
         let pure_content_clone = pure_content.clone();
         let links: Vec<_> = finder.links(&pure_content_clone).collect();
 
-        let content = if !links.is_empty() {
+        if !links.is_empty() {
             for link in links {
                 let html_link = format!("<a href={}>{}</a>", link.as_str(), link.as_str());
                 pure_content.replace_range(link.start()..link.end(), &html_link);
             }
-            pure_content
-        } else {
-            pure_content
-        };
+        }
 
         if new_user {
             let full_html = format!(
                 "<p style=\"opacity: .6;\"><displayname>{}: </displayname>{}</p>",
-                sender_displayname, content
+                sender_displayname, pure_content
             );
             let js_text_event = {
                 let div = web_sys::window()
@@ -96,7 +93,7 @@ impl Component for Notice {
             let node = Node::from(js_text_event);
             VNode::VRef(node)
         } else {
-            let full_html = format!("<p style=\"opacity: .6;\">{}</p>", content);
+            let full_html = format!("<p style=\"opacity: .6;\">{}</p>", pure_content);
             let js_text_event = {
                 let div = web_sys::window()
                     .unwrap()

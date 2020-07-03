@@ -77,27 +77,16 @@ impl Component for Text {
             pure_content
         };
 
-        if self.props.text_event.clone().unwrap().formatted.is_some() {
+        if let Some(formatted) = &self.props.text_event.as_ref().unwrap().formatted {
+            let format_slot;
             let message = if new_user {
-                format!(
+                format_slot = format!(
                     "<displayname>{}:</displayname> {}",
-                    sender_displayname,
-                    self.props
-                        .text_event
-                        .clone()
-                        .unwrap()
-                        .formatted
-                        .unwrap()
-                        .body
-                )
+                    sender_displayname, formatted.body
+                );
+                &format_slot
             } else {
-                self.props
-                    .text_event
-                    .clone()
-                    .unwrap()
-                    .formatted
-                    .unwrap()
-                    .body
+                &formatted.body
             };
             let js_text_event = {
                 let div = web_sys::window()
