@@ -33,7 +33,7 @@ pub fn run_app() -> Result<(), JsValue> {
     let language_loader = DaydreamLanguageLoader::new();
     let requested_languages = WebLanguageRequester::requested_languages();
 
-    i18n_embed::select(&language_loader, &translations, &requested_languages);
+    i18n_embed::select(&language_loader, &translations, &requested_languages).unwrap();
 
     yew::start_app::<app::App>();
     Ok(())

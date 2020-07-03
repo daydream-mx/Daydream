@@ -32,10 +32,9 @@ pub enum Msg {
 
 pub struct App {
     // While unused this needs to stay :(
-    matrix_agent: Box<dyn Bridge<MatrixAgent>>,
+    _matrix_agent: Box<dyn Bridge<MatrixAgent>>,
     route: Option<Route<()>>,
     route_agent: Box<dyn Bridge<RouteAgent<()>>>,
-    session: Option<SessionStore>,
     storage: Arc<Mutex<StorageService>>,
 }
 
@@ -57,13 +56,12 @@ impl Component for App {
         };
         let route_agent = RouteAgent::bridge(link.callback(Msg::RouteChanged));
         let mut matrix_agent = MatrixAgent::bridge(link.callback(Msg::NewMessage));
-        matrix_agent.send(matrix::Request::SetSession(session.clone().unwrap()));
+        matrix_agent.send(matrix::Request::SetSession(session.unwrap()));
         matrix_agent.send(matrix::Request::GetLoggedIn);
         App {
-            matrix_agent,
+            _matrix_agent: matrix_agent,
             route_agent,
             route: None,
-            session,
             storage,
         }
     }

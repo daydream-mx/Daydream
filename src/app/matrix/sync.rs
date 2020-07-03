@@ -167,7 +167,7 @@ impl Sync {
                 event.content = MessageEventContent::Video(video_event);
             }
 
-            let serialized_event = EventJson::from(event.clone());
+            let serialized_event = EventJson::from(event);
             let resp = Response::Sync((room_id.clone(), serialized_event));
             self.callback.emit(resp);
         }
