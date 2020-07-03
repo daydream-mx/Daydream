@@ -10,7 +10,7 @@ const appConfig = (env, argv) => {
     return {
         devServer: {
             contentBase: distPath,
-            compress: process.env.WEBPACK_MODE === 'production',
+            compress: argv.mode === 'production',
             port: 8888,
             historyApiFallback: true
         },
@@ -40,7 +40,7 @@ const appConfig = (env, argv) => {
                     include: [path.resolve(__dirname, "static"), path.resolve(__dirname, "node_modules")],
                     use: [
                         // fallback to style-loader in development
-                        process.env.WEBPACK_MODE !== 'production'
+                        argv.mode !== 'production'
                             ? 'style-loader'
                             : MiniCssExtractPlugin.loader,
                         'css-loader',
@@ -77,7 +77,7 @@ const appConfig = (env, argv) => {
                 template: path.resolve(__dirname, "static/index.html")
             })
         ],
-        watch: process.env.WEBPACK_MODE !== 'production',
+        watch: argv.mode !== 'production',
         watchOptions: {
             poll: true
         },
