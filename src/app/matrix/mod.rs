@@ -1,6 +1,6 @@
-use std::collections::{HashSet};
+use std::collections::HashSet;
 use std::convert::TryFrom;
-use std::sync::{Arc};
+use std::sync::Arc;
 
 use log::*;
 use matrix_sdk::{
@@ -221,7 +221,14 @@ impl Agent for MatrixAgent {
                 });
             }
             Request::GetLoggedIn => {
-                self.login();
+                let login_client = self.login();
+                if login_client.is_none() {
+                    for sub in self.subscribers.iter() {
+                        let resp = Response::Error(MatrixError::MissingClient);
+                        self.link.respond(*sub, resp);
+                    }
+                    return;
+                }
 
                 // Always clone agent after having tried to login!
                 let agent = self.clone();
@@ -432,9 +439,6 @@ impl MatrixAgent {
 
     fn login(&mut self) -> Option<Client> {
         info!("preparing client");
-        if self.session.is_none() {
-            return None;
-        }
         if self.session.is_some() {
             info!("restoring login");
             let homeserver = self.session.clone().unwrap().homeserver_url;

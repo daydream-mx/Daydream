@@ -1,5 +1,5 @@
-use wasm_bindgen::JsCast;
 use wasm_bindgen::prelude::*;
+use wasm_bindgen::JsCast;
 use web_sys::{Notification, NotificationOptions, NotificationPermission};
 
 #[derive(Clone)]

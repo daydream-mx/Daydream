@@ -1,4 +1,4 @@
-use matrix_sdk::{events::room::message::MessageEventContent, Room, identifiers::RoomId};
+use matrix_sdk::{events::room::message::MessageEventContent, identifiers::RoomId, Room};
 use yew::prelude::*;
 use yewtil::NeqAssign;
 

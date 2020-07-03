@@ -57,6 +57,7 @@ impl Component for App {
         };
         let route_agent = RouteAgent::bridge(link.callback(Msg::RouteChanged));
         let mut matrix_agent = MatrixAgent::bridge(link.callback(Msg::NewMessage));
+        matrix_agent.send(matrix::Request::SetSession(session.clone().unwrap()));
         matrix_agent.send(matrix::Request::GetLoggedIn);
         App {
             matrix_agent,
@@ -87,12 +88,6 @@ impl Component for App {
                     }
                     Response::Error(_) => {}
                     Response::LoggedIn(logged_in) => {
-                        if !logged_in && self.session.is_some() {
-                            self.matrix_agent
-                                .send(matrix::Request::SetSession(self.session.clone().unwrap()));
-                            self.matrix_agent.send(matrix::Request::GetLoggedIn);
-                            return false;
-                        }
                         let route: Route = if logged_in {
                             //self.state.logged_in = true;
 
