@@ -70,27 +70,34 @@ impl Component for EventList {
         match msg {
             Msg::NewMessage(response) => {
                 match response {
-                    Response::Sync((room_id, msg)) => {
+                    Response::Sync((room_id, raw_msg)) => {
                         // TODO handle all events
-                        if self.state.events.contains_key(&room_id) {
-                            if !(self.state.events[&room_id]
-                                .iter()
-                                .map(|x| x.event_id.clone())
-                                .any(|x| x == msg.event_id))
-                            {
-                                self.state.events.get_mut(&room_id).unwrap().push(msg);
-                                room_id == self.props.current_room.clone().unwrap().room_id
+                        if let Ok(msg) = raw_msg.deserialize() {
+                            if self.state.events.contains_key(&room_id) {
+                                if !(self.state.events[&room_id]
+                                    .iter()
+                                    .any(|x| x.event_id == msg.event_id))
+                                {
+                                    self.state.events.get_mut(&room_id).unwrap().push(msg);
+                                    room_id == self.props.current_room.clone().unwrap().room_id
+                                } else {
+                                    false
+                                }
                             } else {
-                                false
+                                let mut msgs = vec![msg];
+                                self.state.events.insert(room_id.clone(), msgs);
+                                room_id == self.props.current_room.clone().unwrap().room_id
                             }
                         } else {
-                            let mut msgs = Vec::new();
-                            msgs.push(msg);
-                            self.state.events.insert(room_id.clone(), msgs);
-                            room_id == self.props.current_room.clone().unwrap().room_id
+                            false
                         }
                     }
                     Response::OldMessages((room_id, mut messages)) => {
+                        let mut deserialized_messages: Vec<MessageEvent> = messages
+                            .iter()
+                            .map(|x| x.deserialize())
+                            .filter_map(Result::ok)
+                            .collect();
                         // This is a clippy false positive
                         #[allow(clippy::map_entry)]
                         if self.state.events.contains_key(&room_id) {
@@ -98,10 +105,10 @@ impl Component for EventList {
                                 .events
                                 .get_mut(&room_id)
                                 .unwrap()
-                                .append(messages.as_mut());
+                                .append(deserialized_messages.as_mut());
                             true
                         } else {
-                            self.state.events.insert(room_id, messages);
+                            self.state.events.insert(room_id, deserialized_messages);
                             true
                         }
                     }
@@ -139,30 +146,30 @@ impl Component for EventList {
 
     fn view(&self) -> Html {
         return html! {
-            <div class="event-list container uk-flex uk-flex-column uk-width-5-6">
-                <div class="room-title"><div><h1>{ self.props.current_room.as_ref().unwrap().display_name() }</h1></div></div>
-                <div class="scrollable" style="height: 100%">
-                    {
-                        if self.state.events.contains_key(&self.props.current_room.as_ref().unwrap().room_id) {
-                            let events = self.state.events[&self.props.current_room.as_ref().unwrap().room_id].clone();
-                            let mut elements: Vec<Html> = Vec::new();
-                            for (pos, event) in self.state.events[&self.props.current_room.as_ref().unwrap().room_id].iter().enumerate() {
-                                if pos == 0 {
-                                    elements.push(self.get_event(None, event));
-                                } else {
-                                    elements.push(self.get_event(Some(events[pos - 1].clone()), event));
+            <div class="event-list">
+                <div class="room-title"><h1>{ self.props.current_room.as_ref().unwrap().display_name() }</h1></div>
+                <div class="scrollable" style="height: auto; flex-grow: 1;">
+                    <div class="message-container">
+                        {
+                            if self.state.events.contains_key(&self.props.current_room.as_ref().unwrap().room_id) {
+                                let events = self.state.events[&self.props.current_room.as_ref().unwrap().room_id].clone();
+                                let mut elements: Vec<Html> = Vec::new();
+                                for (pos, event) in self.state.events[&self.props.current_room.as_ref().unwrap().room_id].iter().enumerate() {
+                                    if pos == 0 {
+                                        elements.push(self.get_event(None, event));
+                                    } else {
+                                        elements.push(self.get_event(Some(events[pos - 1].clone()), event));
+                                    }
                                 }
+                                elements.into_iter().collect::<Html>()
+                            } else {
+                                html! {}
                             }
-                            elements.into_iter().collect::<Html>()
-                        } else {
-                            html! {}
                         }
-                    }
-                    <div id="anchor"></div>
+                        <div id="anchor"></div>
+                    </div>
                 </div>
-                <div class="uk-margin">
-                    <Input on_submit=&self.on_submit/>
-                </div>
+                <Input on_submit=&self.on_submit/>
             </div>
         };
     }

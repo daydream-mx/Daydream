@@ -3,13 +3,14 @@ const WasmPackPlugin = require('@wasm-tool/wasm-pack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const TerserPlugin = require('terser-webpack-plugin');
 
 const distPath = path.resolve(__dirname, "dist");
-module.exports = (env, argv) => {
+const appConfig = (env, argv) => {
     return {
         devServer: {
             contentBase: distPath,
-            compress: argv.mode === 'production',
+            compress: process.env.WEBPACK_MODE === 'production',
             port: 8888,
             historyApiFallback: true
         },
@@ -18,6 +19,12 @@ module.exports = (env, argv) => {
             path: distPath,
             filename: "daydream.js",
             webassemblyModuleFilename: "daydream.wasm"
+        },
+        optimization: {
+            minimize: true,
+            minimizer: [new TerserPlugin({
+                parallel: true,
+            })],
         },
         module: {
             rules: [
@@ -33,7 +40,7 @@ module.exports = (env, argv) => {
                     include: [path.resolve(__dirname, "static"), path.resolve(__dirname, "node_modules")],
                     use: [
                         // fallback to style-loader in development
-                        process.env.NODE_ENV !== 'production'
+                        process.env.WEBPACK_MODE !== 'production'
                             ? 'style-loader'
                             : MiniCssExtractPlugin.loader,
                         'css-loader',
@@ -69,7 +76,28 @@ module.exports = (env, argv) => {
             new HtmlWebpackPlugin({
                 template: path.resolve(__dirname, "static/index.html")
             })
-        ]
-        //watch: argv.mode !== 'production'
+        ],
+        watch: process.env.WEBPACK_MODE !== 'production',
+        watchOptions: {
+            poll: true
+        }
     };
+};
+
+// This config actually generates both
+const workerConfig = {
+    entry: "./startup_helper/worker/worker.js",
+    target: "webworker",
+    plugins: [],
+    resolve: {
+        extensions: [".js", ".wasm"]
+    },
+    output: {
+        path: distPath,
+        filename: "worker.js"
+    }
+};
+
+module.exports = (env, argv) => {
+    return [appConfig(env, argv), workerConfig]
 };

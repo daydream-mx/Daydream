@@ -8,7 +8,7 @@ jobs:
       - name: Setup Rust
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: stable
+          toolchain: nightly
       - name: Run fmt
         run: cargo fmt -- --check
       - name: Run clippy

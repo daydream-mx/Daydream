@@ -20,7 +20,7 @@ impl fmt::Display for Field {
 }
 
 // TODO figure out a way to translate this
-#[derive(Error, Debug, Clone)]
+#[derive(Error, Debug, Clone, Serialize, Deserialize)]
 pub enum MatrixError {
     #[error("No Matrix Client is available yet")]
     MissingClient,

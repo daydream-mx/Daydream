@@ -2,12 +2,17 @@ use yew::{prelude::*, virtual_dom::VNode};
 use yew_router::agent::RouteRequest::ChangeRoute;
 use yew_router::{prelude::*, Switch};
 
-use crate::app::matrix::{MatrixAgent, Response};
+use crate::app::matrix::{MatrixAgent, Response, SessionStore};
 use crate::app::views::{login::Login, main_view::MainView};
 use log::*;
+use std::sync::{Arc, Mutex};
+use yew::services::StorageService;
+use yew::services::storage::Area;
+use crate::constants::AUTH_KEY;
+use yew::format::Json;
 
 pub mod components;
-mod matrix;
+pub mod matrix;
 mod views;
 
 #[derive(Switch, Clone)]
@@ -30,6 +35,8 @@ pub struct App {
     matrix_agent: Box<dyn Bridge<MatrixAgent>>,
     route: Option<Route<()>>,
     route_agent: Box<dyn Bridge<RouteAgent<()>>>,
+    session: Option<SessionStore>,
+    storage: Arc<Mutex<StorageService>>,
 }
 
 impl Component for App {
@@ -37,6 +44,17 @@ impl Component for App {
     type Properties = ();
 
     fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
+        let storage = Arc::new(Mutex::new(
+            StorageService::new(Area::Local).expect("storage was disabled by the user"),
+        ));
+
+        let session: Option<SessionStore> = {
+            if let Json(Ok(restored_model)) = storage.lock().unwrap().restore(AUTH_KEY) {
+                Some(restored_model)
+            } else {
+                None
+            }
+        };
         let route_agent = RouteAgent::bridge(link.callback(Msg::RouteChanged));
         let mut matrix_agent = MatrixAgent::bridge(link.callback(Msg::NewMessage));
         matrix_agent.send(matrix::Request::GetLoggedIn);
@@ -44,6 +62,8 @@ impl Component for App {
             matrix_agent,
             route_agent,
             route: None,
+            session,
+            storage,
         }
     }
 
@@ -61,8 +81,17 @@ impl Component for App {
             Msg::NewMessage(response) => {
                 //info!("NewMessage: {:#?}", response);
                 match response {
+                    Response::SaveSession(session) => {
+                        let mut storage = self.storage.lock().unwrap();
+                        storage.store(AUTH_KEY, Json(&session));
+                    }
                     Response::Error(_) => {}
                     Response::LoggedIn(logged_in) => {
+                        if !logged_in && self.session.is_some() {
+                            self.matrix_agent.send(matrix::Request::SetSession(self.session.clone().unwrap()));
+                            self.matrix_agent.send(matrix::Request::GetLoggedIn);
+                            return false;
+                        }
                         let route: Route = if logged_in {
                             //self.state.logged_in = true;
 

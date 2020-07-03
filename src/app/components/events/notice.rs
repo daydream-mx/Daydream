@@ -80,8 +80,7 @@ impl Component for Notice {
         if new_user {
             let full_html = format!(
                 "<p style=\"opacity: .6;\"><displayname>{}: </displayname>{}</p>",
-                sender_displayname,
-                content
+                sender_displayname, content
             );
             let js_text_event = {
                 let div = web_sys::window()

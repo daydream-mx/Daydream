@@ -23,7 +23,7 @@ use serde::{Deserialize, Serialize};
 use url::Url;
 use wasm_bindgen_futures::spawn_local;
 use yew::format::Json;
-use yew::services::{storage::Area, StorageService};
+use yew::worker::*;
 use yew::worker::*;
 
 use crate::app::matrix::types::{get_media_download_url, get_video_media_download_url};
@@ -55,36 +55,35 @@ pub struct MatrixAgent {
     matrix_client: Option<Client>,
     // TODO make arc mutex :(
     subscribers: HashSet<HandlerId>,
-    storage: Arc<Mutex<StorageService>>,
     session: Option<SessionStore>,
 }
 
-#[derive(Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub enum Request {
     SetHomeserver(String),
     SetUsername(String),
     SetPassword(String),
+    SetSession(SessionStore),
     Login,
     GetLoggedIn,
     GetOldMessages((RoomId, Option<String>)),
     StartSync,
-    GetJoinedRooms,
     GetJoinedRoom(RoomId),
     SendMessage((RoomId, String)),
 }
 
 #[allow(clippy::large_enum_variant)]
-#[derive(Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum Response {
     Error(MatrixError),
     LoggedIn(bool),
     // TODO properly handle sync events
-    Sync((RoomId, MessageEvent)),
+    Sync((RoomId, EventJson<MessageEvent>)),
+    JoinedRoomSync(RoomId),
     SyncPing,
-    JoinedRoomList(HashMap<RoomId, Room>),
-    Userdata(),
-    OldMessages((RoomId, Vec<MessageEvent>)),
+    OldMessages((RoomId, Vec<EventJson<MessageEvent>>)),
     JoinedRoom((RoomId, Room)),
+    SaveSession(SessionStore)
 }
 
 #[derive(Debug, Clone)]
@@ -93,29 +92,18 @@ pub enum Msg {
 }
 
 impl Agent for MatrixAgent {
-    type Reach = Context<MatrixAgent>;
+    type Reach = Public<Self>;
     type Message = Msg;
     type Input = Request;
     type Output = Response;
 
     fn create(link: AgentLink<Self>) -> Self {
-        let storage = Arc::new(Mutex::new(
-            StorageService::new(Area::Local).expect("storage was disabled by the user"),
-        ));
-        let session: Option<SessionStore> = {
-            if let Json(Ok(restored_model)) = storage.lock().unwrap().restore(AUTH_KEY) {
-                Some(restored_model)
-            } else {
-                None
-            }
-        };
         MatrixAgent {
             link,
             matrix_state: Default::default(),
             matrix_client: None,
             subscribers: HashSet::new(),
-            storage,
-            session,
+            session: Default::default(),
         }
     }
 
@@ -134,6 +122,10 @@ impl Agent for MatrixAgent {
     }
     fn handle_input(&mut self, msg: Self::Input, _: HandlerId) {
         match msg {
+            Request::SetSession(session) => {
+                self.session = Some(session);
+            }
+
             Request::SetHomeserver(homeserver) => {
                 self.matrix_state.homeserver = Some(homeserver);
             }
@@ -184,10 +176,9 @@ impl Agent for MatrixAgent {
                                     device_id: login_response.device_id,
                                     homeserver_url: client.homeserver().to_string(),
                                 };
-                                let mut storage = agent.storage.lock().unwrap();
-                                storage.store(AUTH_KEY, Json(&session_store));
-
                                 for sub in subscribers.iter() {
+                                    let resp = Response::SaveSession(session_store.clone());
+                                    agent.link.respond(*sub, resp);
                                     let resp = Response::LoggedIn(true);
                                     agent.link.respond(*sub, resp);
                                 }
@@ -265,24 +256,6 @@ impl Agent for MatrixAgent {
                     agent.start_sync().await;
                 });
             }
-            Request::GetJoinedRooms => {
-                let agent = self.clone();
-                spawn_local(async move {
-                    let rooms: Arc<RwLock<HashMap<RoomId, Arc<RwLock<Room>>>>> =
-                        agent.matrix_client.unwrap().joined_rooms();
-
-                    let readable_rooms = rooms.read().await;
-                    let mut rooms_unarced: HashMap<RoomId, Room> = HashMap::new();
-                    for (id, room) in readable_rooms.iter() {
-                        let unarced_room = (*room.write().await).clone();
-                        rooms_unarced.insert(id.clone(), unarced_room);
-                    }
-                    for sub in agent.subscribers.iter() {
-                        let resp = Response::JoinedRoomList(rooms_unarced.clone());
-                        agent.link.respond(*sub, resp);
-                    }
-                });
-            }
             Request::GetOldMessages((room_id, from)) => {
                 let agent = self.clone();
                 spawn_local(async move {
@@ -320,7 +293,7 @@ impl Agent for MatrixAgent {
                         .unwrap();
                     // TODO save end point for future loading
 
-                    let mut wrapped_messages: Vec<MessageEvent> = Vec::new();
+                    let mut wrapped_messages: Vec<EventJson<MessageEvent>> = Vec::new();
                     let chunk_iter: Vec<EventJson<RoomEvent>> = messsages.chunk;
                     let (oks, _): (Vec<_>, Vec<_>) = chunk_iter
                         .iter()
@@ -377,7 +350,9 @@ impl Agent for MatrixAgent {
                                 }
                                 event.content = MessageEventContent::Video(video_event);
                             }
-                            wrapped_messages.push(event.clone());
+
+                            let serialized_event = EventJson::from(event.clone());
+                            wrapped_messages.push(serialized_event);
                         }
                     }
 
@@ -438,6 +413,10 @@ impl Agent for MatrixAgent {
 
     fn disconnected(&mut self, id: HandlerId) {
         self.subscribers.remove(&id);
+    }
+
+    fn name_of_resource() -> &'static str {
+        "worker.js"
     }
 }
 

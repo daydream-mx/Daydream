@@ -9,6 +9,7 @@ jobs:
         containers: [1, 2, 3]
     steps:
       - uses: actions/checkout@v1
+      - run: rustup default nightly
       - uses: cypress-io/github-action@v1
         with:
           browser: chrome

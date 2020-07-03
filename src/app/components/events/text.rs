@@ -113,8 +113,7 @@ impl Component for Text {
         } else if new_user {
             let full_html = format!(
                 "<p><displayname>{}: </displayname>{}</p>",
-                sender_displayname,
-                content
+                sender_displayname, content
             );
             let js_text_event = {
                 let div = web_sys::window()

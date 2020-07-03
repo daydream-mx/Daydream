@@ -1,10 +1,15 @@
 use std::sync::Arc;
+use std::sync::Mutex;
 use std::time::Duration;
 
 use log::*;
 use matrix_sdk::{
     api::r0::sync::sync_events::Response as SyncResponse,
-    events::{collections::all::RoomEvent, room::message::MessageEventContent},
+    events::{
+        collections::all::{RoomEvent, StateEvent},
+        room::message::MessageEventContent,
+        EventJson,
+    },
     identifiers::RoomId,
     locks::RwLock,
     Client, Room, SyncSettings,
@@ -12,10 +17,17 @@ use matrix_sdk::{
 use wasm_bindgen_futures::spawn_local;
 use yew::Callback;
 
+use lazy_static::lazy_static;
+
 use crate::app::components::events::{get_sender_avatar, get_sender_displayname};
 use crate::app::matrix::types::{get_media_download_url, get_video_media_download_url};
 use crate::app::matrix::Response;
 use crate::utils::notifications::Notifications;
+use serde::Serialize;
+
+lazy_static! {
+    static ref SYNC_NUMBER: Mutex<i32> = Mutex::new(0);
+}
 
 pub struct Sync {
     pub(crate) matrix_client: Client,
@@ -37,20 +49,44 @@ impl Sync {
 
     async fn on_sync_response(&self, response: SyncResponse) {
         debug!("got sync!");
+
         // FIXME: Is there a smarter way?
         let resp = Response::SyncPing;
         self.callback.emit(resp);
         for (room_id, room) in response.rooms.join {
+            for event in room.state.events {
+                if let Ok(event) = event.deserialize() {
+                    self.on_state_event(&room_id, event).await
+                }
+            }
             for event in room.timeline.events {
                 if let Ok(event) = event.deserialize() {
                     self.on_room_message(&room_id, event).await
                 }
             }
         }
+        let mut sync_number = SYNC_NUMBER.lock().unwrap();
+        if *sync_number == 0 {
+            *sync_number = 1;
+        }
+    }
+
+    async fn on_state_event(&self, room_id: &RoomId, event: StateEvent) {
+        if let StateEvent::RoomCreate(event) = event {
+            info!("Sent JoinedRoomSync State");
+            let resp = Response::JoinedRoomSync(room_id.clone());
+            self.callback.emit(resp);
+        }
     }
 
     async fn on_room_message(&self, room_id: &RoomId, event: RoomEvent) {
         // TODO handle all messages...
+
+        if let RoomEvent::RoomCreate(_create_event) = event.clone() {
+            info!("Sent JoinedRoomSync Timeline");
+            let resp = Response::JoinedRoomSync(room_id.clone());
+            self.callback.emit(resp);
+        }
 
         if let RoomEvent::RoomMessage(mut event) = event {
             if let MessageEventContent::Text(text_event) = event.clone().content {
@@ -59,28 +95,41 @@ impl Sync {
                 let cloned_event = event.clone();
                 let client = self.matrix_client.clone();
                 let local_room_id = room_id.clone();
-                spawn_local(async move {
-                    if Notifications::browser_support() {
-                        let room: Arc<RwLock<Room>> = client
-                            .clone()
-                            .get_joined_room(&local_room_id.clone())
-                            .await
-                            .unwrap();
-                        let read_clone = room.read().await;
-                        let clean_room = (*read_clone).clone();
-                        let avatar_url = get_sender_avatar(
-                            homeserver_url,
-                            clean_room.clone(),
-                            cloned_event.clone(),
-                        );
-                        let displayname =
-                            get_sender_displayname(clean_room, cloned_event.clone());
+                let sync_number = SYNC_NUMBER.lock().unwrap();
+                if *sync_number == 1 {
+                    spawn_local(async move {
+                        if Notifications::browser_support() {
+                            let room: Arc<RwLock<Room>> = client
+                                .clone()
+                                .get_joined_room(&local_room_id.clone())
+                                .await
+                                .unwrap();
+                            let read_clone = room.read().await;
+                            let clean_room = (*read_clone).clone();
+                            let avatar_url = get_sender_avatar(
+                                homeserver_url,
+                                clean_room.clone(),
+                                cloned_event.clone(),
+                            );
+                            let room_name = clean_room.display_name();
+                            let displayname =
+                                get_sender_displayname(clean_room, cloned_event.clone());
 
-                        let notification =
-                            Notifications::new(avatar_url, displayname, text_event.body.clone());
-                        notification.show();
-                    }
-                });
+                            let mut title = "".to_string();
+                            if displayname == room_name {
+                                title = displayname;
+                            } else {
+                                title = format!("{} ({})", displayname, room_name);
+                            }
+
+                            /*
+                            TODO fix by moving it out of the worker
+                            let notification =
+                                Notifications::new(avatar_url, title, text_event.body.clone());
+                            notification.show();*/
+                        }
+                    });
+                }
             }
             if let MessageEventContent::Image(mut image_event) = event.clone().content {
                 if image_event.url.is_some() {
@@ -125,7 +174,8 @@ impl Sync {
                 event.content = MessageEventContent::Video(video_event);
             }
 
-            let resp = Response::Sync((room_id.clone(), event.clone()));
+            let serialized_event = EventJson::from(event.clone());
+            let resp = Response::Sync((room_id.clone(), serialized_event));
             self.callback.emit(resp);
         }
     }

@@ -1,7 +1,7 @@
 .scrollable {
   overflow-y: auto !important;
   overflow-x: hidden !important;
-  height: 100vh;
+  height: 100%;
   scrollbar-width: thin;
   scrollbar-color: $scrollbar-color $scrollbar-bg-color;
 }
@@ -78,7 +78,7 @@ em {
 
 .error {
   color: #992E2E;
-  font-family: Roboto;
+  font-family: 'Roboto', sans-serif;
   font-style: normal;
   font-weight: 500;
   font-size: 16px;
@@ -89,10 +89,6 @@ em {
   letter-spacing: 0.02em;
   font-feature-settings: 'ordn' on;
   margin: 0;
-}
-
-.roomlist {
-  min-width: 260px;
 }
 
 .uk-search, .uk-inline {
@@ -141,7 +137,6 @@ li {
 
 @import "sun-loading-animation.scss";
 @import "lightbox.scss";
-@import "fonts.scss";
 
 .daydream-title {
   font-family: 'Dancing Script', cursive;
@@ -221,7 +216,7 @@ _::-webkit-full-page-media, _:future, :root .login-page-bg {
 }
 
 .login-title {
-  font-family: Roboto;
+  font-family: 'Roboto', sans-serif;
   font-style: normal;
   font-weight: bold;
   font-size: 48px;
@@ -252,7 +247,7 @@ _::-webkit-full-page-media, _:future, :root .login-page-bg {
   transition: all 0.3s ease 0s;
   border-radius: 45px;
 
-  font-family: Roboto;
+  font-family: 'Roboto', sans-serif;
   font-style: normal;
   font-weight: normal;
   font-size: 24px;
@@ -295,7 +290,7 @@ input.login-input {
 
   /* Subtitle 1 / Roboto Regular */
 
-  font-family: Roboto;
+  font-family: 'Roboto', sans-serif;
   font-style: normal;
   font-weight: normal;
   font-size: 16px;
@@ -344,25 +339,285 @@ body {
 }
 
 .room-title {
-  margin-bottom: 1.5rem;
-
   width: 100%;
-  overflow: hidden;
-  padding-bottom: 10px;
-}
+  height: 100%;
+  max-height: 5.875rem;
 
-.room-title > div {
-  width: 100%;
-  //height: 100px;
+  //h1 {
+  //  margin: 0 !important;
+  //  height: 5.875rem;
+  //}
 
-  box-shadow: 0 1px 10px rgba(0, 0, 0, 0.2), 0 4px 5px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.14);
-  -moz-box-shadow: 0 1px 10px rgba(0, 0, 0, 0.2), 0 4px 5px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.14);
-  -webkit-box-shadow: 0 1px 10px rgba(0, 0, 0, 0.2), 0 4px 5px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.14);
+  &::before {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 5.875rem;
+
+    box-shadow: 0 1px 10px rgba(0, 0, 0, 0.2), 0 4px 5px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.14);
+    -moz-box-shadow: 0 1px 10px rgba(0, 0, 0, 0.2), 0 4px 5px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.14);
+    -webkit-box-shadow: 0 1px 10px rgba(0, 0, 0, 0.2), 0 4px 5px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.14);
+  }
 }
 
 .event-list {
-  padding: 40px;
-  padding-bottom: 0 !important;
-  padding-right: 0 !important;
   height: 100%;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
 }
+
+.message-container {
+  width: 100%;
+  max-width: 67.0625rem;
+
+  margin: 0 auto;
+}
+
+
+.roomlist {
+  width: 100%;
+  max-width: 31.5rem;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  z-index: 0;
+
+  .list {
+    width: 100%;
+    flex-grow: 1;
+    height: auto !important;
+    z-index: -1;
+  }
+
+  .top-bar {
+    width: 100%;
+
+    height: 138px;
+
+    .userdata {
+      width: 100%;
+      height: 5.875rem;
+
+      background-color: $accent-color;
+
+      padding-left: 1.5625rem;
+      padding-right: 1.1875rem;
+      -webkit-box-sizing: border-box; /* Safari/Chrome, other WebKit */
+      -moz-box-sizing: border-box; /* Firefox, other Gecko */
+      box-sizing: border-box; /* Opera/IE 8+ */
+    }
+
+    .search {
+      width: 100%;
+
+      div {
+        height: 2.75rem;
+
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+
+        padding-left: 1.5625rem;
+        padding-right: 1.1875rem;
+        -webkit-box-sizing: border-box; /* Safari/Chrome, other WebKit */
+        -moz-box-sizing: border-box; /* Firefox, other Gecko */
+        box-sizing: border-box; /* Opera/IE 8+ */
+        z-index: 1;
+
+        width: 100%;
+        box-shadow: 0 1px 10px rgba(0, 0, 0, 0.2), 0 4px 5px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.14);
+        -moz-box-shadow: 0 1px 10px rgba(0, 0, 0, 0.2), 0 4px 5px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.14);
+        -webkit-box-shadow: 0 1px 10px rgba(0, 0, 0, 0.2), 0 4px 5px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.14);
+
+        .material-icons {
+          margin-top: 0.625rem;
+          margin-bottom: 0.625rem;
+        }
+
+        .search-input {
+          /*
+             * 1. Define consistent box sizing.
+             * 3. Remove `border-radius` in iOS.
+             * 4. Change font properties to `inherit` in all browsers
+             * 5. Show the overflow in Edge.
+             * 6. Remove default style in iOS.
+             * 7. Vertical alignment
+             * 8. Take the full container width
+             * 9. Style
+          */
+          /* 1 */
+          box-sizing: border-box;
+          /* 3 */
+          border-radius: 0;
+          /* 4 */
+          font: inherit;
+          /* 5 */
+          overflow: visible;
+          /* 6 */
+          -webkit-appearance: none;
+          /* 7 */
+          vertical-align: middle;
+          /* 8 */
+          width: 100%;
+          /* 9 */
+          border: none;
+
+
+          margin-top: 0.625rem;
+          margin-bottom: 0.625rem;
+          margin-left: 3.206875rem;
+
+          /* H6 / Roboto Medium */
+
+          font-family: 'Roboto', sans-serif;
+          font-style: normal;
+          font-weight: 500;
+          font-size: 20px;
+          line-height: 23px;
+          display: flex;
+          align-items: center;
+          letter-spacing: 0.15px;
+
+          color: $search-grey;
+
+          &:focus {
+            // Chrome override
+            outline: none 0;
+          }
+
+
+          /*
+           * Remove the inner padding and cancel buttons in Chrome on OS X and Safari on OS X.
+           */
+
+          &::-webkit-search-cancel-button,
+          &::-webkit-search-decoration {
+            -webkit-appearance: none;
+          }
+
+          /*
+           * Removes placeholder transparency in Firefox.
+           */
+
+          &::-moz-placeholder {
+            opacity: 1;
+          }
+
+        }
+      }
+    }
+
+  }
+
+  .bottom-bar {
+    height: 4.375rem;
+    width: 100%;
+    position: relative;
+
+    &::after {
+      content: '';
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      z-index: -1;
+      box-shadow: -10px -1px 10px rgba(0, 0, 0, 0.2), -10px -4px 5px rgba(0, 0, 0, 0.12), -10px -2px 4px rgba(0, 0, 0, 0.14);
+    }
+
+    .toggleWrapper {
+      height: 100%;
+      // Following later becomes button stuff
+      margin: 9px 54px;
+    }
+  }
+}
+
+// TODO make room-list-item responsive
+.room-list-item {
+  &:hover {
+    background-color: #d9d9d9;
+  }
+
+  a {
+    &:hover {
+      text-decoration: none !important;
+    }
+
+    background-color: #F2F2F2;
+    height: 5rem;
+
+    .content {
+      margin-left: 35px;
+      height: 5rem;
+      display: flex;
+      flex-direction: row;
+      width: 100%;
+      max-width: 28.8125rem;
+
+      img.avatar {
+        border-radius: 50%;
+        box-shadow: 0 1px 8px rgba(0, 0, 0, 0.2), 0 3px 4px rgba(0, 0, 0, 0.12), 0 3px 3px rgba(0, 0, 0, 0.14);
+      }
+
+      .avatar {
+        margin-right: 28px;
+        width: 48px;
+        height: 48px;
+        box-sizing: border-box;
+        margin-bottom: 16px;
+        margin-top: 16px;
+      }
+
+      div {
+        margin-bottom: 3px;
+
+        .name {
+          /* RoomList Names */
+
+          font-family: Roboto, sans-serif;
+          font-style: normal;
+          font-weight: 500;
+          font-size: 18px;
+          line-height: 23px;
+          margin: 0 !important;
+          margin-top: 18px !important;
+          text-overflow: ellipsis;
+          overflow: hidden;
+          white-space: nowrap;
+
+          /* Black */
+
+          color: #000000;
+
+          width: 100%;
+          max-width: 22rem;
+        }
+
+        p.latest-msg {
+          font-family: Roboto, sans-serif;
+          font-style: normal;
+          font-weight: normal;
+          font-size: 14px;
+          line-height: 28px;
+          text-overflow: ellipsis;
+          overflow: hidden;
+          white-space: nowrap;
+
+          letter-spacing: 0.5px;
+          margin: 0 !important;
+
+          /* Search Grey */
+          color: #737373;
+
+          width: 100%;
+          max-width: 22rem;
+          display: inline-block;
+        }
+      }
+    }
+
+  }
+}
+
