@@ -36,4 +36,9 @@ pub enum MatrixError {
     /// This can't use transparent as we need Clone
     #[error("An error occurred in the Matrix client library: `{0}`")]
     SDKError(String),
+
+    /// An error occurred in the URL parse library.
+    /// This can't use transparent as we need Serialize, Deserialize
+    #[error("An error occurred in the URL parse library: `{0}`")]
+    UrlParseError(String),
 }

@@ -2,7 +2,7 @@ use yew::{prelude::*, virtual_dom::VNode};
 use yew_router::agent::RouteRequest::ChangeRoute;
 use yew_router::{prelude::*, Switch};
 
-use crate::app::matrix::{MatrixAgent, Response, SessionStore};
+use crate::app::matrix::{login::SessionStore, MatrixAgent, Response};
 use crate::app::views::{login::Login, main_view::MainView};
 use crate::constants::AUTH_KEY;
 use log::*;

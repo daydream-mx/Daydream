@@ -1,5 +1,4 @@
 use std::collections::HashSet;
-use std::convert::TryFrom;
 use std::sync::Arc;
 
 use log::*;
@@ -16,17 +15,18 @@ use matrix_sdk::{
     identifiers::RoomId,
     js_int::UInt,
     locks::RwLock,
-    Client, ClientConfig, MessagesRequestBuilder, Room, Session,
+    Client, MessagesRequestBuilder, Room,
 };
 use pulldown_cmark::{html, Options, Parser};
 use serde::{Deserialize, Serialize};
-use url::Url;
 use wasm_bindgen_futures::spawn_local;
 use yew::worker::*;
 
 use crate::app::matrix::types::{get_media_download_url, get_video_media_download_url};
-use crate::errors::{Field, MatrixError};
+use crate::errors::MatrixError;
+use login::{login, SessionStore};
 
+pub mod login;
 mod sync;
 pub mod types;
 
@@ -35,14 +35,6 @@ pub struct MatrixClient {
     pub(crate) homeserver: Option<String>,
     pub(crate) username: Option<String>,
     pub(crate) password: Option<String>,
-}
-
-#[derive(Serialize, Deserialize, Default, Clone, Debug)]
-pub struct SessionStore {
-    pub(crate) access_token: String,
-    pub(crate) user_id: String,
-    pub(crate) device_id: String,
-    pub(crate) homeserver_url: String,
 }
 
 #[derive(Clone, Debug)]
@@ -134,117 +126,124 @@ impl Agent for MatrixAgent {
             }
             Request::Login => {
                 info!("Starting Login");
-                let login_client = self.login();
-                if login_client.is_none() {
-                    for sub in self.subscribers.iter() {
-                        let resp = Response::Error(MatrixError::MissingClient);
-                        self.link.respond(*sub, resp);
-                    }
-                    return;
-                }
-                let client = login_client.unwrap();
-                let username = self.matrix_state.username.clone().unwrap();
-                let password = self.matrix_state.password.clone().unwrap();
-                let subscribers = self.subscribers.clone();
-                let agent = self.clone();
-                spawn_local(async move {
-                    // TODO handle login error
-                    if agent.session.is_some() {
-                        let stored_session = agent.session.unwrap();
-                        let session = Session {
-                            access_token: stored_session.access_token,
-                            user_id: matrix_sdk::identifiers::UserId::try_from(
-                                stored_session.user_id.as_str(),
-                            )
-                            .unwrap(),
-                            device_id: stored_session.device_id,
-                        };
-                        client.restore_login(session).await;
-                    } else {
-                        // FIXME gracefully handle login errors
-                        let login_response = client
-                            .login(username, password, None, Some("Daydream".to_string()))
-                            .await;
-                        match login_response {
-                            Ok(login_response) => {
-                                let session_store = SessionStore {
-                                    access_token: login_response.access_token,
-                                    user_id: login_response.user_id.to_string(),
-                                    device_id: login_response.device_id,
-                                    homeserver_url: client.homeserver().to_string(),
-                                };
-                                for sub in subscribers.iter() {
-                                    let resp = Response::SaveSession(session_store.clone());
-                                    agent.link.respond(*sub, resp);
-                                    let resp = Response::LoggedIn(true);
-                                    agent.link.respond(*sub, resp);
-                                }
+                let homeserver = self.matrix_state.homeserver.as_ref();
+                let session = self.session.as_ref();
+                let client = login(session, homeserver);
+                match client {
+                    Ok(client) => {
+                        if let Some(_session) = session {
+                            for sub in self.subscribers.iter() {
+                                let resp = Response::LoggedIn(true);
+                                self.link.respond(*sub, resp);
                             }
-                            Err(e) => {
-                                if let matrix_sdk::Error::Reqwest(e) = e {
-                                    match e.status() {
-                                        None => {
-                                            for sub in subscribers.iter() {
-                                                let resp = Response::Error(MatrixError::SDKError(
-                                                    e.to_string(),
-                                                ));
-                                                agent.link.respond(*sub, resp);
-                                            }
-                                        }
-                                        Some(v) => {
-                                            if v.is_server_error() {
-                                                for sub in subscribers.iter() {
-                                                    let resp =
-                                                        Response::Error(MatrixError::LoginTimeout);
-                                                    agent.link.respond(*sub, resp);
-                                                }
-                                            } else {
-                                                for sub in subscribers.iter() {
+                        }
+                        self.matrix_client = Some(client.clone());
+                        let username = self.matrix_state.username.clone().unwrap();
+                        let password = self.matrix_state.password.clone().unwrap();
+                        let agent = self.clone();
+                        spawn_local(async move {
+                            // FIXME gracefully handle login errors
+                            let login_response = agent
+                                .matrix_client
+                                .as_ref()
+                                .unwrap()
+                                .login(username, password, None, Some("Daydream".to_string()))
+                                .await;
+                            match login_response {
+                                Ok(login_response) => {
+                                    let session_store = SessionStore {
+                                        access_token: login_response.access_token,
+                                        user_id: login_response.user_id.to_string(),
+                                        device_id: login_response.device_id,
+                                        homeserver_url: client.homeserver().to_string(),
+                                    };
+                                    for sub in agent.subscribers.iter() {
+                                        let resp = Response::SaveSession(session_store.clone());
+                                        agent.link.respond(*sub, resp);
+                                        let resp = Response::LoggedIn(true);
+                                        agent.link.respond(*sub, resp);
+                                    }
+                                }
+                                Err(e) => {
+                                    if let matrix_sdk::Error::Reqwest(e) = e {
+                                        match e.status() {
+                                            None => {
+                                                for sub in agent.subscribers.iter() {
                                                     let resp = Response::Error(
                                                         MatrixError::SDKError(e.to_string()),
                                                     );
                                                     agent.link.respond(*sub, resp);
                                                 }
                                             }
+                                            Some(v) => {
+                                                if v.is_server_error() {
+                                                    for sub in agent.subscribers.iter() {
+                                                        let resp = Response::Error(
+                                                            MatrixError::LoginTimeout,
+                                                        );
+                                                        agent.link.respond(*sub, resp);
+                                                    }
+                                                } else {
+                                                    for sub in agent.subscribers.iter() {
+                                                        let resp = Response::Error(
+                                                            MatrixError::SDKError(e.to_string()),
+                                                        );
+                                                        agent.link.respond(*sub, resp);
+                                                    }
+                                                }
+                                            }
                                         }
-                                    }
-                                } else {
-                                    for sub in subscribers.iter() {
-                                        let resp =
-                                            Response::Error(MatrixError::SDKError(e.to_string()));
-                                        agent.link.respond(*sub, resp);
+                                    } else {
+                                        for sub in agent.subscribers.iter() {
+                                            let resp = Response::Error(MatrixError::SDKError(
+                                                e.to_string(),
+                                            ));
+                                            agent.link.respond(*sub, resp);
+                                        }
                                     }
                                 }
                             }
+                        });
+                    }
+                    Err(e) => {
+                        for sub in self.subscribers.iter() {
+                            let resp = Response::Error(e.clone());
+                            self.link.respond(*sub, resp);
                         }
                     }
-                });
+                }
             }
             Request::GetLoggedIn => {
-                let login_client = self.login();
-                if login_client.is_none() {
-                    for sub in self.subscribers.iter() {
-                        let resp = Response::Error(MatrixError::MissingClient);
-                        self.link.respond(*sub, resp);
+                let homeserver = self.matrix_state.homeserver.as_ref();
+                let session = self.session.clone();
+                let client = login(session.as_ref(), homeserver);
+                match client {
+                    Ok(client) => {
+                        info!("Got client");
+                        self.matrix_client = Some(client);
+                        info!("Client set");
+                        let agent = self.clone();
+                        spawn_local(async move {
+                            let logged_in = agent.get_logged_in().await;
+
+                            if !logged_in && session.is_some() {
+                                error!("Not logged in but got session");
+                            } else {
+                                for sub in agent.subscribers.iter() {
+                                    let resp = Response::LoggedIn(logged_in);
+                                    agent.link.respond(*sub, resp);
+                                }
+                            }
+                        });
                     }
-                    return;
-                }
-
-                // Always clone agent after having tried to login!
-                let agent = self.clone();
-
-                spawn_local(async move {
-                    let logged_in = agent.get_logged_in().await;
-
-                    if !logged_in && agent.session.is_some() {
-                        error!("Not logged in but got session");
-                    } else {
-                        for sub in agent.subscribers.iter() {
-                            let resp = Response::LoggedIn(logged_in);
-                            agent.link.respond(*sub, resp);
+                    Err(e) => {
+                        error!("Got no client: {:?}", e);
+                        for sub in self.subscribers.iter() {
+                            let resp = Response::Error(e.clone());
+                            self.link.respond(*sub, resp);
                         }
                     }
-                });
+                }
             }
             Request::StartSync => {
                 // Always clone agent after having tried to login!
@@ -435,65 +434,5 @@ impl MatrixAgent {
             return false;
         }
         self.matrix_client.as_ref().unwrap().logged_in().await
-    }
-
-    fn login(&mut self) -> Option<Client> {
-        info!("preparing client");
-        if self.session.is_some() {
-            info!("restoring login");
-            let homeserver = &self.session.as_ref().unwrap().homeserver_url;
-
-            let client_config = ClientConfig::new();
-            let homeserver_url = Url::parse(homeserver).unwrap();
-            let client = Client::new_with_config(homeserver_url, client_config).unwrap();
-            self.matrix_client = Some(client.clone());
-
-            info!("got client");
-            // Also directly restore Login data
-            let stored_session = self.session.clone().unwrap();
-            let session = Session {
-                access_token: stored_session.access_token,
-                user_id: matrix_sdk::identifiers::UserId::try_from(stored_session.user_id.as_str())
-                    .unwrap(),
-                device_id: stored_session.device_id,
-            };
-            let client_clone = client.clone();
-            info!("before restore");
-            spawn_local(async move {
-                info!("before inner restore");
-                client_clone.restore_login(session).await;
-                info!("after restore");
-            });
-
-            Some(client)
-        } else if self.matrix_state.homeserver.is_none() {
-            for sub in self.subscribers.iter() {
-                let resp = Response::Error(MatrixError::MissingFields(Field::Homeserver));
-                self.link.respond(*sub, resp);
-            }
-            None
-        } else if self.matrix_state.username.is_none() {
-            for sub in self.subscribers.iter() {
-                let resp = Response::Error(MatrixError::MissingFields(Field::MXID));
-                self.link.respond(*sub, resp);
-            }
-            None
-        } else if self.matrix_state.password.is_none() {
-            for sub in self.subscribers.iter() {
-                let resp = Response::Error(MatrixError::MissingFields(Field::Password));
-                self.link.respond(*sub, resp);
-            }
-            None
-        } else {
-            info!("new login");
-            let homeserver = self.matrix_state.homeserver.clone().unwrap();
-
-            let client_config = ClientConfig::new();
-            let homeserver_url = Url::parse(&homeserver).unwrap();
-            let client = Client::new_with_config(homeserver_url, client_config).unwrap();
-            self.matrix_client = Some(client.clone());
-
-            Some(client)
-        }
     }
 }
