@@ -56,7 +56,9 @@ impl Component for App {
         };
         let route_agent = RouteAgent::bridge(link.callback(Msg::RouteChanged));
         let mut matrix_agent = MatrixAgent::bridge(link.callback(Msg::NewMessage));
-        matrix_agent.send(matrix::Request::SetSession(session.unwrap()));
+        if let Some(session) = session {
+            matrix_agent.send(matrix::Request::SetSession(session));
+        }
         matrix_agent.send(matrix::Request::GetLoggedIn);
         App {
             _matrix_agent: matrix_agent,
