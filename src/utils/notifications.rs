@@ -34,7 +34,9 @@ impl Notifications {
                 }
             }) as Box<dyn FnMut()>);
 
-            Notification::request_permission_with_permission_callback(cb.as_ref().unchecked_ref());
+            if let Err(_e) = Notification::request_permission_with_permission_callback(cb.as_ref().unchecked_ref()) {
+                // Noop to please clippy/rust compiler
+            }
             cb.forget();
         } else {
             self.show_actual();
@@ -49,6 +51,9 @@ impl Notifications {
         } else {
             options
         };
-        Notification::new_with_options(&self.displayname, &options);
+        if let Err(_e) = Notification::new_with_options(&self.displayname, &options) {
+            // Noop to please clippy/rust compiler
+            // TODO check if we in this case should stop showing notifications
+        }
     }
 }

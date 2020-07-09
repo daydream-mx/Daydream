@@ -401,7 +401,10 @@ impl Agent for MatrixAgent {
                             }),
                         })
                     };
-                    client.room_send(&room_id, content, None).await;
+                    if let Err(e) = client.room_send(&room_id, content, None).await {
+                        // TODO show error in UI or try again if possible
+                        error!("Error sending message: {}", e);
+                    }
                 });
             }
         }
