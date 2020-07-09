@@ -303,7 +303,7 @@ impl Agent for MatrixAgent {
                                 if let Some(image_event_url) = image_event.url {
                                     let new_url = get_media_download_url(
                                         agent.matrix_client.as_ref().unwrap().homeserver(),
-                                        image_event_url,
+                                        &image_event_url,
                                     );
                                     image_event.url = Some(new_url.to_string());
                                 }
@@ -311,7 +311,7 @@ impl Agent for MatrixAgent {
                                     if let Some(thumbnail_url) = info.thumbnail_url.as_ref() {
                                         let new_url = get_media_download_url(
                                             agent.matrix_client.as_ref().unwrap().homeserver(),
-                                            (*thumbnail_url).clone(),
+                                            thumbnail_url,
                                         );
                                         info.thumbnail_url = Some(new_url.to_string());
                                     }
@@ -331,7 +331,7 @@ impl Agent for MatrixAgent {
                                     if let Some(thumbnail_url) = info.thumbnail_url {
                                         let new_url = Some(get_media_download_url(
                                             agent.matrix_client.as_ref().unwrap().homeserver(),
-                                            thumbnail_url,
+                                            &thumbnail_url,
                                         )).unwrap();
                                         info.thumbnail_url = Some(new_url.to_string());
                                     }

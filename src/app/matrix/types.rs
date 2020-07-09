@@ -1,6 +1,6 @@
 use url::Url;
 
-pub fn get_media_download_url(homeserver: &Url, mxc_url: String) -> Url {
+pub fn get_media_download_url(homeserver: &Url, mxc_url: &str) -> Url {
     let url_parts_raw = mxc_url.replace("mxc://", "");
     let url_parts: Vec<&str> = url_parts_raw.split('/').collect();
     let server_name = (*url_parts.first().unwrap()).to_string();

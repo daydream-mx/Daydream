@@ -130,7 +130,7 @@ impl Sync {
                     let old_image_url = mem::take(image_url);
                     *image_url = get_media_download_url(
                         self.matrix_client.clone().homeserver(),
-                        old_image_url,
+                        &old_image_url,
                     ).to_string();
                 }
 
@@ -139,7 +139,7 @@ impl Sync {
                         let old_thumbnail_url = mem::take(thumbnail_url);
                         *thumbnail_url = get_media_download_url(
                             self.matrix_client.clone().homeserver(),
-                            old_thumbnail_url,
+                            &old_thumbnail_url,
                         ).to_string();
                     }
                 }
@@ -158,7 +158,7 @@ impl Sync {
                         let old_thumbnail_url = mem::take(thumbnail_url);
                         *thumbnail_url = get_media_download_url(
                             self.matrix_client.clone().homeserver(),
-                            old_thumbnail_url,
+                            &old_thumbnail_url,
                         ).to_string();
                     }
                 }

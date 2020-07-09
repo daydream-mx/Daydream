@@ -30,5 +30,5 @@ pub fn get_sender_avatar<'a>(homeserver_url: &'a Url, room: &'a Room, event: &'a
         .get(&event.sender)
         .or_else(|| room.invited_members.get(&event.sender))?;
 
-    Some(get_media_download_url(homeserver_url, member.avatar_url.clone()?))
+    Some(get_media_download_url(homeserver_url, member.avatar_url.as_deref()?))
 }
