@@ -106,11 +106,10 @@ impl Sync {
 
                         let (avatar_url, room_name, displayname) = {
                             let room = room.read().await;
-
                             (
-                                get_sender_avatar(homeserver_url, &room, &cloned_event),
+                                get_sender_avatar(&homeserver_url, &room, &cloned_event),
                                 room.display_name(),
-                                get_sender_displayname(&room, &cloned_event),
+                                get_sender_displayname(&room, &cloned_event).to_string(),
                             )
                         };
 
@@ -132,7 +131,7 @@ impl Sync {
                     *image_url = get_media_download_url(
                         self.matrix_client.clone().homeserver(),
                         old_image_url,
-                    );
+                    ).to_string();
                 }
 
                 if let Some(info) = &mut image_event.info {
@@ -141,7 +140,7 @@ impl Sync {
                         *thumbnail_url = get_media_download_url(
                             self.matrix_client.clone().homeserver(),
                             old_thumbnail_url,
-                        );
+                        ).to_string();
                     }
                 }
             }
@@ -151,7 +150,7 @@ impl Sync {
                     *video_url = get_video_media_download_url(
                         self.matrix_client.clone().homeserver(),
                         old_video_url,
-                    );
+                    ).to_string();
                 }
 
                 if let Some(info) = &mut video_event.info {
@@ -160,7 +159,7 @@ impl Sync {
                         *thumbnail_url = get_media_download_url(
                             self.matrix_client.clone().homeserver(),
                             old_thumbnail_url,
-                        );
+                        ).to_string();
                     }
                 }
             }

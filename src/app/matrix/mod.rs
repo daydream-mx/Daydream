@@ -13,7 +13,6 @@ use matrix_sdk::{
         EventJson,
     },
     identifiers::RoomId,
-    js_int::UInt,
     locks::RwLock,
     Client, MessagesRequestBuilder, Room,
 };
@@ -255,29 +254,25 @@ impl Agent for MatrixAgent {
             Request::GetOldMessages((room_id, from)) => {
                 let agent = self.clone();
                 spawn_local(async move {
-                    let mut builder = &mut MessagesRequestBuilder::new();
-                    builder = builder.room_id(room_id.clone());
-                    if let Some(from) = from {
-                        builder = builder.from(from);
-                    } else {
-                        builder = builder.from(
-                            agent
-                                .matrix_client
-                                .clone()
-                                .unwrap()
-                                .sync_token()
-                                .await
-                                .unwrap(),
-                        );
-                    }
+                    let mut builder = match from {
+                        Some(from) => MessagesRequestBuilder::new(room_id.clone(), from),
+                        None => MessagesRequestBuilder::new(room_id.clone(), agent
+                            .matrix_client
+                            .as_ref()
+                            .unwrap()
+                            .sync_token()
+                            .await
+                            .unwrap()),
+                    };
                     let filter = RoomEventFilter {
                         types: Some(vec!["m.room.message".to_string()]),
                         ..Default::default()
                     };
-                    builder = builder
+                    // TODO find better way than cloning
+                    builder = (*builder
                         .filter(filter)
                         .direction(Direction::Backward)
-                        .limit(UInt::new(30).unwrap());
+                        .limit(30)).clone();
 
                     // TODO handle error gracefully
                     let messsages = agent
@@ -303,44 +298,42 @@ impl Agent for MatrixAgent {
                         // TODO deduplicate betweeen this and sync
                         if let RoomEvent::RoomMessage(mut event) = event {
                             if let MessageEventContent::Image(mut image_event) =
-                                event.clone().content
+                            event.clone().content
                             {
-                                if image_event.url.is_some() {
-                                    let new_url = Some(get_media_download_url(
+                                if let Some(image_event_url) = image_event.url {
+                                    let new_url = get_media_download_url(
                                         agent.matrix_client.as_ref().unwrap().homeserver(),
-                                        image_event.url.unwrap(),
-                                    ));
-                                    image_event.url = new_url;
+                                        image_event_url,
+                                    );
+                                    image_event.url = Some(new_url.to_string());
                                 }
-                                if image_event.info.is_some() {
-                                    let mut info = image_event.info.unwrap();
-                                    if info.thumbnail_url.is_some() {
-                                        let new_url = Some(get_media_download_url(
+                                if let Some(mut info) = image_event.info {
+                                    if let Some(thumbnail_url) = info.thumbnail_url.as_ref() {
+                                        let new_url = get_media_download_url(
                                             agent.matrix_client.as_ref().unwrap().homeserver(),
-                                            info.thumbnail_url.unwrap(),
-                                        ));
-                                        info.thumbnail_url = new_url;
+                                            (*thumbnail_url).clone(),
+                                        );
+                                        info.thumbnail_url = Some(new_url.to_string());
                                     }
                                     image_event.info = Some(info);
                                 }
                                 event.content = MessageEventContent::Image(image_event);
                             }
                             if let MessageEventContent::Video(mut video_event) = event.content {
-                                if video_event.url.is_some() {
-                                    let new_url = Some(get_video_media_download_url(
+                                if let Some(video_event_url) = video_event.url {
+                                    let new_url = get_video_media_download_url(
                                         agent.matrix_client.as_ref().unwrap().homeserver(),
-                                        video_event.url.unwrap(),
-                                    ));
-                                    video_event.url = new_url;
+                                        video_event_url,
+                                    );
+                                    video_event.url = Some(new_url.to_string());
                                 }
-                                if video_event.info.is_some() {
-                                    let mut info = video_event.info.unwrap();
-                                    if info.thumbnail_url.is_some() {
+                                if let Some(mut info) = video_event.info {
+                                    if let Some(thumbnail_url) = info.thumbnail_url {
                                         let new_url = Some(get_media_download_url(
                                             agent.matrix_client.as_ref().unwrap().homeserver(),
-                                            info.thumbnail_url.unwrap(),
-                                        ));
-                                        info.thumbnail_url = new_url;
+                                            thumbnail_url,
+                                        )).unwrap();
+                                        info.thumbnail_url = Some(new_url.to_string());
                                     }
                                     video_event.info = Some(info);
                                 }

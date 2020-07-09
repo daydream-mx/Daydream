@@ -16,23 +16,19 @@ pub fn is_new_user(prev_event: Option<&MessageEvent>, event: &MessageEvent) -> b
     }
 }
 
-pub fn get_sender_displayname(room: &Room, event: &MessageEvent) -> String {
-    match room.members.get(&event.sender) {
-        None => event.sender.to_string(),
-        Some(member) => member
-            .display_name
-            .as_ref()
-            .map(ToString::to_string)
-            .unwrap_or_else(|| event.sender.to_string()),
-    }
+pub fn get_sender_displayname<'a>(room: &'a Room, event: &'a MessageEvent) -> &'a str {
+    room.joined_members
+        .get(&event.sender)
+        .or_else(|| room.invited_members.get(&event.sender))
+        .and_then(|member| member.display_name.as_deref())
+        .unwrap_or_else(|| event.sender.as_ref())
 }
 
-pub fn get_sender_avatar(homeserver_url: Url, room: &Room, event: &MessageEvent) -> Option<String> {
-    room.members.get(&event.sender).and_then(|member| {
-        member
-            .avatar_url
-            .as_ref()
-            .map(ToString::to_string)
-            .map(|v| get_media_download_url(&homeserver_url, v))
-    })
+pub fn get_sender_avatar<'a>(homeserver_url: &'a Url, room: &'a Room, event: &'a MessageEvent) -> Option<Url> {
+    let member = room
+        .joined_members
+        .get(&event.sender)
+        .or_else(|| room.invited_members.get(&event.sender))?;
+
+    Some(get_media_download_url(homeserver_url, member.avatar_url.clone()?))
 }

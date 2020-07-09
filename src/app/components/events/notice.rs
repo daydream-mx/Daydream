@@ -53,7 +53,7 @@ impl Component for Notice {
         let sender_displayname = if new_user {
             get_sender_displayname(&self.props.room, &self.props.event)
         } else {
-            "".to_string()
+            ""
         };
 
         let mut pure_content = self.props.notice_event.body.clone();

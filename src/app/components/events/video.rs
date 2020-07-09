@@ -50,7 +50,7 @@ impl Component for Video {
         let sender_displayname = if new_user {
             get_sender_displayname(&self.props.room, &self.props.event)
         } else {
-            "".to_string()
+            ""
         };
 
         let _caption = format!("{}: {}", sender_displayname, self.props.video_event.body);

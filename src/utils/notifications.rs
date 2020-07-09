@@ -1,16 +1,17 @@
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 use web_sys::{Notification, NotificationOptions, NotificationPermission};
+use url::Url;
 
 #[derive(Clone)]
 pub(crate) struct Notifications {
-    avatar: Option<String>,
+    avatar: Option<Url>,
     displayname: String,
     content: String,
 }
 
 impl Notifications {
-    pub fn new(avatar: Option<String>, displayname: String, content: String) -> Self {
+    pub fn new(avatar: Option<Url>, displayname: String, content: String) -> Self {
         Notifications {
             avatar,
             displayname,
@@ -44,12 +45,14 @@ impl Notifications {
     }
 
     fn show_actual(&self) {
-        let mut options = NotificationOptions::new() as NotificationOptions;
-        let options = options.body(&self.content).tag("daydream") as &mut NotificationOptions;
-        let options = if self.avatar.is_some() {
-            options.icon(self.avatar.as_ref().unwrap())
-        } else {
-            options
+        let mut options_0 = NotificationOptions::new() as NotificationOptions;
+        let options_1 = options_0.body(&self.content).tag("daydream") as &mut NotificationOptions;
+        let options = match self.clone().avatar {
+            None => options_1,
+            Some(avatar) => {
+                let url = avatar.to_string();
+                options_1.icon(&url)
+            },
         };
         if let Err(_e) = Notification::new_with_options(&self.displayname, &options) {
             // Noop to please clippy/rust compiler

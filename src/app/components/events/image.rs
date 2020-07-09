@@ -50,7 +50,7 @@ impl Component for Image {
         let sender_displayname = if new_user {
             get_sender_displayname(&self.props.room, &self.props.event)
         } else {
-            "".to_string()
+            ""
         };
 
         if let Some(image_url) = &self.props.image_event.url {
