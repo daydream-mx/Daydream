@@ -2,7 +2,10 @@ use std::rc::Rc;
 
 use crate::app::components::events::{get_sender_displayname, is_new_user};
 use matrix_sdk::{
-    events::room::message::{ImageMessageEventContent, MessageEvent},
+    events::{
+        room::message::{ImageMessageEventContent, MessageEvent},
+        AnyMessageEventStub,
+    },
     Room,
 };
 use rand::random;
@@ -15,8 +18,8 @@ pub(crate) struct Image {
 #[derive(Clone, Properties, Debug)]
 pub struct Props {
     #[prop_or_default]
-    pub prev_event: Option<MessageEvent>,
-    pub event: MessageEvent,
+    pub prev_event: Option<AnyMessageEventStub>,
+    pub event: AnyMessageEventStub,
     pub image_event: ImageMessageEventContent,
     pub room: Rc<Room>,
 }

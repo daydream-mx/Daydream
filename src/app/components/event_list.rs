@@ -2,7 +2,7 @@ use std::{collections::HashMap, rc::Rc};
 
 use log::*;
 use matrix_sdk::{
-    events::room::message::{MessageEvent, MessageEventContent},
+    events::{room::message::MessageEventContent, AnyMessageEventContent, AnyMessageEventStub},
     identifiers::RoomId,
     Room,
 };
@@ -24,7 +24,7 @@ pub struct EventList {
 #[derive(Default)]
 pub struct State {
     // TODO handle all events
-    pub events: HashMap<RoomId, Vec<MessageEvent>>,
+    pub events: HashMap<RoomId, Vec<AnyMessageEventStub>>,
 }
 
 #[allow(clippy::large_enum_variant)]
@@ -74,7 +74,7 @@ impl Component for EventList {
                             if self.state.events.contains_key(&room_id) {
                                 if !(self.state.events[&room_id]
                                     .iter()
-                                    .any(|x| x.event_id == msg.event_id))
+                                    .any(|x| x.event_id() == msg.event_id()))
                                 {
                                     self.state.events.get_mut(&room_id).unwrap().push(msg);
                                     room_id == self.props.current_room.room_id
@@ -91,7 +91,7 @@ impl Component for EventList {
                         }
                     }
                     Response::OldMessages((room_id, messages)) => {
-                        let mut deserialized_messages: Vec<MessageEvent> = messages
+                        let mut deserialized_messages: Vec<AnyMessageEventStub> = messages
                             .iter()
                             .map(|x| x.deserialize())
                             .filter_map(Result::ok)
@@ -175,53 +175,58 @@ impl Component for EventList {
 impl EventList {
     // Typeinspection of IDEA breaks with this :D
     //noinspection RsTypeCheck
-    fn get_event(&self, prev_event: Option<MessageEvent>, event: &MessageEvent) -> Html {
+    fn get_event(
+        &self,
+        prev_event: Option<AnyMessageEventStub>,
+        event: &AnyMessageEventStub,
+    ) -> Html {
         // TODO make encryption supported
 
-        match &event.content {
-            MessageEventContent::Text(text_event) => {
-                html! {
-                    <Text
-                        prev_event=prev_event.clone()
-                        event=event.clone()
-                        room=self.props.current_room.clone()
-                        text_event=text_event.clone()
-                    />
+        match &event.content() {
+            AnyMessageEventContent::RoomMessage(room_message) => match room_message {
+                MessageEventContent::Text(text_event) => {
+                    html! {
+                        <Text
+                            prev_event=prev_event.clone()
+                            event=event.clone()
+                            room=self.props.current_room.clone()
+                            text_event=text_event.clone()
+                        />
+                    }
                 }
-            }
-            MessageEventContent::Notice(notice_event) => {
-                html! {
-                    <Notice
-                        prev_event=prev_event.clone()
-                        event=event.clone()
-                        room=self.props.current_room.clone()
-                        notice_event=notice_event.clone()
-                    />
+                MessageEventContent::Notice(notice_event) => {
+                    html! {
+                        <Notice
+                            prev_event=prev_event.clone()
+                            event=event.clone()
+                            room=self.props.current_room.clone()
+                            notice_event=notice_event.clone()
+                        />
+                    }
                 }
-            }
-            MessageEventContent::Image(image_event) => {
-                html! {
-                    <Image
-                        prev_event=prev_event.clone()
-                        event=event.clone()
-                        room=self.props.current_room.clone()
-                        image_event=image_event.clone()
-                    />
+                MessageEventContent::Image(image_event) => {
+                    html! {
+                        <Image
+                            prev_event=prev_event.clone()
+                            event=event.clone()
+                            room=self.props.current_room.clone()
+                            image_event=image_event.clone()
+                        />
+                    }
                 }
-            }
-            MessageEventContent::Video(video_event) => {
-                html! {
-                    <Video
-                        prev_event=prev_event.clone()
-                        event=event.clone()
-                        room=self.props.current_room.clone()
-                        video_event=video_event.clone()
-                    />
+                MessageEventContent::Video(video_event) => {
+                    html! {
+                        <Video
+                            prev_event=prev_event.clone()
+                            event=event.clone()
+                            room=self.props.current_room.clone()
+                            video_event=video_event.clone()
+                        />
+                    }
                 }
-            }
-            _ => {
-                html! {}
-            }
+                _ => html! {},
+            },
+            _ => html! {},
         }
     }
 }

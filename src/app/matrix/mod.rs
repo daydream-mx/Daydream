@@ -5,12 +5,11 @@ use log::*;
 use matrix_sdk::{
     api::r0::{filter::RoomEventFilter, message::get_message_events::Direction},
     events::{
-        AnyRoomEvent,
         room::message::{
             FormattedBody, MessageEvent, MessageEventContent, MessageFormat,
             TextMessageEventContent,
         },
-        EventJson,
+        AnyMessageEventStub, AnyRoomEvent, EventJson, AnyMessageEvent,
     },
     identifiers::RoomId,
     locks::RwLock,
@@ -66,7 +65,7 @@ pub enum Response {
     Error(MatrixError),
     LoggedIn(bool),
     // TODO properly handle sync events
-    Sync((RoomId, EventJson<MessageEvent>)),
+    Sync((RoomId, EventJson<AnyMessageEventStub>)),
     JoinedRoomSync(RoomId),
     SyncPing,
     OldMessages((RoomId, Vec<EventJson<MessageEvent>>)),
@@ -256,13 +255,16 @@ impl Agent for MatrixAgent {
                 spawn_local(async move {
                     let mut builder = match from {
                         Some(from) => MessagesRequestBuilder::new(room_id.clone(), from),
-                        None => MessagesRequestBuilder::new(room_id.clone(), agent
-                            .matrix_client
-                            .as_ref()
-                            .unwrap()
-                            .sync_token()
-                            .await
-                            .unwrap()),
+                        None => MessagesRequestBuilder::new(
+                            room_id.clone(),
+                            agent
+                                .matrix_client
+                                .as_ref()
+                                .unwrap()
+                                .sync_token()
+                                .await
+                                .unwrap(),
+                        ),
                     };
                     let filter = RoomEventFilter {
                         types: Some(vec!["m.room.message".to_string()]),
@@ -272,7 +274,8 @@ impl Agent for MatrixAgent {
                     builder = (*builder
                         .filter(filter)
                         .direction(Direction::Backward)
-                        .limit(30)).clone();
+                        .limit(30))
+                        .clone();
 
                     // TODO handle error gracefully
                     let messsages = agent
@@ -296,7 +299,7 @@ impl Agent for MatrixAgent {
 
                     for event in deserialized_events.into_iter().rev() {
                         // TODO deduplicate betweeen this and sync
-                        if let AnyRoomEvent::RoomMessage(mut event) = event {
+                        if let AnyRoomEvent::Message(AnyMessageEvent::RoomMessage(mut event)) = event {
                             if let MessageEventContent::Image(mut image_event) =
                             event.clone().content
                             {
@@ -332,7 +335,8 @@ impl Agent for MatrixAgent {
                                         let new_url = Some(get_media_download_url(
                                             agent.matrix_client.as_ref().unwrap().homeserver(),
                                             &thumbnail_url,
-                                        )).unwrap();
+                                        ))
+                                            .unwrap();
                                         info.thumbnail_url = Some(new_url.to_string());
                                     }
                                     video_event.info = Some(info);

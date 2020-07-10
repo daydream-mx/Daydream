@@ -2,7 +2,10 @@ use std::rc::Rc;
 
 use crate::app::components::events::{get_sender_displayname, is_new_user};
 use matrix_sdk::{
-    events::room::message::{MessageEvent, VideoMessageEventContent},
+    events::{
+        room::message::{MessageEvent, VideoMessageEventContent},
+        AnyMessageEventStub,
+    },
     Room,
 };
 use rand::random;
@@ -15,8 +18,8 @@ pub(crate) struct Video {
 #[derive(Clone, Properties, Debug)]
 pub struct Props {
     #[prop_or_default]
-    pub prev_event: Option<MessageEvent>,
-    pub event: MessageEvent,
+    pub prev_event: Option<AnyMessageEventStub>,
+    pub event: AnyMessageEventStub,
     pub video_event: VideoMessageEventContent,
     pub room: Rc<Room>,
 }

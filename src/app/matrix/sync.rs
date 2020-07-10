@@ -7,11 +7,8 @@ use log::*;
 use matrix_sdk::{
     api::r0::sync::sync_events::Response as SyncResponse,
     events::{
-        AnyRoomEventStub,
-        AnyStateEventStub,
-        AnyMessageEventStub,
-        room::message::MessageEventContent,
-        EventJson,
+        room::message::MessageEventContent, AnyMessageEventStub, AnyRoomEventStub,
+        AnyStateEventStub, EventJson,
     },
     identifiers::RoomId,
     locks::RwLock,
@@ -84,7 +81,8 @@ impl Sync {
     async fn on_room_message(&self, room_id: &RoomId, event: AnyRoomEventStub) {
         // TODO handle all messages...
 
-        if let AnyRoomEventStub::State(AnyStateEventStub::RoomCreate(_create_event)) = event.clone() {
+        if let AnyRoomEventStub::State(AnyStateEventStub::RoomCreate(_create_event)) = event.clone()
+        {
             info!("Sent JoinedRoomSync Timeline");
             let resp = Response::JoinedRoomSync(room_id.clone());
             self.callback.emit(resp);
@@ -133,7 +131,8 @@ impl Sync {
                     *image_url = get_media_download_url(
                         self.matrix_client.clone().homeserver(),
                         &old_image_url,
-                    ).to_string();
+                    )
+                    .to_string();
                 }
 
                 if let Some(info) = &mut image_event.info {
@@ -142,7 +141,8 @@ impl Sync {
                         *thumbnail_url = get_media_download_url(
                             self.matrix_client.clone().homeserver(),
                             &old_thumbnail_url,
-                        ).to_string();
+                        )
+                        .to_string();
                     }
                 }
             }
@@ -152,7 +152,8 @@ impl Sync {
                     *video_url = get_video_media_download_url(
                         self.matrix_client.clone().homeserver(),
                         old_video_url,
-                    ).to_string();
+                    )
+                    .to_string();
                 }
 
                 if let Some(info) = &mut video_event.info {
@@ -161,7 +162,8 @@ impl Sync {
                         *thumbnail_url = get_media_download_url(
                             self.matrix_client.clone().homeserver(),
                             &old_thumbnail_url,
-                        ).to_string();
+                        )
+                        .to_string();
                     }
                 }
             }

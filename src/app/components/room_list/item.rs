@@ -1,6 +1,10 @@
 use std::rc::Rc;
 
-use matrix_sdk::{events::room::message::MessageEventContent, identifiers::RoomId, Room};
+use matrix_sdk::{
+    events::{room::message::MessageEventContent, AnyMessageEventContent},
+    identifiers::RoomId,
+    Room,
+};
 use yew::prelude::*;
 use yewtil::NeqAssign;
 
@@ -50,7 +54,9 @@ impl Component for RoomItem {
         let last_message = match room.messages.iter().last() {
             None => "".to_string(),
             Some(m) => {
-                if let MessageEventContent::Text(text_event) = m.content.clone() {
+                if let AnyMessageEventContent::RoomMessage(MessageEventContent::Text(text_event)) =
+                    m.content.clone()
+                {
                     text_event.body.clone()
                 } else {
                     "".to_string()
