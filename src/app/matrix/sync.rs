@@ -19,7 +19,7 @@ use yew::Callback;
 
 use lazy_static::lazy_static;
 
-use crate::app::components::events::{get_sender_avatar, get_sender_displayname};
+use crate::app::components::events::{RoomExt};
 use crate::app::matrix::types::{get_media_download_url, get_video_media_download_url};
 use crate::app::matrix::Response;
 use crate::utils::notifications::Notifications;
@@ -107,9 +107,9 @@ impl Sync {
                         let (avatar_url, room_name, displayname) = {
                             let room = room.read().await;
                             (
-                                get_sender_avatar(&homeserver_url, &room, &cloned_event),
+                                room.get_sender_avatar(&homeserver_url, &AnyMessageEventStub::RoomMessage(cloned_event)),
                                 room.display_name(),
-                                get_sender_displayname(&room, &cloned_event).to_string(),
+                                room.get_sender_displayname(&AnyMessageEventStub::RoomMessage(cloned_event)).to_string(),
                             )
                         };
 

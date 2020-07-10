@@ -1,12 +1,9 @@
 use std::rc::Rc;
 
-use crate::app::components::events::{get_sender_displayname, is_new_user};
+use crate::app::components::events::{RoomExt, EventExt};
 use linkify::LinkFinder;
 use matrix_sdk::{
-    events::{
-        room::message::{MessageEvent, TextMessageEventContent},
-        AnyMessageEventStub,
-    },
+    events::{room::message::TextMessageEventContent, AnyMessageEventStub},
     Room,
 };
 use web_sys::Node;
@@ -51,9 +48,9 @@ impl Component for Text {
 
     //noinspection RsTypeCheck
     fn view(&self) -> Html {
-        let new_user = is_new_user(self.props.prev_event.as_ref(), &self.props.event);
+        let new_user = self.props.event.is_new_user(self.props.prev_event.as_ref());
         let sender_displayname = if new_user {
-            get_sender_displayname(&self.props.room, &self.props.event)
+            self.props.room.get_sender_displayname(&self.props.event)
         } else {
             ""
         };

@@ -2,7 +2,10 @@ use std::{collections::HashMap, rc::Rc};
 
 use log::*;
 use matrix_sdk::{
-    events::{room::message::MessageEventContent, AnyMessageEventContent, AnyMessageEventStub},
+    events::{
+        room::message::MessageEventContent, AnyMessageEventContent, AnyMessageEventStub,
+         MessageEvent
+    },
     identifiers::RoomId,
     Room,
 };

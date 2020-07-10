@@ -9,7 +9,7 @@ use matrix_sdk::{
             FormattedBody, MessageEvent, MessageEventContent, MessageFormat,
             TextMessageEventContent,
         },
-        AnyMessageEventStub, AnyRoomEvent, EventJson, AnyMessageEvent,
+        AnyMessageEvent, AnyMessageEventStub, AnyRoomEvent, EventJson,
     },
     identifiers::RoomId,
     locks::RwLock,
@@ -275,7 +275,7 @@ impl Agent for MatrixAgent {
                         .filter(filter)
                         .direction(Direction::Backward)
                         .limit(30))
-                        .clone();
+                    .clone();
 
                     // TODO handle error gracefully
                     let messsages = agent
@@ -299,9 +299,11 @@ impl Agent for MatrixAgent {
 
                     for event in deserialized_events.into_iter().rev() {
                         // TODO deduplicate betweeen this and sync
-                        if let AnyRoomEvent::Message(AnyMessageEvent::RoomMessage(mut event)) = event {
+                        if let AnyRoomEvent::Message(AnyMessageEvent::RoomMessage(mut event)) =
+                            event
+                        {
                             if let MessageEventContent::Image(mut image_event) =
-                            event.clone().content
+                                event.clone().content
                             {
                                 if let Some(image_event_url) = image_event.url {
                                     let new_url = get_media_download_url(
@@ -336,7 +338,7 @@ impl Agent for MatrixAgent {
                                             agent.matrix_client.as_ref().unwrap().homeserver(),
                                             &thumbnail_url,
                                         ))
-                                            .unwrap();
+                                        .unwrap();
                                         info.thumbnail_url = Some(new_url.to_string());
                                     }
                                     video_event.info = Some(info);

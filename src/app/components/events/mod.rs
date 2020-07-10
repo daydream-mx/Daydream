@@ -9,34 +9,53 @@ pub mod notice;
 pub mod text;
 pub mod video;
 
-pub fn is_new_user(prev_event: Option<&AnyMessageEventStub>, event: &AnyMessageEventStub) -> bool {
-    if let Some(prev_event) = prev_event {
-        prev_event.sender() != event.sender()
-    } else {
-        true
+pub trait EventExt {
+    fn is_new_user(&self, prev_event: Option<&AnyMessageEventStub>) -> bool;
+}
+
+impl EventExt for AnyMessageEventStub {
+    fn is_new_user(&self, prev_event: Option<&AnyMessageEventStub>) -> bool {
+        if let Some(prev_event) = prev_event {
+            prev_event.sender() != self.sender()
+        } else {
+            true
+        }
     }
 }
 
-pub fn get_sender_displayname<'a>(room: &'a Room, event: &'a AnyMessageEventStub) -> &'a str {
-    room.joined_members
-        .get(&event.sender())
-        .or_else(|| room.invited_members.get(&event.sender()))
-        .and_then(|member| member.display_name.as_deref())
-        .unwrap_or_else(|| event.sender().as_str())
+pub trait RoomExt {
+    fn get_sender_displayname<'a>(&self, event: &'a AnyMessageEventStub) -> &'a str;
+    fn get_sender_avatar<'a>(
+        &self,
+        homeserver_url: &'a Url,
+        event: &'a AnyMessageEventStub,
+    ) -> Option<Url>;
 }
 
-pub fn get_sender_avatar<'a>(
-    homeserver_url: &'a Url,
-    room: &'a Room,
-    event: &'a AnyMessageEventStub,
-) -> Option<Url> {
-    let member = room
-        .joined_members
-        .get(&event.sender())
-        .or_else(|| room.invited_members.get(&event.sender()))?;
+impl RoomExt for Room {
+    fn get_sender_displayname<'a>(&self, event: &'a AnyMessageEventStub) -> &'a str {
+        self.joined_members
+            .get(&event.sender())
+            .or_else(|| self.invited_members.get(&event.sender()))
+            .and_then(|member| member.display_name.as_deref())
+            .unwrap_or_else(|| event.sender().as_str())
+    }
 
-    Some(get_media_download_url(
-        homeserver_url,
-        member.avatar_url.as_deref()?,
-    ))
+    fn get_sender_avatar<'a>(
+        &self,
+        homeserver_url: &'a Url,
+        event: &'a AnyMessageEventStub,
+    ) -> Option<Url> {
+        let member = self
+            .joined_members
+            .get(&event.sender())
+            .or_else(|| self.invited_members.get(&event.sender()))?;
+
+        Some(get_media_download_url(
+            homeserver_url,
+            member.avatar_url.as_deref()?,
+        ))
+    }
+
 }
+
