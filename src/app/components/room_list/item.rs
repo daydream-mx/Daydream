@@ -52,18 +52,19 @@ impl Component for RoomItem {
 
         // TODO placeholder for encrypted rooms
         let last_message = match room.messages.iter().last() {
-            None => "".to_string(),
+            None => "",
             Some(m) => {
                 if let AnyMessageEventContent::RoomMessage(MessageEventContent::Text(text_event)) =
-                    m.content.clone()
+                    &m.content
                 {
-                    text_event.body
+                    &text_event.body
                 } else {
-                    "".to_string()
+                    ""
                 }
             }
         };
 
+        let room = room.clone();
         let display_name = room.display_name();
 
         html! {

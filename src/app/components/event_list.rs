@@ -7,7 +7,7 @@ use matrix_sdk::{
     identifiers::RoomId,
     Room,
 };
-use yew::prelude::*;
+use yew::{prelude::*, virtual_dom::VList};
 
 use crate::app::components::{
     events::{image::Image, notice::Notice, text::Text, video::Video},
@@ -144,33 +144,40 @@ impl Component for EventList {
     }
 
     fn view(&self) -> Html {
-        return html! {
+        let events = if self
+            .state
+            .events
+            .contains_key(&self.props.current_room.room_id)
+        {
+            let events = &self.state.events[&self.props.current_room.room_id];
+
+            let mut html_nodes = VList::new();
+            if let Some(event) = events.first() {
+                html_nodes.add_child(self.get_event(None, event));
+            }
+            html_nodes.add_children(
+                events
+                    .windows(2)
+                    .map(|e| self.get_event(Some(&e[0]), &e[1])),
+            );
+
+            html_nodes.into()
+        } else {
+            html! {}
+        };
+
+        html! {
             <div class="event-list">
                 <div class="room-title"><div><h1>{ self.props.current_room.display_name() }</h1></div></div>
                 <div class="scrollable message-scrollarea">
                     <div class="message-container">
-                        {
-                            if self.state.events.contains_key(&self.props.current_room.room_id) {
-                                let events = self.state.events[&self.props.current_room.room_id].clone();
-                                let mut elements: Vec<Html> = Vec::new();
-                                for (pos, event) in self.state.events[&self.props.current_room.room_id].iter().enumerate() {
-                                    if pos == 0 {
-                                        elements.push(self.get_event(None, event));
-                                    } else {
-                                        elements.push(self.get_event(Some(events[pos - 1].clone()), event));
-                                    }
-                                }
-                                elements.into_iter().collect::<Html>()
-                            } else {
-                                html! {}
-                            }
-                        }
+                        { events }
                         <div id="anchor"></div>
                     </div>
                 </div>
                 <Input on_submit=&self.on_submit/>
             </div>
-        };
+        }
     }
 }
 
@@ -179,7 +186,7 @@ impl EventList {
     //noinspection RsTypeCheck
     fn get_event(
         &self,
-        prev_event: Option<AnyMessageEventStub>,
+        prev_event: Option<&AnyMessageEventStub>,
         event: &AnyMessageEventStub,
     ) -> Html {
         // TODO make encryption supported
@@ -189,7 +196,7 @@ impl EventList {
                 MessageEventContent::Text(text_event) => {
                     html! {
                         <Text
-                            prev_event=prev_event.clone()
+                            prev_event=prev_event.cloned()
                             event=event.clone()
                             room=self.props.current_room.clone()
                             text_event=text_event.clone()
@@ -199,7 +206,7 @@ impl EventList {
                 MessageEventContent::Notice(notice_event) => {
                     html! {
                         <Notice
-                            prev_event=prev_event.clone()
+                            prev_event=prev_event.cloned()
                             event=event.clone()
                             room=self.props.current_room.clone()
                             notice_event=notice_event.clone()
@@ -209,7 +216,7 @@ impl EventList {
                 MessageEventContent::Image(image_event) => {
                     html! {
                         <Image
-                            prev_event=prev_event.clone()
+                            prev_event=prev_event.cloned()
                             event=event.clone()
                             room=self.props.current_room.clone()
                             image_event=image_event.clone()
@@ -219,7 +226,7 @@ impl EventList {
                 MessageEventContent::Video(video_event) => {
                     html! {
                         <Video
-                            prev_event=prev_event.clone()
+                            prev_event=prev_event.cloned()
                             event=event.clone()
                             room=self.props.current_room.clone()
                             video_event=video_event.clone()

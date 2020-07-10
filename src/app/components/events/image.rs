@@ -4,7 +4,6 @@ use crate::app::components::events::{EventExt, RoomExt};
 use matrix_sdk::{
     events::{room::message::ImageMessageEventContent, AnyMessageEventStub},
     Room,
-    js_int::UInt
 };
 use rand::random;
 use yew::prelude::*;
@@ -72,8 +71,8 @@ impl Component for Image {
                 html! {
                     <div>
                         <p><displayname>{sender_displayname}{": "}</displayname></p>
-                        <a href={lightbox_href_full.clone()}><div class="thumbnail-container"><img src=thumbnail/></div></a>
-                        <div class="lightbox short-animate" id={lightbox_id_full.clone()}>
+                        <a href=lightbox_href_full><div class="thumbnail-container"><img src=thumbnail/></div></a>
+                        <div class="lightbox short-animate" id=lightbox_id_full>
                             <img class="long-animate" src=image_url/>
                         </div>
                         <div id="lightbox-controls" class="short-animate">
@@ -84,8 +83,8 @@ impl Component for Image {
             } else {
                 html! {
                     <div>
-                        <a href={lightbox_href_full.clone()}><img src=thumbnail/></a>
-                        <div class="lightbox short-animate" id={lightbox_id_full.clone()}>
+                        <a href=lightbox_href_full><img src=thumbnail/></a>
+                        <div class="lightbox short-animate" id=lightbox_id_full>
                             <img class="long-animate" src=image_url/>
                         </div>
                         <div id="lightbox-controls" class="short-animate">
