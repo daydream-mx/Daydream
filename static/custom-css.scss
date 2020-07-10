@@ -353,22 +353,24 @@ body {
   padding-bottom: 1.625rem;
   flex: 0 1 5.875rem;
 
-  h1 {
-    font-family: Roboto, sans-serif;
-    font-style: normal;
-    font-weight: bold;
-    font-size: 2.125rem;
-    line-height: 2.5rem;
-    letter-spacing: 0.015625rem;
-  }
-
   div {
     width: 100%;
-    height: 5.875rem !important;
+    height: 100%;
 
     box-shadow: 0 1px 10px rgba(0, 0, 0, 0.2), 0 4px 5px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.14);
     -moz-box-shadow: 0 1px 10px rgba(0, 0, 0, 0.2), 0 4px 5px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.14);
     -webkit-box-shadow: 0 1px 10px rgba(0, 0, 0, 0.2), 0 4px 5px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.14);
+
+    padding-left: 9.375rem;
+    padding-top: 1.1875rem;
+    h1 {
+      font-family: Roboto, sans-serif;
+      font-style: normal;
+      font-weight: bold;
+      font-size: 2.125rem;
+      line-height: 2.5rem;
+      letter-spacing: 0.015625rem;
+    }
   }
 }
 
