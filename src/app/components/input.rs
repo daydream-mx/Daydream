@@ -46,7 +46,7 @@ impl Component for Input {
                 if data.key() == "Enter" {
                     self.props
                         .on_submit
-                        .emit(self.state.value.as_ref().unwrap_or(&"".to_string()).clone());
+                        .emit(self.state.value.as_deref().unwrap_or("").to_owned());
                     self.state.value = None;
                     return true;
                 }
@@ -64,7 +64,7 @@ impl Component for Input {
             <div class="uk-inline message-input">
                 <span class="material-icons" id="ma-icon">{"create"}</span>
                 <input class="uk-input" type="text"
-                    value=&self.state.value.as_ref().unwrap_or(&"".to_string())
+                    value=&self.state.value.as_deref().unwrap_or("")
                     oninput=&self.on_input
                     onkeypress=&self.on_submit
                 />
