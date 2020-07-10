@@ -6,8 +6,7 @@ use matrix_sdk::{
     api::r0::{filter::RoomEventFilter, message::get_message_events::Direction},
     events::{
         room::message::{
-            FormattedBody,  MessageEventContent, MessageFormat,
-            TextMessageEventContent,
+            FormattedBody, MessageEventContent, MessageFormat, TextMessageEventContent,
         },
         AnyMessageEvent, AnyMessageEventStub, AnyRoomEvent, EventJson,
     },

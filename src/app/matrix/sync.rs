@@ -7,7 +7,6 @@ use log::*;
 use matrix_sdk::{
     api::r0::sync::sync_events::Response as SyncResponse,
     events::{
-
         room::message::MessageEventContent, AnyMessageEventStub, AnyRoomEventStub,
         AnyStateEventStub, EventJson,
     },

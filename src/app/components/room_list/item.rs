@@ -57,7 +57,7 @@ impl Component for RoomItem {
                 if let AnyMessageEventContent::RoomMessage(MessageEventContent::Text(text_event)) =
                     m.content.clone()
                 {
-                    text_event.body.clone()
+                    text_event.body
                 } else {
                     "".to_string()
                 }

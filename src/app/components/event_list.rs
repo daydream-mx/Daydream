@@ -1,11 +1,9 @@
 use std::{collections::HashMap, rc::Rc};
 
+use crate::utils::ruma::AnyMessageEventExt;
 use log::*;
 use matrix_sdk::{
-    events::{
-        room::message::MessageEventContent, AnyMessageEvent, AnyMessageEventContent,
-        AnyMessageEventStub,
-    },
+    events::{room::message::MessageEventContent, AnyMessageEventContent, AnyMessageEventStub},
     identifiers::RoomId,
     Room,
 };
@@ -27,7 +25,7 @@ pub struct EventList {
 #[derive(Default)]
 pub struct State {
     // TODO handle all events
-    pub events: HashMap<RoomId, Vec<AnyMessageEvent>>,
+    pub events: HashMap<RoomId, Vec<AnyMessageEventStub>>,
 }
 
 #[allow(clippy::large_enum_variant)]
@@ -94,10 +92,11 @@ impl Component for EventList {
                         }
                     }
                     Response::OldMessages((room_id, messages)) => {
-                        let mut deserialized_messages: Vec<AnyMessageEvent> = messages
+                        let mut deserialized_messages: Vec<AnyMessageEventStub> = messages
                             .iter()
                             .map(|x| x.deserialize())
                             .filter_map(Result::ok)
+                            .map(|x| x.without_room_id())
                             .collect();
                         // This is a clippy false positive
                         #[allow(clippy::map_entry)]
