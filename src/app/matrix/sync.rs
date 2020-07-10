@@ -7,7 +7,9 @@ use log::*;
 use matrix_sdk::{
     api::r0::sync::sync_events::Response as SyncResponse,
     events::{
-        collections::all::{RoomEvent, StateEvent},
+        AnyRoomEventStub,
+        AnyStateEventStub,
+        AnyMessageEventStub,
         room::message::MessageEventContent,
         EventJson,
     },
@@ -71,24 +73,24 @@ impl Sync {
         }
     }
 
-    async fn on_state_event(&self, room_id: &RoomId, event: StateEvent) {
-        if let StateEvent::RoomCreate(_event) = event {
+    async fn on_state_event(&self, room_id: &RoomId, event: AnyStateEventStub) {
+        if let AnyStateEventStub::RoomCreate(_event) = event {
             info!("Sent JoinedRoomSync State");
             let resp = Response::JoinedRoomSync(room_id.clone());
             self.callback.emit(resp);
         }
     }
 
-    async fn on_room_message(&self, room_id: &RoomId, event: RoomEvent) {
+    async fn on_room_message(&self, room_id: &RoomId, event: AnyRoomEventStub) {
         // TODO handle all messages...
 
-        if let RoomEvent::RoomCreate(_create_event) = event.clone() {
+        if let AnyRoomEventStub::State(AnyStateEventStub::RoomCreate(_create_event)) = event.clone() {
             info!("Sent JoinedRoomSync Timeline");
             let resp = Response::JoinedRoomSync(room_id.clone());
             self.callback.emit(resp);
         }
 
-        if let RoomEvent::RoomMessage(mut event) = event {
+        if let AnyRoomEventStub::Message(AnyMessageEventStub::RoomMessage(mut event)) = event {
             if let MessageEventContent::Text(text_event) = event.content.clone() {
                 let homeserver_url = self.matrix_client.clone().homeserver().clone();
 

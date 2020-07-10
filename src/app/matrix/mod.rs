@@ -5,7 +5,7 @@ use log::*;
 use matrix_sdk::{
     api::r0::{filter::RoomEventFilter, message::get_message_events::Direction},
     events::{
-        collections::all::RoomEvent,
+        AnyRoomEvent,
         room::message::{
             FormattedBody, MessageEvent, MessageEventContent, MessageFormat,
             TextMessageEventContent,
@@ -285,18 +285,18 @@ impl Agent for MatrixAgent {
                     // TODO save end point for future loading
 
                     let mut wrapped_messages: Vec<EventJson<MessageEvent>> = Vec::new();
-                    let chunk_iter: Vec<EventJson<RoomEvent>> = messsages.chunk;
+                    let chunk_iter: Vec<EventJson<AnyRoomEvent>> = messsages.chunk;
                     let (oks, _): (Vec<_>, Vec<_>) = chunk_iter
                         .iter()
                         .map(|event| event.deserialize())
                         .partition(Result::is_ok);
 
-                    let deserialized_events: Vec<RoomEvent> =
+                    let deserialized_events: Vec<AnyRoomEvent> =
                         oks.into_iter().map(Result::unwrap).collect();
 
                     for event in deserialized_events.into_iter().rev() {
                         // TODO deduplicate betweeen this and sync
-                        if let RoomEvent::RoomMessage(mut event) = event {
+                        if let AnyRoomEvent::RoomMessage(mut event) = event {
                             if let MessageEventContent::Image(mut image_event) =
                             event.clone().content
                             {

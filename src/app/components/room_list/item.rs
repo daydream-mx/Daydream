@@ -50,7 +50,7 @@ impl Component for RoomItem {
         let last_message = match room.messages.iter().last() {
             None => "".to_string(),
             Some(m) => {
-                if let MessageEventContent::Text(text_event) = &m.content {
+                if let MessageEventContent::Text(text_event) = m.content.clone() {
                     text_event.body.clone()
                 } else {
                     "".to_string()

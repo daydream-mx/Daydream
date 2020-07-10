@@ -62,7 +62,6 @@ features = [
 [patch.crates-io]
 olm-sys = { git = "https://gitlab.gnome.org/stoically/olm-sys", branch = "wasm-target" }
 cjson = { git = "https://github.com/engineerd/cjson" }
-ruma-events = { git = "https://github.com/ruma/ruma-events", rev="3f74ba327093d4f32e11c2741aaa649e4ab733d9" }
 reqwest = { git = "https://github.com/daydream-mx/reqwest.git", branch = "MTRNord/wasm-worker-support"}
 
 [profile.release]
