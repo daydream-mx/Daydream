@@ -144,33 +144,40 @@ impl Component for EventList {
     }
 
     fn view(&self) -> Html {
-        return html! {
+        let events = if self
+            .state
+            .events
+            .contains_key(&self.props.current_room.room_id)
+        {
+            let events = self.state.events[&self.props.current_room.room_id].clone();
+            let mut elements: Vec<Html> = Vec::new();
+            for (pos, event) in self.state.events[&self.props.current_room.room_id]
+                .iter()
+                .enumerate()
+            {
+                if pos == 0 {
+                    elements.push(self.get_event(None, event));
+                } else {
+                    elements.push(self.get_event(Some(events[pos - 1].clone()), event));
+                }
+            }
+            elements.into_iter().collect::<Html>()
+        } else {
+            html! {}
+        };
+
+        html! {
             <div class="event-list">
                 <div class="room-title"><div><h1>{ self.props.current_room.display_name() }</h1></div></div>
                 <div class="scrollable message-scrollarea">
                     <div class="message-container">
-                        {
-                            if self.state.events.contains_key(&self.props.current_room.room_id) {
-                                let events = self.state.events[&self.props.current_room.room_id].clone();
-                                let mut elements: Vec<Html> = Vec::new();
-                                for (pos, event) in self.state.events[&self.props.current_room.room_id].iter().enumerate() {
-                                    if pos == 0 {
-                                        elements.push(self.get_event(None, event));
-                                    } else {
-                                        elements.push(self.get_event(Some(events[pos - 1].clone()), event));
-                                    }
-                                }
-                                elements.into_iter().collect::<Html>()
-                            } else {
-                                html! {}
-                            }
-                        }
+                        { events }
                         <div id="anchor"></div>
                     </div>
                 </div>
                 <Input on_submit=&self.on_submit/>
             </div>
-        };
+        }
     }
 }
 
