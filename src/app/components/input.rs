@@ -61,7 +61,7 @@ impl Component for Input {
 
     fn view(&self) -> Html {
         html! {
-            <div class="uk-inline" style="display: block !important; padding-right: 40px;">
+            <div class="uk-inline message-input">
                 <span class="material-icons" id="ma-icon">{"create"}</span>
                 <input class="uk-input" type="text"
                     value=&self.state.value.as_ref().unwrap_or(&"".to_string())

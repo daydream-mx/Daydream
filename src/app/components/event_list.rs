@@ -146,8 +146,8 @@ impl Component for EventList {
     fn view(&self) -> Html {
         return html! {
             <div class="event-list">
-                <div class="room-title"><h1>{ self.props.current_room.display_name() }</h1></div>
-                <div class="scrollable" style="height: auto; flex-grow: 1;">
+                <div class="room-title"><div><h1>{ self.props.current_room.display_name() }</h1></div></div>
+                <div class="scrollable message-scrollarea">
                     <div class="message-container">
                         {
                             if self.state.events.contains_key(&self.props.current_room.room_id) {

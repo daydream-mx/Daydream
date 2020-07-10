@@ -338,26 +338,48 @@ body {
   width: 100vw;
 }
 
+.thumbnail-container {
+  height: 37.5rem;
+
+  img {
+    max-height:100%;
+    max-width: 100%;
+  }
+}
+
 .room-title {
   width: 100%;
-  height: 100%;
-  max-height: 5.875rem;
+  overflow: hidden;
+  padding-bottom: 1.625rem;
+  flex: 0 1 5.875rem;
 
-  //h1 {
-  //  margin: 0 !important;
-  //  height: 5.875rem;
-  //}
+  h1 {
+    font-family: Roboto, sans-serif;
+    font-style: normal;
+    font-weight: bold;
+    font-size: 2.125rem;
+    line-height: 2.5rem;
+    letter-spacing: 0.015625rem;
+  }
 
-  &::before {
-    content: '';
-    position: absolute;
+  div {
     width: 100%;
-    height: 5.875rem;
+    height: 5.875rem !important;
 
     box-shadow: 0 1px 10px rgba(0, 0, 0, 0.2), 0 4px 5px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.14);
     -moz-box-shadow: 0 1px 10px rgba(0, 0, 0, 0.2), 0 4px 5px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.14);
     -webkit-box-shadow: 0 1px 10px rgba(0, 0, 0, 0.2), 0 4px 5px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.14);
   }
+}
+
+.message-input {
+  flex: 0 1 4.375rem;
+  display: block !important;
+  padding-right: 40px;
+}
+
+.message-scrollarea {
+  flex: 1 1 auto;
 }
 
 .event-list {
@@ -529,7 +551,12 @@ body {
     .toggleWrapper {
       height: 100%;
       // Following later becomes button stuff
-      margin: 9px 54px;
+
+      div {
+        position: relative;
+        left: 40%;
+        top: 5%;
+      }
     }
   }
 }
