@@ -3,8 +3,8 @@ use std::{collections::HashMap, rc::Rc};
 use log::*;
 use matrix_sdk::{
     events::{
-        room::message::MessageEventContent, AnyMessageEventContent, AnyMessageEventStub,
-         MessageEvent
+        room::message::MessageEventContent, AnyMessageEvent, AnyMessageEventContent,
+        AnyMessageEventStub,
     },
     identifiers::RoomId,
     Room,
@@ -27,7 +27,7 @@ pub struct EventList {
 #[derive(Default)]
 pub struct State {
     // TODO handle all events
-    pub events: HashMap<RoomId, Vec<AnyMessageEventStub>>,
+    pub events: HashMap<RoomId, Vec<AnyMessageEvent>>,
 }
 
 #[allow(clippy::large_enum_variant)]
@@ -94,7 +94,7 @@ impl Component for EventList {
                         }
                     }
                     Response::OldMessages((room_id, messages)) => {
-                        let mut deserialized_messages: Vec<AnyMessageEventStub> = messages
+                        let mut deserialized_messages: Vec<AnyMessageEvent> = messages
                             .iter()
                             .map(|x| x.deserialize())
                             .filter_map(Result::ok)

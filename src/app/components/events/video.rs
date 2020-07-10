@@ -1,6 +1,6 @@
 use std::rc::Rc;
 
-use crate::app::components::events::{RoomExt, EventExt};
+use crate::app::components::events::{EventExt, RoomExt};
 use matrix_sdk::{
     events::{room::message::VideoMessageEventContent, AnyMessageEventStub},
     Room,

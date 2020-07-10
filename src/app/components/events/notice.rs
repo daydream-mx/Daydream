@@ -9,7 +9,7 @@ use web_sys::Node;
 use yew::prelude::*;
 use yew::virtual_dom::VNode;
 
-use crate::app::components::events::{RoomExt, EventExt};
+use crate::app::components::events::{EventExt, RoomExt};
 
 pub(crate) struct Notice {
     props: Props,

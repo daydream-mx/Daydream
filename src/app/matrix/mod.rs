@@ -6,7 +6,7 @@ use matrix_sdk::{
     api::r0::{filter::RoomEventFilter, message::get_message_events::Direction},
     events::{
         room::message::{
-            FormattedBody, MessageEvent, MessageEventContent, MessageFormat,
+            FormattedBody,  MessageEventContent, MessageFormat,
             TextMessageEventContent,
         },
         AnyMessageEvent, AnyMessageEventStub, AnyRoomEvent, EventJson,
@@ -68,7 +68,7 @@ pub enum Response {
     Sync((RoomId, EventJson<AnyMessageEventStub>)),
     JoinedRoomSync(RoomId),
     SyncPing,
-    OldMessages((RoomId, Vec<EventJson<MessageEvent>>)),
+    OldMessages((RoomId, Vec<EventJson<AnyMessageEvent>>)),
     JoinedRoom((RoomId, Room)),
     SaveSession(SessionStore),
 }
@@ -287,7 +287,7 @@ impl Agent for MatrixAgent {
                         .unwrap();
                     // TODO save end point for future loading
 
-                    let mut wrapped_messages: Vec<EventJson<MessageEvent>> = Vec::new();
+                    let mut wrapped_messages: Vec<EventJson<AnyMessageEvent>> = Vec::new();
                     let chunk_iter: Vec<EventJson<AnyRoomEvent>> = messsages.chunk;
                     let (oks, _): (Vec<_>, Vec<_>) = chunk_iter
                         .iter()
@@ -346,7 +346,8 @@ impl Agent for MatrixAgent {
                                 event.content = MessageEventContent::Video(video_event);
                             }
 
-                            let serialized_event = EventJson::from(event.clone());
+                            let serialized_event =
+                                EventJson::from(AnyMessageEvent::RoomMessage(event.clone()));
                             wrapped_messages.push(serialized_event);
                         }
                     }

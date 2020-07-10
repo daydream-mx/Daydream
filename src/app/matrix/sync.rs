@@ -7,6 +7,7 @@ use log::*;
 use matrix_sdk::{
     api::r0::sync::sync_events::Response as SyncResponse,
     events::{
+
         room::message::MessageEventContent, AnyMessageEventStub, AnyRoomEventStub,
         AnyStateEventStub, EventJson,
     },
@@ -19,7 +20,7 @@ use yew::Callback;
 
 use lazy_static::lazy_static;
 
-use crate::app::components::events::{RoomExt};
+use crate::app::components::events::RoomExt;
 use crate::app::matrix::types::{get_media_download_url, get_video_media_download_url};
 use crate::app::matrix::Response;
 use crate::utils::notifications::Notifications;
@@ -107,9 +108,15 @@ impl Sync {
                         let (avatar_url, room_name, displayname) = {
                             let room = room.read().await;
                             (
-                                room.get_sender_avatar(&homeserver_url, &AnyMessageEventStub::RoomMessage(cloned_event)),
+                                room.get_sender_avatar(
+                                    &homeserver_url,
+                                    &AnyMessageEventStub::RoomMessage(cloned_event.clone()),
+                                ),
                                 room.display_name(),
-                                room.get_sender_displayname(&AnyMessageEventStub::RoomMessage(cloned_event)).to_string(),
+                                room.get_sender_displayname(&AnyMessageEventStub::RoomMessage(
+                                    cloned_event,
+                                ))
+                                .to_string(),
                             )
                         };
 
@@ -168,7 +175,7 @@ impl Sync {
                 }
             }
 
-            let serialized_event = EventJson::from(event);
+            let serialized_event = EventJson::from(AnyMessageEventStub::RoomMessage(event));
             let resp = Response::Sync((room_id.clone(), serialized_event));
             self.callback.emit(resp);
         }

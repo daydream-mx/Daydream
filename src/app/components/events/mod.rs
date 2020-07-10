@@ -24,16 +24,16 @@ impl EventExt for AnyMessageEventStub {
 }
 
 pub trait RoomExt {
-    fn get_sender_displayname<'a>(&self, event: &'a AnyMessageEventStub) -> &'a str;
+    fn get_sender_displayname<'a>(&'a self, event: &'a AnyMessageEventStub) -> &'a str;
     fn get_sender_avatar<'a>(
-        &self,
+        &'a self,
         homeserver_url: &'a Url,
         event: &'a AnyMessageEventStub,
     ) -> Option<Url>;
 }
 
 impl RoomExt for Room {
-    fn get_sender_displayname<'a>(&self, event: &'a AnyMessageEventStub) -> &'a str {
+    fn get_sender_displayname<'a>(&'a self, event: &'a AnyMessageEventStub) -> &'a str {
         self.joined_members
             .get(&event.sender())
             .or_else(|| self.invited_members.get(&event.sender()))
@@ -56,6 +56,4 @@ impl RoomExt for Room {
             member.avatar_url.as_deref()?,
         ))
     }
-
 }
-
