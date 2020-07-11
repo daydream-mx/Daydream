@@ -4,6 +4,7 @@ const CopyWebpackPlugin = require('copy-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
+const WaitPlugin = require('./startup_helper/WaitPlugin');
 
 const distPath = path.resolve(__dirname, "dist");
 const appConfig = (env, argv) => {
@@ -89,7 +90,9 @@ const appConfig = (env, argv) => {
 const workerConfig = {
     entry: "./startup_helper/worker/worker.js",
     target: "webworker",
-    plugins: [],
+    plugins: [
+        new WaitPlugin('./dist/daydream.wasm', 100, 480000)
+    ],
     resolve: {
         extensions: [".js", ".wasm"]
     },
