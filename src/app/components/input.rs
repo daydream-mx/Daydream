@@ -61,9 +61,12 @@ impl Component for Input {
 
     fn view(&self) -> Html {
         html! {
-            <div class="uk-inline message-input">
-                <span class="material-icons" id="ma-icon">{"create"}</span>
-                <input class="uk-input" type="text"
+            <div class="message-input">
+                <div class="encryption-bg">
+                    <span class="material-icons">{"lock_open"}</span>
+                </div>
+                <textarea autofocus=true
+                    placeholder={"Input Text..."}
                     value=&self.state.value.as_deref().unwrap_or("")
                     oninput=&self.on_input
                     onkeypress=&self.on_submit
