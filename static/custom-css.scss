@@ -139,25 +139,11 @@ li {
 @import "lightbox.scss";
 
 .daydream-title {
-  font-family: 'Dancing Script', cursive;
-  position: relative;
-  margin-left: calc(50% - 381px / 2 - 0.5px);
-  margin-top: 48px;
+  //position: relative;
+  //margin-left: calc(50% - 295px / 2 - 0.5px);
+  margin: 0 auto 1rem;
 
-  font-style: normal;
-  font-weight: bold;
-  font-size: 96px;
-  line-height: 115px;
-  display: flex;
-  align-items: center;
-  text-align: center;
-
-  /* Daydrean Red */
-
-  color: #B80B0B;
-  /* 6dp — Elevation */
-
-  text-shadow: 0 3px 5px rgba(0, 0, 0, 0.2), 0 1px 18px rgba(0, 0, 0, 0.12), 0 6px 10px rgba(0, 0, 0, 0.14);
+  width: 18.875rem;
 }
 
 .login-page-bg {
@@ -185,8 +171,7 @@ _::-webkit-full-page-media, _:future, :root .login-page-bg {
 .login-bg {
   position: relative;
   width: 481px;
-  margin-left: calc(50% - 481px / 2 + 0.5px);
-  margin-top: 48px;
+  margin: 48px auto 0;
   height: calc(100% - 48px);
   box-sizing: border-box;
 

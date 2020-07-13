@@ -146,7 +146,7 @@ impl Component for Login {
         if self.state.loading {
             html! {
                 <div class="container">
-                    <div class="uk-position-center uk-padding">
+                    <div class="uk-position-center uk-padding sun-animation">
                         <RawHTML inner_html=include_str!("../svgs/loading_animation.svg")/>
                     </div>
                 </div>
@@ -157,8 +157,8 @@ impl Component for Login {
                     <div class="login-page-bg"></div>
                     <div class="scrollable" style="width:100vw; padding:2px;">
                         <div>
-                            <p class="daydream-title">{"Daydream"}</p>
                             <div class="login-bg">
+                                <div class="daydream-title"><RawHTML inner_html=include_str!("../svgs/DaydreamLogo_v0_light.svg")/></div>
                                 <div class="login-content">
                                     <h1 class="login-title">
                                         {
