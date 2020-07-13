@@ -381,33 +381,35 @@ body {
     }
   }
 
-  // Move placeholder
-  textarea::placeholder {
-    font-family: Roboto, sans-serif;
-    font-style: normal;
-    font-weight: 300;
-    font-size: 18px;
-    line-height: 21px;
-    /* identical to box height */
-
-    display: flex;
-    align-items: center;
-  }
-
   textarea {
     flex-grow: 1;
     //background-color: #f5f5f5;
     // Reset
     border: 0;
+
     &:focus {
       outline: 0;
     }
 
 
-
   }
 }
 
+textarea::-webkit-input-placeholder {
+  padding-top: 20px;
+}
+
+textarea::-moz-input-placeholder {
+  padding-top: 20px;
+}
+
+textarea:-moz-input-placeholder {
+  padding-top: 20px;
+}
+
+textarea:-ms-input-placeholder {
+  padding-top: 20px;
+}
 
 
 .message-scrollarea {

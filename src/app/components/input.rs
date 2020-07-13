@@ -66,7 +66,7 @@ impl Component for Input {
                     <span class="material-icons">{"lock_open"}</span>
                 </div>
                 <textarea autofocus=true
-                    placeholder={"Input Text..."}
+                    placeholder={ "Input Text..." }
                     value=&self.state.value.as_deref().unwrap_or("")
                     oninput=&self.on_input
                     onkeypress=&self.on_submit
