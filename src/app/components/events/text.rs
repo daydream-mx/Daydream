@@ -3,7 +3,7 @@ use std::rc::Rc;
 use crate::app::components::events::{EventExt, RoomExt};
 use linkify::LinkFinder;
 use matrix_sdk::{
-    events::{room::message::TextMessageEventContent, AnyMessageEventStub},
+    events::{room::message::TextMessageEventContent, AnySyncMessageEvent},
     Room,
 };
 use web_sys::Node;
@@ -17,8 +17,8 @@ pub struct Text {
 #[derive(Clone, Properties, Debug)]
 pub struct Props {
     #[prop_or_default]
-    pub prev_event: Option<AnyMessageEventStub>,
-    pub event: AnyMessageEventStub,
+    pub prev_event: Option<AnySyncMessageEvent>,
+    pub event: AnySyncMessageEvent,
     pub text_event: TextMessageEventContent,
     pub room: Rc<Room>,
 }

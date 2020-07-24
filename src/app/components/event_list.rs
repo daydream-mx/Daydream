@@ -3,7 +3,7 @@ use std::{collections::HashMap, rc::Rc};
 use crate::utils::ruma::AnyMessageEventExt;
 use log::*;
 use matrix_sdk::{
-    events::{room::message::MessageEventContent, AnyMessageEventContent, AnyMessageEventStub},
+    events::{room::message::MessageEventContent, AnyMessageEventContent, AnySyncMessageEvent},
     identifiers::RoomId,
     Room,
 };
@@ -25,7 +25,7 @@ pub struct EventList {
 #[derive(Default)]
 pub struct State {
     // TODO handle all events
-    pub events: HashMap<RoomId, Vec<AnyMessageEventStub>>,
+    pub events: HashMap<RoomId, Vec<AnySyncMessageEvent>>,
 }
 
 #[allow(clippy::large_enum_variant)]
@@ -92,7 +92,7 @@ impl Component for EventList {
                         }
                     }
                     Response::OldMessages((room_id, messages)) => {
-                        let mut deserialized_messages: Vec<AnyMessageEventStub> = messages
+                        let mut deserialized_messages: Vec<AnySyncMessageEvent> = messages
                             .iter()
                             .map(|x| x.deserialize())
                             .filter_map(Result::ok)
@@ -186,8 +186,8 @@ impl EventList {
     //noinspection RsTypeCheck
     fn get_event(
         &self,
-        prev_event: Option<&AnyMessageEventStub>,
-        event: &AnyMessageEventStub,
+        prev_event: Option<&AnySyncMessageEvent>,
+        event: &AnySyncMessageEvent,
     ) -> Html {
         // TODO make encryption supported
 

@@ -5,10 +5,12 @@ use std::time::Duration;
 
 use log::*;
 use matrix_sdk::{
+    api::r0::filter::{FilterDefinition, LazyLoadOptions, RoomEventFilter, RoomFilter},
+    api::r0::sync::sync_events::Filter,
     api::r0::sync::sync_events::Response as SyncResponse,
     events::{
-        room::message::MessageEventContent, AnyMessageEventStub, AnyRoomEventStub,
-        AnyStateEventStub, EventJson,
+        room::message::MessageEventContent, AnySyncMessageEvent, AnySyncRoomEvent,
+        AnySyncStateEvent, EventJson,
     },
     identifiers::RoomId,
     locks::RwLock,
@@ -18,6 +20,7 @@ use wasm_bindgen_futures::spawn_local;
 use yew::Callback;
 
 use lazy_static::lazy_static;
+use matrix_sdk::js_int::UInt;
 
 use crate::app::components::events::RoomExt;
 use crate::app::matrix::types::{get_media_download_url, get_video_media_download_url};
@@ -37,7 +40,21 @@ impl Sync {
     pub async fn start_sync(&self) {
         debug!("start sync!");
         let client = self.matrix_client.clone();
-        let settings = SyncSettings::default().timeout(Duration::from_secs(30));
+        let settings = SyncSettings::default()
+            .timeout(Duration::from_secs(30))
+            .filter(Filter::FilterDefinition(FilterDefinition {
+                room: Some(RoomFilter {
+                    timeline: Some(RoomEventFilter {
+                        limit: Some(UInt::new(20).unwrap()),
+                        lazy_load_options: LazyLoadOptions::Enabled {
+                            include_redundant_members: true,
+                        },
+                        ..Default::default()
+                    }),
+                    ..Default::default()
+                }),
+                ..Default::default()
+            }));
         //.full_state(true);
 
         debug!("start sync_forever!");
@@ -70,25 +87,25 @@ impl Sync {
         }
     }
 
-    async fn on_state_event(&self, room_id: &RoomId, event: AnyStateEventStub) {
-        if let AnyStateEventStub::RoomCreate(_event) = event {
+    async fn on_state_event(&self, room_id: &RoomId, event: AnySyncStateEvent) {
+        if let AnySyncStateEvent::RoomCreate(_event) = event {
             info!("Sent JoinedRoomSync State");
             let resp = Response::JoinedRoomSync(room_id.clone());
             self.callback.emit(resp);
         }
     }
 
-    async fn on_room_message(&self, room_id: &RoomId, event: AnyRoomEventStub) {
+    async fn on_room_message(&self, room_id: &RoomId, event: AnySyncRoomEvent) {
         // TODO handle all messages...
 
-        if let AnyRoomEventStub::State(AnyStateEventStub::RoomCreate(_create_event)) = event.clone()
+        if let AnySyncRoomEvent::State(AnySyncStateEvent::RoomCreate(_create_event)) = event.clone()
         {
             info!("Sent JoinedRoomSync Timeline");
             let resp = Response::JoinedRoomSync(room_id.clone());
             self.callback.emit(resp);
         }
 
-        if let AnyRoomEventStub::Message(AnyMessageEventStub::RoomMessage(mut event)) = event {
+        if let AnySyncRoomEvent::Message(AnySyncMessageEvent::RoomMessage(mut event)) = event {
             if let MessageEventContent::Text(text_event) = event.content.clone() {
                 let homeserver_url = self.matrix_client.clone().homeserver().clone();
 
@@ -109,10 +126,10 @@ impl Sync {
                             (
                                 room.get_sender_avatar(
                                     &homeserver_url,
-                                    &AnyMessageEventStub::RoomMessage(cloned_event.clone()),
+                                    &AnySyncMessageEvent::RoomMessage(cloned_event.clone()),
                                 ),
                                 room.display_name(),
-                                room.get_sender_displayname(&AnyMessageEventStub::RoomMessage(
+                                room.get_sender_displayname(&AnySyncMessageEvent::RoomMessage(
                                     cloned_event,
                                 ))
                                 .to_string(),
@@ -174,7 +191,7 @@ impl Sync {
                 }
             }
 
-            let serialized_event = EventJson::from(AnyMessageEventStub::RoomMessage(event));
+            let serialized_event = EventJson::from(AnySyncMessageEvent::RoomMessage(event));
             let resp = Response::Sync((room_id.clone(), serialized_event));
             self.callback.emit(resp);
         }

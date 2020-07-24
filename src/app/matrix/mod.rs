@@ -8,7 +8,7 @@ use matrix_sdk::{
         room::message::{
             FormattedBody, MessageEventContent, MessageFormat, TextMessageEventContent,
         },
-        AnyMessageEvent, AnyMessageEventStub, AnyRoomEvent, EventJson,
+        AnyMessageEvent, AnyRoomEvent, AnySyncMessageEvent, EventJson,
     },
     identifiers::RoomId,
     locks::RwLock,
@@ -64,7 +64,7 @@ pub enum Response {
     Error(MatrixError),
     LoggedIn(bool),
     // TODO properly handle sync events
-    Sync((RoomId, EventJson<AnyMessageEventStub>)),
+    Sync((RoomId, EventJson<AnySyncMessageEvent>)),
     JoinedRoomSync(RoomId),
     SyncPing,
     OldMessages((RoomId, Vec<EventJson<AnyMessageEvent>>)),
@@ -151,7 +151,7 @@ impl Agent for MatrixAgent {
                                     let session_store = SessionStore {
                                         access_token: login_response.access_token,
                                         user_id: login_response.user_id.to_string(),
-                                        device_id: login_response.device_id,
+                                        device_id: login_response.device_id.into(),
                                         homeserver_url: client.homeserver().to_string(),
                                     };
                                     for sub in agent.subscribers.iter() {

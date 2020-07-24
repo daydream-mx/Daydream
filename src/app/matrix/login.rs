@@ -54,7 +54,7 @@ fn restore_client(session: &SessionStore) -> Result<Client, MatrixError> {
                             session.user_id.as_str(),
                         )
                         .unwrap(),
-                        device_id: session.device_id.clone(),
+                        device_id: session.device_id.clone().into(),
                     };
                     info!("before restore");
                     let cloned_client = client.clone();

@@ -1,7 +1,10 @@
 use std::rc::Rc;
 
 use matrix_sdk::{
-    events::{room::message::MessageEventContent, AnyMessageEventContent},
+    events::{
+        room::message::MessageEventContent, AnyPossiblyRedactedSyncMessageEvent,
+        AnySyncMessageEvent,
+    },
     identifiers::RoomId,
     Room,
 };
@@ -54,10 +57,15 @@ impl Component for RoomItem {
         let last_message = match room.messages.iter().last() {
             None => "",
             Some(m) => {
-                if let AnyMessageEventContent::RoomMessage(MessageEventContent::Text(text_event)) =
-                    &m.content
+                if let AnyPossiblyRedactedSyncMessageEvent::Regular(
+                    AnySyncMessageEvent::RoomMessage(event),
+                ) = &**m
                 {
-                    &text_event.body
+                    if let MessageEventContent::Text(text_event) = &event.content {
+                        &text_event.body
+                    } else {
+                        ""
+                    }
                 } else {
                     ""
                 }

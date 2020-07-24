@@ -1,19 +1,19 @@
 use matrix_sdk::events::{
-    room::redaction::RedactionEventStub, AnyMessageEvent, AnyMessageEventStub, MessageEvent,
-    MessageEventContent, MessageEventStub,
+    room::redaction::SyncRedactionEvent, AnyMessageEvent, AnySyncMessageEvent, MessageEvent,
+    MessageEventContent, SyncMessageEvent,
 };
 
 pub trait AnyMessageEventExt {
-    fn without_room_id(self) -> AnyMessageEventStub;
+    fn without_room_id(self) -> AnySyncMessageEvent;
 }
 
 impl AnyMessageEventExt for AnyMessageEvent {
-    fn without_room_id(self) -> AnyMessageEventStub {
-        fn without_room_id<C>(ev: MessageEvent<C>) -> MessageEventStub<C>
+    fn without_room_id(self) -> AnySyncMessageEvent {
+        fn without_room_id<C>(ev: MessageEvent<C>) -> SyncMessageEvent<C>
         where
             C: MessageEventContent,
         {
-            MessageEventStub {
+            SyncMessageEvent {
                 content: ev.content,
                 event_id: ev.event_id,
                 sender: ev.sender,
@@ -22,7 +22,7 @@ impl AnyMessageEventExt for AnyMessageEvent {
             }
         }
 
-        use AnyMessageEventStub::*;
+        use AnySyncMessageEvent::*;
 
         match self {
             Self::CallAnswer(ev) => CallAnswer(without_room_id(ev)),
@@ -34,7 +34,7 @@ impl AnyMessageEventExt for AnyMessageEvent {
             Self::RoomMessageFeedback(ev) => RoomMessageFeedback(without_room_id(ev)),
             Self::Sticker(ev) => Sticker(without_room_id(ev)),
             Self::Custom(ev) => Custom(without_room_id(ev)),
-            Self::RoomRedaction(ev) => RoomRedaction(RedactionEventStub {
+            Self::RoomRedaction(ev) => RoomRedaction(SyncRedactionEvent {
                 content: ev.content,
                 event_id: ev.event_id,
                 sender: ev.sender,

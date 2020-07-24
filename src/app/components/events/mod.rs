@@ -1,4 +1,4 @@
-use matrix_sdk::events::AnyMessageEventStub;
+use matrix_sdk::events::AnySyncMessageEvent;
 use matrix_sdk::Room;
 use url::Url;
 
@@ -10,11 +10,11 @@ pub mod text;
 pub mod video;
 
 pub trait EventExt {
-    fn is_new_user(&self, prev_event: Option<&AnyMessageEventStub>) -> bool;
+    fn is_new_user(&self, prev_event: Option<&AnySyncMessageEvent>) -> bool;
 }
 
-impl EventExt for AnyMessageEventStub {
-    fn is_new_user(&self, prev_event: Option<&AnyMessageEventStub>) -> bool {
+impl EventExt for AnySyncMessageEvent {
+    fn is_new_user(&self, prev_event: Option<&AnySyncMessageEvent>) -> bool {
         if let Some(prev_event) = prev_event {
             prev_event.sender() != self.sender()
         } else {
@@ -24,16 +24,16 @@ impl EventExt for AnyMessageEventStub {
 }
 
 pub trait RoomExt {
-    fn get_sender_displayname<'a>(&'a self, event: &'a AnyMessageEventStub) -> &'a str;
+    fn get_sender_displayname<'a>(&'a self, event: &'a AnySyncMessageEvent) -> &'a str;
     fn get_sender_avatar<'a>(
         &'a self,
         homeserver_url: &'a Url,
-        event: &'a AnyMessageEventStub,
+        event: &'a AnySyncMessageEvent,
     ) -> Option<Url>;
 }
 
 impl RoomExt for Room {
-    fn get_sender_displayname<'a>(&'a self, event: &'a AnyMessageEventStub) -> &'a str {
+    fn get_sender_displayname<'a>(&'a self, event: &'a AnySyncMessageEvent) -> &'a str {
         self.joined_members
             .get(&event.sender())
             .or_else(|| self.invited_members.get(&event.sender()))
@@ -44,7 +44,7 @@ impl RoomExt for Room {
     fn get_sender_avatar<'a>(
         &self,
         homeserver_url: &'a Url,
-        event: &'a AnyMessageEventStub,
+        event: &'a AnySyncMessageEvent,
     ) -> Option<Url> {
         let member = self
             .joined_members
