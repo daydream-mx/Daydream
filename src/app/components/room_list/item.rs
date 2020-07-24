@@ -3,7 +3,7 @@ use std::rc::Rc;
 use matrix_sdk::{
     events::{
         room::message::MessageEventContent, AnyPossiblyRedactedSyncMessageEvent,
-        AnySyncMessageEvent,
+        AnySyncMessageEvent, SyncMessageEvent,
     },
     identifiers::RoomId,
     Room,
@@ -54,22 +54,14 @@ impl Component for RoomItem {
         let room = self.props.room.clone();
 
         // TODO placeholder for encrypted rooms
-        let last_message = match room.messages.iter().last() {
-            None => "",
-            Some(m) => {
-                if let AnyPossiblyRedactedSyncMessageEvent::Regular(
-                    AnySyncMessageEvent::RoomMessage(event),
-                ) = &**m
-                {
-                    if let MessageEventContent::Text(text_event) = &event.content {
-                        &text_event.body
-                    } else {
-                        ""
-                    }
-                } else {
-                    ""
-                }
-            }
+        let last_message = match room.messages.iter().last().map(|m| &**m) {
+            Some(AnyPossiblyRedactedSyncMessageEvent::Regular(
+                AnySyncMessageEvent::RoomMessage(SyncMessageEvent {
+                    content: MessageEventContent::Text(text_event),
+                    ..
+                }),
+            )) => &text_event.body,
+            _ => "",
         };
 
         let room = room.clone();

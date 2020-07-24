@@ -114,25 +114,13 @@ impl Component for App {
     }
 
     fn view(&self) -> Html {
-        html! {
-            {
-                match &self.route {
-                    None => html! {<Login />},
-                    Some(route) => match AppRoute::switch(route.clone()) {
-                        Some(AppRoute::MainView) => {
-                            html! {
-                                <MainView />
-                            }
-                        },
-                        Some(AppRoute::Login) => {
-                            html! {
-                                <Login />
-                            }
-                        },
-                        None => VNode::from("404")
-                    }
-                }
-            }
+        match &self.route {
+            None => html! { <Login /> },
+            Some(route) => match AppRoute::switch(route.clone()) {
+                Some(AppRoute::MainView) => html! { <MainView /> },
+                Some(AppRoute::Login) => html! { <Login /> },
+                None => VNode::from("404"),
+            },
         }
     }
 }

@@ -143,16 +143,15 @@ impl Component for RoomList {
                 </div>
             }
         } else {
-            let rooms = if self.state.search_query.is_none()
-                || (self.state.search_query.as_ref().unwrap_or(&"".to_string()) == &"".to_string())
-            {
-                self.state
+            let rooms: Html = match self.state.search_query.as_deref() {
+                None | Some("") => self
+                    .state
                     .rooms
                     .iter()
                     .map(|(_, room)| self.get_room(room))
-                    .collect::<Html>()
-            } else {
-                self.state
+                    .collect(),
+                _ => self
+                    .state
                     .rooms
                     .iter()
                     .filter(|(_, room)| {
@@ -161,7 +160,7 @@ impl Component for RoomList {
                             .contains(&self.state.search_query.as_ref().unwrap().to_lowercase())
                     })
                     .map(|(_, room)| self.get_room(room))
-                    .collect::<Html>()
+                    .collect(),
             };
 
             html! {
@@ -181,7 +180,7 @@ impl Component for RoomList {
                                             "Filter Rooms..."
                                         )
                                     }
-                                    value=&self.state.search_query.as_ref().unwrap_or(&"".to_string())
+                                    value=self.state.search_query.as_deref().unwrap_or("")
                                     oninput=self.link.callback(|e: InputData| Msg::SetFilter(e.value)) />
                             </div>
                         </div>
