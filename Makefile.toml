@@ -1,0 +1,68 @@
+[config]
+skip_core_tasks = true
+
+[tasks.format]
+install_crate = "rustfmt"
+command = "cargo"
+args = ["fmt"]
+
+[tasks.wasm-clean]
+script_runner = "@shell"
+script = [
+'''
+rm ./dist
+rm ./pkg
+'''
+]
+
+[tasks.dist]
+# TODO add scss task when it works
+dependencies = ["format", "wasm-clean", "wasm-build", "copy-files"]
+
+[tasks.dist-debug]
+# TODO add scss task when it works
+dependencies = ["format", "wasm-clean", "wasm-build-debug", "copy-files"]
+
+[tasks.run]
+watch = {watch = ["./src", "./static", "./startup_helper"], poll = true}
+dependencies = ["dist-debug", "start-server"]
+
+[tasks.start-server]
+install_crate = { crate_name = "sfz", binary = "sfz", test_arg = "--help" }
+command = "sfz"
+args = ["./dist"]
+
+[tasks.wasm-build]
+command = "wasm-pack"
+args = ["build", "--release", "--target", "web"]
+
+[tasks.wasm-build-debug]
+command = "wasm-pack"
+args = ["build", "--debug", "--target", "web"]
+
+[tasks.copy-files]
+script_runner = "@shell"
+script = [
+'''
+mkdir dist
+cp static/index_rust_only.html dist/index.html
+cp pkg/daydream.js dist/daydream.js
+cp pkg/daydream_bg.wasm dist/daydream_bg.wasm
+'''
+]
+
+[tasks.update-translations]
+condition = { platforms = ["mac", "linux"] }
+ignore_errors = true
+command = "cargo"
+args = ["i18n"]
+dependencies = ["install-xtr"]
+
+[tasks.install-xtr]
+condition = { platforms = ["mac", "linux"] }
+install_crate = { crate_name = "xtr", binary = "xtr", test_arg = "--help" }
+
+[tasks.scss]
+install_crate = { crate_name = "grass", binary = "grass", test_arg = "--help" }
+command = "grass"
+args = ["static/style.scss", "dist/style.css"]

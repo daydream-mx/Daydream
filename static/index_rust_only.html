@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+    <head>
+        <meta charset="utf-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <meta name="Description" content="A Matrix Client written in Rust using WebAssembly.">
+        <link rel="dns-prefetch" href="//fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+        <script type="module">
+            import init, {run_app, init_worker} from "./daydream.js";
+
+            async function run() {
+                await init();
+                init_worker();
+                run_app();
+            }
+            run();
+
+        </script>
+        <title>Daydream</title>
+     </head>
+    <body>
+    </body>
+</html>
