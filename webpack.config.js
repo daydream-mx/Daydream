@@ -91,7 +91,7 @@ const workerConfig = {
     entry: "./startup_helper/worker/worker.js",
     target: "webworker",
     plugins: [
-        new WaitPlugin('./dist/daydream.wasm', 100, 480000)
+        new WaitPlugin('./dist/daydream.wasm', 100, 600000)
     ],
     resolve: {
         extensions: [".js", ".wasm"]
