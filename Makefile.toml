@@ -24,7 +24,7 @@ script_runner = "@rust"
 script = [
 '''
 fn main() -> std::io::Result<()> {
-    fs::create_dir_all("./dist")?;
+    std::fs::create_dir_all("./dist")?;
     Ok(())
 }
 '''
