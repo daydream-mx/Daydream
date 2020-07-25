@@ -28,7 +28,7 @@ wasm-logger = "0.2"
 lazy_static = "1.4.0"
 
 # Yew
-yew = { git = "https://github.com/daydream-mx/yew.git", branch = "MTRNord/daydream-no-bincode", features = ["webpack"] }
+yew = { git = "https://github.com/daydream-mx/yew.git", branch = "MTRNord/daydream-no-bincode" }
 yew-router = { git = "https://github.com/daydream-mx/yew.git", branch = "MTRNord/daydream-no-bincode" }
 yewtil = { git = "https://github.com/daydream-mx/yew.git", branch = "MTRNord/daydream-no-bincode" }
 
