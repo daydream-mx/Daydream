@@ -67,55 +67,50 @@ impl Component for EventList {
 
     fn update(&mut self, msg: Self::Message) -> bool {
         match msg {
-            Msg::NewMessage(response) => {
-                match response {
-                    Response::Sync((room_id, raw_msg)) => {
-                        // TODO handle all events
-                        if let Ok(msg) = raw_msg.deserialize() {
-                            if self.state.events.contains_key(&room_id) {
-                                if !(self.state.events[&room_id]
-                                    .iter()
-                                    .any(|x| x.event_id() == msg.event_id()))
-                                {
-                                    self.state.events.get_mut(&room_id).unwrap().push(msg);
-                                    room_id == self.props.current_room.room_id
-                                } else {
-                                    false
-                                }
-                            } else {
-                                let msgs = vec![msg];
-                                self.state.events.insert(room_id.clone(), msgs);
-                                room_id == self.props.current_room.room_id
-                            }
+            Msg::NewMessage(Response::Sync((room_id, raw_msg))) => {
+                // TODO handle all events
+                if let Ok(msg) = raw_msg.deserialize() {
+                    if self.state.events.contains_key(&room_id) {
+                        if !(self.state.events[&room_id]
+                            .iter()
+                            .any(|x| x.event_id() == msg.event_id()))
+                        {
+                            self.state.events.get_mut(&room_id).unwrap().push(msg);
+                            room_id == self.props.current_room.room_id
                         } else {
                             false
                         }
+                    } else {
+                        let msgs = vec![msg];
+                        self.state.events.insert(room_id.clone(), msgs);
+                        room_id == self.props.current_room.room_id
                     }
-                    Response::OldMessages((room_id, messages)) => {
-                        let mut deserialized_messages: Vec<AnySyncMessageEvent> = messages
-                            .iter()
-                            .map(|x| x.deserialize())
-                            .filter_map(Result::ok)
-                            .map(|x| x.without_room_id())
-                            .collect();
-                        // This is a clippy false positive
-                        #[allow(clippy::map_entry)]
-                        if self.state.events.contains_key(&room_id) {
-                            self.state
-                                .events
-                                .get_mut(&room_id)
-                                .unwrap()
-                                .append(deserialized_messages.as_mut());
-                            true
-                        } else {
-                            self.state.events.insert(room_id, deserialized_messages);
-                            true
-                        }
-                    }
-
-                    _ => false,
+                } else {
+                    false
                 }
             }
+            Msg::NewMessage(Response::OldMessages((room_id, messages))) => {
+                let mut deserialized_messages: Vec<AnySyncMessageEvent> = messages
+                    .iter()
+                    .map(|x| x.deserialize())
+                    .filter_map(Result::ok)
+                    .map(|x| x.without_room_id())
+                    .collect();
+                // This is a clippy false positive
+                #[allow(clippy::map_entry)]
+                if self.state.events.contains_key(&room_id) {
+                    self.state
+                        .events
+                        .get_mut(&room_id)
+                        .unwrap()
+                        .append(deserialized_messages.as_mut());
+                    true
+                } else {
+                    self.state.events.insert(room_id, deserialized_messages);
+                    true
+                }
+            }
+            Msg::NewMessage(_) => false,
             Msg::SendMessage(message) => {
                 info!("Sending Message");
                 self.matrix_agent.send(Request::SendMessage((
