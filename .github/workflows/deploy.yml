@@ -33,7 +33,7 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y gettext
 
       - name: Build
-        run: source emsdk-master/emsdk_env.sh && cargo make dist
+        run: source emsdk-master/emsdk_env.sh && cargo install cargo-make && cargo make dist
 
       #- name: Publish
       #  uses: netlify/actions/cli@master
