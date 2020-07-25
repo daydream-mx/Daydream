@@ -7,10 +7,15 @@ command = "cargo"
 args = ["fmt"]
 
 [tasks.wasm-clean]
-script_runner = "@shell"
+script_runner = "@rust"
 script = [
 '''
-rm ./dist
+fn main() -> std::io::Result<()> {
+    if std::path::Path::new("./dist").exists() {
+        std::fs::remove_dir_all("./dist")?;
+    }
+    Ok(())
+}
 '''
 ]
 
@@ -72,6 +77,7 @@ command = "wasm-bindgen"
 args = ["--no-typescript", "--debug", "--out-dir", "./dist/", "--target", "no-modules", "--out-name", "worker", "./target/wasm32-unknown-unknown/debug/daydream_worker.wasm"]
 
 [tasks.copy-files]
+# TODO use rust
 script_runner = "@shell"
 script = [
 '''
