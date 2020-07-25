@@ -8,4 +8,4 @@
   publish = "dist/"
 
   # Default build command.
-  command = "(curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y) && source $HOME/.cargo/env && rustup target add wasm32-unknown-unknown && npm run build"
+  command = "(curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y) && source $HOME/.cargo/env && rustup target add wasm32-unknown-unknown && cargo make dist"
