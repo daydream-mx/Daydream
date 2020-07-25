@@ -5,6 +5,7 @@
 @import "./variable-ovewrites.scss";
 @import "./custom-css.scss";
 @import "../node_modules/uikit/src/scss/mixins-theme.scss";
+@import "../node_modules/uikit/src/scss/variables.scss";
 @import "../node_modules/uikit/src/scss/uikit-theme.scss";
 
 [data-theme="dark"] {

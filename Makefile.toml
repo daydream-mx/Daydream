@@ -11,43 +11,74 @@ script_runner = "@shell"
 script = [
 '''
 rm ./dist
-rm ./pkg
 '''
 ]
 
 [tasks.dist]
 # TODO add scss task when it works
-dependencies = ["format", "wasm-clean", "wasm-build", "copy-files"]
+dependencies = ["format", "wasm-clean", "scss", "pure-build-app", "wasm-build", "pure-build-worker", "wasm-build-worker", "copy-files"]
 
 [tasks.dist-debug]
 # TODO add scss task when it works
-dependencies = ["format", "wasm-clean", "wasm-build-debug", "copy-files"]
+dependencies = ["format", "wasm-clean", "scss", "pure-build-app-debug", "wasm-build-debug", "pure-build-worker-debug", "wasm-build-worker-debug", "copy-files"]
 
 [tasks.run]
 watch = {watch = ["./src", "./static", "./startup_helper"], poll = true}
 dependencies = ["dist-debug", "start-server"]
 
 [tasks.start-server]
-install_crate = { crate_name = "sfz", binary = "sfz", test_arg = "--help" }
-command = "sfz"
-args = ["./dist"]
+script_runner = "@shell"
+script = [
+'''
+cd dist
+python -m http.server
+'''
+]
+
+[tasks.pure-build-app]
+command = "cargo"
+args = ["build", "--release", "--target", "wasm32-unknown-unknown", "--bin", "daydream_app"]
+
+[tasks.pure-build-app-debug]
+command = "cargo"
+args = ["build", "--target", "wasm32-unknown-unknown", "--bin", "daydream_app"]
+
+[tasks.pure-build-worker]
+command = "cargo"
+args = ["build", "--release", "--target", "wasm32-unknown-unknown", "--bin", "daydream_worker"]
+
+[tasks.pure-build-worker-debug]
+command = "cargo"
+args = ["build", "--target", "wasm32-unknown-unknown", "--bin", "daydream_worker"]
 
 [tasks.wasm-build]
-command = "wasm-pack"
-args = ["build", "--release", "--target", "web"]
+install_crate = { crate_name = "wasm-bindgen-cli", binary = "wasm-bindgen", test_arg = "--help" }
+command = "wasm-bindgen"
+args = ["--no-typescript", "--release", "--out-dir", "./dist/", "--target", "web", "--out-name", "daydream", "./target/wasm32-unknown-unknown/release/daydream_app.wasm"]
 
 [tasks.wasm-build-debug]
-command = "wasm-pack"
-args = ["build", "--debug", "--target", "web"]
+install_crate = { crate_name = "wasm-bindgen-cli", binary = "wasm-bindgen", test_arg = "--help" }
+command = "wasm-bindgen"
+args = ["--no-typescript", "--debug", "--out-dir", "./dist/", "--target", "web", "--out-name", "daydream", "./target/wasm32-unknown-unknown/debug/daydream_app.wasm"]
+
+[tasks.wasm-build-worker]
+install_crate = { crate_name = "wasm-bindgen-cli", binary = "wasm-bindgen", test_arg = "--help" }
+command = "wasm-bindgen"
+args = ["--no-typescript", "--release", "--out-dir", "./dist/", "--target", "no-modules", "--out-name", "worker", "./target/wasm32-unknown-unknown/release/daydream_worker.wasm"]
+
+[tasks.wasm-build-worker-debug]
+install_crate = { crate_name = "wasm-bindgen-cli", binary = "wasm-bindgen", test_arg = "--help" }
+command = "wasm-bindgen"
+args = ["--no-typescript", "--debug", "--out-dir", "./dist/", "--target", "no-modules", "--out-name", "worker", "./target/wasm32-unknown-unknown/debug/daydream_worker.wasm"]
 
 [tasks.copy-files]
 script_runner = "@shell"
 script = [
 '''
-mkdir dist
 cp static/index_rust_only.html dist/index.html
-cp pkg/daydream.js dist/daydream.js
-cp pkg/daydream_bg.wasm dist/daydream_bg.wasm
+mkdir dist/images
+cp static/images/* dist/images/*
+cp static/normalize.css dist/normalize.css
 '''
 ]
 
@@ -64,5 +95,6 @@ install_crate = { crate_name = "xtr", binary = "xtr", test_arg = "--help" }
 
 [tasks.scss]
 install_crate = { crate_name = "grass", binary = "grass", test_arg = "--help" }
+install_crate_args = ["--git", "https://github.com/connorskees/grass"]
 command = "grass"
 args = ["static/style.scss", "dist/style.css"]

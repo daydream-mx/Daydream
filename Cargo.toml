@@ -7,8 +7,13 @@ license = "AGPL-v3.0"
 repository = "https://github.com/MTRNord/Daydream"
 description = "A Matrix Web client written in Rust"
 
-[lib]
-crate-type = ["cdylib", "rlib"]
+[[bin]]
+name = "daydream_app"
+path = "src/bin/app.rs"
+
+[[bin]]
+name = "daydream_worker"
+path = "src/bin/native_worker.rs"
 
 [dependencies]
 console_error_panic_hook = { version = "0.1" }
