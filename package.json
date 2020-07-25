@@ -1,7 +1,7 @@
 {
   "private": true,
   "scripts": {
-    "test:chrome": "start-server-and-test 'cargo make run' http-get://localhost:8000 cy:run:ci",
+    "test": "start-server-and-test 'cargo make run' http-get://localhost:8000 cy:run:ci",
     "cy:open": "cypress open",
     "cy:run:ci": "cypress run --browser chrome --record --key 99194b81-775d-4e98-9bac-8f2cc12bc62e --ci-build-id \"${GITHUB_SHA}-${GITHUB_WORKFLOW}-${GITHUB_EVENT_NAME}\" --group github-action-e2e --parallel"
   },
