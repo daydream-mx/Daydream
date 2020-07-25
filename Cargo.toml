@@ -33,7 +33,8 @@ yew-router = { git = "https://github.com/daydream-mx/yew.git", branch = "MTRNord
 yewtil = { git = "https://github.com/daydream-mx/yew.git", branch = "MTRNord/daydream-no-bincode" }
 
 # Matrix
-matrix-sdk = { version = "0.1.0", git = "https://github.com/MTRNord/matrix-rust-sdk", branch = "daydream", default-features = false, features = ["messages"]}# features = ["encryption"]}
+#, branch = "daydream"
+matrix-sdk = { version = "0.1.0", git = "https://github.com/matrix-org/matrix-rust-sdk", default-features = false, features = ["messages"]}# features = ["encryption"]}
 url = "2.1.1"
 thiserror = "1.0"
 futures-locks = { git = "https://github.com/asomers/futures-locks", default-features = false }

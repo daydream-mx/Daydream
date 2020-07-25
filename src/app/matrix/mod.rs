@@ -389,7 +389,7 @@ impl Agent for MatrixAgent {
                     formatted_message.pop();
 
                     let content = if formatted_message == message {
-                        MessageEventContent::Text(TextMessageEventContent::new_plain(message))
+                        MessageEventContent::Text(TextMessageEventContent::plain(message))
                     } else {
                         MessageEventContent::Text(TextMessageEventContent {
                             body: message,
