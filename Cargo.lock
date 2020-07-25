@@ -1173,8 +1173,7 @@ dependencies = [
 [[package]]
 name = "reqwest"
 version = "0.10.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "12427a5577082c24419c9c417db35cfeb65962efc7675bb6b0d5f1f9d315bfe6"
+source = "git+https://github.com/daydream-mx/reqwest.git?branch=MTRNord/wasm-worker-support#3cfec388702b239ba0daf41dc48a4fee775ce43a"
 dependencies = [
  "base64",
  "bytes",
@@ -2087,8 +2086,3 @@ source = "git+https://github.com/engineerd/cjson#ccb9a6336f8279d35561a6ec189aa7e
 name = "olm-sys"
 version = "0.1.5"
 source = "git+https://gitlab.gnome.org/stoically/olm-sys?branch=wasm-target#19e18932a122dca32ead57660711327126c78432"
-
-[[patch.unused]]
-name = "reqwest"
-version = "0.10.6"
-source = "git+https://github.com/daydream-mx/reqwest.git?branch=MTRNord/wasm-worker-support#0f7c15c8531028b39f7af7a4aab0ee9a0c02695a"

@@ -16,11 +16,11 @@ rm ./dist
 
 [tasks.dist]
 # TODO add scss task when it works
-dependencies = ["format", "wasm-clean", "scss", "pure-build-app", "wasm-build", "pure-build-worker", "wasm-build-worker", "copy-files"]
+dependencies = ["format", "wasm-clean", "update-translations", "scss", "pure-build-app", "wasm-build", "pure-build-worker", "wasm-build-worker", "copy-files"]
 
 [tasks.dist-debug]
 # TODO add scss task when it works
-dependencies = ["format", "wasm-clean", "scss", "pure-build-app-debug", "wasm-build-debug", "pure-build-worker-debug", "wasm-build-worker-debug", "copy-files"]
+dependencies = ["format", "wasm-clean", "update-translations", "scss", "pure-build-app-debug", "wasm-build-debug", "pure-build-worker-debug", "wasm-build-worker-debug", "copy-files"]
 
 [tasks.run]
 watch = {watch = ["./src", "./static", "./startup_helper"], poll = true}
