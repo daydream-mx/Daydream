@@ -36,7 +36,7 @@ dependencies = ["format", "wasm-clean", "update-translations", "dist-folder", "s
 
 [tasks.dist-debug]
 # TODO add scss task when it works
-dependencies = ["format", "wasm-clean", "update-translations", "dist-folder", "scss", "pure-build-app-debug", "wasm-build-debug", "pure-build-worker-debug", "wasm-build-worker-debug", "copy-files"]
+dependencies = ["format", "wasm-clean", "update-translations", "dist-folder", "scss", "pure-build-app-debug", "wasm-build", "pure-build-worker-debug", "wasm-build-worker", "copy-files"]
 
 [tasks.run]
 watch = {watch = ["./src", "./static", "./startup_helper"], poll = true}
@@ -70,22 +70,12 @@ args = ["build", "--target", "wasm32-unknown-unknown", "--bin", "daydream_worker
 [tasks.wasm-build]
 install_crate = { crate_name = "wasm-bindgen-cli", binary = "wasm-bindgen", test_arg = "--help" }
 command = "wasm-bindgen"
-args = ["--no-typescript", "--release", "--out-dir", "./dist/", "--target", "web", "--out-name", "daydream", "./target/wasm32-unknown-unknown/release/daydream_app.wasm"]
-
-[tasks.wasm-build-debug]
-install_crate = { crate_name = "wasm-bindgen-cli", binary = "wasm-bindgen", test_arg = "--help" }
-command = "wasm-bindgen"
-args = ["--no-typescript", "--debug", "--out-dir", "./dist/", "--target", "web", "--out-name", "daydream", "./target/wasm32-unknown-unknown/debug/daydream_app.wasm"]
+args = ["--no-typescript", "--out-dir", "./dist/", "--target", "web", "--out-name", "daydream", "./target/wasm32-unknown-unknown/release/daydream_app.wasm"]
 
 [tasks.wasm-build-worker]
 install_crate = { crate_name = "wasm-bindgen-cli", binary = "wasm-bindgen", test_arg = "--help" }
 command = "wasm-bindgen"
-args = ["--no-typescript", "--release", "--out-dir", "./dist/", "--target", "no-modules", "--out-name", "worker", "./target/wasm32-unknown-unknown/release/daydream_worker.wasm"]
-
-[tasks.wasm-build-worker-debug]
-install_crate = { crate_name = "wasm-bindgen-cli", binary = "wasm-bindgen", test_arg = "--help" }
-command = "wasm-bindgen"
-args = ["--no-typescript", "--debug", "--out-dir", "./dist/", "--target", "no-modules", "--out-name", "worker", "./target/wasm32-unknown-unknown/debug/daydream_worker.wasm"]
+args = ["--no-typescript", "--out-dir", "./dist/", "--target", "no-modules", "--out-name", "worker", "./target/wasm32-unknown-unknown/release/daydream_worker.wasm"]
 
 [tasks.copy-files]
 # TODO use rust
