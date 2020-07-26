@@ -99,7 +99,7 @@ script = [
 '''
 mkdir -p dist/images
 cp static/index_rust_only.html dist/index.html
-cp static/images/* dist/images/*
+cp static/images/* dist/images/
 cp static/normalize.css dist/normalize.css
 '''
 ]
