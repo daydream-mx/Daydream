@@ -97,8 +97,8 @@ args = ["--no-typescript", "--debug", "--out-dir", "./dist/", "--target", "no-mo
 script_runner = "@shell"
 script = [
 '''
+mkdir -p dist/images
 cp static/index_rust_only.html dist/index.html
-mkdir dist/images
 cp static/images/* dist/images/*
 cp static/normalize.css dist/normalize.css
 '''
