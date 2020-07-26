@@ -1,3 +1,4 @@
+#![recursion_limit = "1024"]
 //====== Running the worker ======///
 
 // We need to import the Threaded trait to register the worker

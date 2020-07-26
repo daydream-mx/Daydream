@@ -218,26 +218,5 @@ impl RoomList {
         html! {
             <RoomItem change_room_callback=self.link.callback(Msg::ChangeRoom) room=room.clone() />
         }
-        /*html! {
-            <li class=classes>
-                <a onclick=self.link.callback(move |e: MouseEvent| Msg::ChangeRoom(room.clone()))>
-                    {matrix_room.display_name()}
-                    {
-                        if matrix_room.unread_notifications.is_some() && matrix_room.unread_notifications.unwrap() != UInt::from(0u32) {
-                            html! { <span class="uk-badge uk-margin-small-left">{matrix_room.unread_notifications.unwrap()}</span> }
-                        } else {
-                            html! {}
-                        }
-                    }
-                    {
-                        if matrix_room.unread_highlight.is_some() && matrix_room.unread_highlight.unwrap() != UInt::from(0u32) {
-                            html! { <span class="uk-badge red uk-margin-small-left">{matrix_room.unread_highlight.unwrap()}</span> }
-                        } else {
-                            html! {}
-                        }
-                    }
-                </a>
-            </li>
-        }*/
     }
 }
