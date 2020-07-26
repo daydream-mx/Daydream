@@ -394,10 +394,7 @@ impl Agent for MatrixAgent {
                         MessageEventContent::Text(TextMessageEventContent {
                             body: message,
                             relates_to: None,
-                            formatted: Some(FormattedBody {
-                                body: formatted_message,
-                                format: MessageFormat::Html,
-                            }),
+                            formatted: Some(FormattedBody::html(formatted_message)),
                         })
                     };
                     if let Err(e) = client.room_send(&room_id, content, None).await {
