@@ -120,31 +120,32 @@ impl Sync {
                             .get_joined_room(&local_room_id)
                             .await
                             .unwrap();
+                        if cloned_event.sender.clone() != client.user_id().await.unwrap() {
+                            let (avatar_url, room_name, displayname) = {
+                                let room = room.read().await;
+                                (
+                                    room.get_sender_avatar(
+                                        &homeserver_url,
+                                        &AnySyncMessageEvent::RoomMessage(cloned_event.clone()),
+                                    ),
+                                    room.display_name(),
+                                    room.get_sender_displayname(&AnySyncMessageEvent::RoomMessage(
+                                        cloned_event,
+                                    ))
+                                    .to_string(),
+                                )
+                            };
 
-                        let (avatar_url, room_name, displayname) = {
-                            let room = room.read().await;
-                            (
-                                room.get_sender_avatar(
-                                    &homeserver_url,
-                                    &AnySyncMessageEvent::RoomMessage(cloned_event.clone()),
-                                ),
-                                room.display_name(),
-                                room.get_sender_displayname(&AnySyncMessageEvent::RoomMessage(
-                                    cloned_event,
-                                ))
-                                .to_string(),
-                            )
-                        };
+                            let title = if displayname == room_name {
+                                displayname
+                            } else {
+                                format!("{} ({})", displayname, room_name)
+                            };
 
-                        let title = if displayname == room_name {
-                            displayname
-                        } else {
-                            format!("{} ({})", displayname, room_name)
-                        };
-
-                        let notification =
-                            Notifications::new(avatar_url, title, text_event.body.clone());
-                        notification.show();
+                            let notification =
+                                Notifications::new(avatar_url, title, text_event.body.clone());
+                            notification.show();
+                        }
                     });
                 }
             }

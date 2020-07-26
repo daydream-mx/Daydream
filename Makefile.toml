@@ -6,6 +6,10 @@ install_crate = "rustfmt"
 command = "cargo"
 args = ["fmt"]
 
+[tasks.ruma-docs]
+command = "cargo"
+args = ["doc", "-p", "ruma", "--open"]
+
 [tasks.wasm-clean]
 script_runner = "@rust"
 script = [
