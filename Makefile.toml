@@ -2,7 +2,7 @@
 skip_core_tasks = true
 
 [tasks.format]
-install_crate = "rustfmt"
+install_crate = { crate_name = "rustfmt", rustup_component_name = "rustfmt", binary = "rustfmt", test_arg = "--help" }
 command = "cargo"
 args = ["fmt"]
 
