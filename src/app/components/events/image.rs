@@ -1,6 +1,8 @@
-use crate::app::components::events::{get_sender_displayname, is_new_user};
+use std::rc::Rc;
+
+use crate::app::components::events::{EventExt, RoomExt};
 use matrix_sdk::{
-    events::room::message::{ImageMessageEventContent, MessageEvent},
+    events::{room::message::ImageMessageEventContent, AnySyncMessageEvent},
     Room,
 };
 use rand::random;
@@ -13,13 +15,10 @@ pub(crate) struct Image {
 #[derive(Clone, Properties, Debug)]
 pub struct Props {
     #[prop_or_default]
-    pub prev_event: Option<MessageEvent>,
-    #[prop_or_default]
-    pub event: Option<MessageEvent>,
-    #[prop_or_default]
-    pub image_event: Option<ImageMessageEventContent>,
-    #[prop_or_default]
-    pub room: Option<Room>,
+    pub prev_event: Option<AnySyncMessageEvent>,
+    pub event: AnySyncMessageEvent,
+    pub image_event: ImageMessageEventContent,
+    pub room: Rc<Room>,
 }
 
 impl Component for Image {
@@ -34,61 +33,37 @@ impl Component for Image {
         false
     }
 
-    fn change(&mut self, props: Self::Properties) -> bool {
+    fn change(&mut self, _props: Self::Properties) -> bool {
         // TODO fix the PartialEq hack
-        if format!("{:#?}", self.props) != format!("{:#?}", props) {
+        /*if format!("{:?}", self.props) != format!("{:?}", props) {
             self.props = props;
             true
         } else {
             false
-        }
+        }*/
+        true
     }
 
     //noinspection RsTypeCheck
     fn view(&self) -> Html {
-        let new_user = is_new_user(
-            self.props.prev_event.clone(),
-            self.props.event.clone().unwrap(),
-        );
+        let new_user = self.props.event.is_new_user(self.props.prev_event.as_ref());
         let sender_displayname = if new_user {
-            get_sender_displayname(
-                self.props.room.clone().unwrap(),
-                self.props.event.clone().unwrap(),
-            )
+            self.props.room.get_sender_displayname(&self.props.event)
         } else {
-            "".to_string()
+            ""
         };
 
-        if self
-            .props
-            .image_event
-            .as_ref()
-            .unwrap()
-            .url
-            .clone()
-            .is_some()
-        {
-            let image_url = self
+        if let Some(image_url) = &self.props.image_event.url {
+            let thumbnail = self
                 .props
                 .image_event
-                .as_ref()
-                .unwrap()
-                .url
-                .clone()
-                .unwrap();
-            let thumbnail = match self
-                .props
-                .image_event
-                .as_ref()
-                .unwrap()
                 .info
-                .clone()
+                .as_ref()
                 .unwrap()
                 .thumbnail_url
-            {
-                None => image_url.clone(),
-                Some(v) => v,
-            };
+                .as_ref()
+                .unwrap_or(image_url);
+
             let lightbox_id: u8 = random();
             let lightbox_id_full = format!("image_{}", lightbox_id);
             let lightbox_href_full = format!("#image_{}", lightbox_id);
@@ -96,8 +71,8 @@ impl Component for Image {
                 html! {
                     <div>
                         <p><displayname>{sender_displayname}{": "}</displayname></p>
-                        <a href={lightbox_href_full.clone()}><img src=thumbnail/></a>
-                        <div class="lightbox short-animate" id={lightbox_id_full.clone()}>
+                        <a href=lightbox_href_full><div class="thumbnail-container"><img src=thumbnail/></div></a>
+                        <div class="lightbox short-animate" id=lightbox_id_full>
                             <img class="long-animate" src=image_url/>
                         </div>
                         <div id="lightbox-controls" class="short-animate">
@@ -108,8 +83,8 @@ impl Component for Image {
             } else {
                 html! {
                     <div>
-                        <a href={lightbox_href_full.clone()}><img src=thumbnail/></a>
-                        <div class="lightbox short-animate" id={lightbox_id_full.clone()}>
+                        <a href=lightbox_href_full><img src=thumbnail/></a>
+                        <div class="lightbox short-animate" id=lightbox_id_full>
                             <img class="long-animate" src=image_url/>
                         </div>
                         <div id="lightbox-controls" class="short-animate">

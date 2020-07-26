@@ -13,8 +13,10 @@ jobs:
       - name: Setup Rust
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: stable
+          toolchain: nightly
           target: wasm32-unknown-unknown
+
+      - run: rustup default nightly
 
       - name: Setup Node
         uses: actions/setup-node@v1
@@ -30,17 +32,8 @@ jobs:
       - name: Install gettext
         run: sudo apt-get update && sudo apt-get install -y gettext
 
-      - name: Install xtr
-        run: cargo install xtr
-
-      - name: Install cargo-i18n
-        run: cargo install cargo-i18n
-
-      - name: Regenerate translation files
-        run: cargo i18n || exit 0
-
       - name: Build
-        run: source emsdk-master/emsdk_env.sh && yarn run build
+        run: source emsdk-master/emsdk_env.sh && cargo install cargo-make && cargo make dist
 
       #- name: Publish
       #  uses: netlify/actions/cli@master

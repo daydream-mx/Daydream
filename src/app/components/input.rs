@@ -46,7 +46,7 @@ impl Component for Input {
                 if data.key() == "Enter" {
                     self.props
                         .on_submit
-                        .emit(self.state.value.as_ref().unwrap_or(&"".to_string()).clone());
+                        .emit(self.state.value.as_deref().unwrap_or("").to_owned());
                     self.state.value = None;
                     return true;
                 }
@@ -61,10 +61,13 @@ impl Component for Input {
 
     fn view(&self) -> Html {
         html! {
-            <div class="uk-inline" style="display: block !important; padding-right: 40px;">
-                <span class="material-icons" id="ma-icon">{"create"}</span>
-                <input class="uk-input" type="text"
-                    value=&self.state.value.as_ref().unwrap_or(&"".to_string())
+            <div class="message-input">
+                <div class="encryption-bg">
+                    <span class="material-icons">{"lock_open"}</span>
+                </div>
+                <textarea autofocus=true
+                    placeholder={ "Input Text..." }
+                    value=&self.state.value.as_deref().unwrap_or("")
                     oninput=&self.on_input
                     onkeypress=&self.on_submit
                 />

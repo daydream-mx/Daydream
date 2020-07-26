@@ -1,7 +1,9 @@
-use crate::app::components::events::{get_sender_displayname, is_new_user};
+use std::rc::Rc;
+
+use crate::app::components::events::{EventExt, RoomExt};
 use linkify::LinkFinder;
 use matrix_sdk::{
-    events::room::message::{MessageEvent, TextMessageEventContent},
+    events::{room::message::TextMessageEventContent, AnySyncMessageEvent},
     Room,
 };
 use web_sys::Node;
@@ -15,13 +17,10 @@ pub struct Text {
 #[derive(Clone, Properties, Debug)]
 pub struct Props {
     #[prop_or_default]
-    pub prev_event: Option<MessageEvent>,
-    #[prop_or_default]
-    pub event: Option<MessageEvent>,
-    #[prop_or_default]
-    pub text_event: Option<TextMessageEventContent>,
-    #[prop_or_default]
-    pub room: Option<Room>,
+    pub prev_event: Option<AnySyncMessageEvent>,
+    pub event: AnySyncMessageEvent,
+    pub text_event: TextMessageEventContent,
+    pub room: Rc<Room>,
 }
 
 impl Component for Text {
@@ -36,32 +35,27 @@ impl Component for Text {
         false
     }
 
-    fn change(&mut self, props: Self::Properties) -> bool {
+    fn change(&mut self, _props: Self::Properties) -> bool {
         // TODO fix the PartialEq hack
-        if format!("{:#?}", self.props) != format!("{:#?}", props) {
+        /*if format!("{:?}", self.props) != format!("{:?}", props) {
             self.props = props;
             true
         } else {
             false
-        }
+        }*/
+        true
     }
 
     //noinspection RsTypeCheck
     fn view(&self) -> Html {
-        let new_user = is_new_user(
-            self.props.prev_event.clone(),
-            self.props.event.clone().unwrap(),
-        );
+        let new_user = self.props.event.is_new_user(self.props.prev_event.as_ref());
         let sender_displayname = if new_user {
-            get_sender_displayname(
-                self.props.room.clone().unwrap(),
-                self.props.event.clone().unwrap(),
-            )
+            self.props.room.get_sender_displayname(&self.props.event)
         } else {
-            "".to_string()
+            ""
         };
 
-        let mut pure_content = self.props.text_event.clone().unwrap().body;
+        let mut pure_content = self.props.text_event.body.clone();
         let finder = LinkFinder::new();
         let pure_content_clone = pure_content.clone();
         let links: Vec<_> = finder.links(&pure_content_clone).collect();
@@ -76,27 +70,16 @@ impl Component for Text {
             pure_content
         };
 
-        if self.props.text_event.clone().unwrap().formatted.is_some() {
+        if let Some(formatted) = &self.props.text_event.formatted {
+            let format_slot;
             let message = if new_user {
-                format!(
+                format_slot = format!(
                     "<displayname>{}:</displayname> {}",
-                    sender_displayname,
-                    self.props
-                        .text_event
-                        .clone()
-                        .unwrap()
-                        .formatted
-                        .unwrap()
-                        .body
-                )
+                    sender_displayname, formatted.body
+                );
+                &format_slot
             } else {
-                self.props
-                    .text_event
-                    .clone()
-                    .unwrap()
-                    .formatted
-                    .unwrap()
-                    .body
+                &formatted.body
             };
             let js_text_event = {
                 let div = web_sys::window()
@@ -113,8 +96,7 @@ impl Component for Text {
         } else if new_user {
             let full_html = format!(
                 "<p><displayname>{}: </displayname>{}</p>",
-                sender_displayname,
-                content
+                sender_displayname, content
             );
             let js_text_event = {
                 let div = web_sys::window()

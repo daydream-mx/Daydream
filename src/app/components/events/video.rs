@@ -1,6 +1,8 @@
-use crate::app::components::events::{get_sender_displayname, is_new_user};
+use std::rc::Rc;
+
+use crate::app::components::events::{EventExt, RoomExt};
 use matrix_sdk::{
-    events::room::message::{MessageEvent, VideoMessageEventContent},
+    events::{room::message::VideoMessageEventContent, AnySyncMessageEvent},
     Room,
 };
 use rand::random;
@@ -13,13 +15,10 @@ pub(crate) struct Video {
 #[derive(Clone, Properties, Debug)]
 pub struct Props {
     #[prop_or_default]
-    pub prev_event: Option<MessageEvent>,
-    #[prop_or_default]
-    pub event: Option<MessageEvent>,
-    #[prop_or_default]
-    pub video_event: Option<VideoMessageEventContent>,
-    #[prop_or_default]
-    pub room: Option<Room>,
+    pub prev_event: Option<AnySyncMessageEvent>,
+    pub event: AnySyncMessageEvent,
+    pub video_event: VideoMessageEventContent,
+    pub room: Rc<Room>,
 }
 
 impl Component for Video {
@@ -34,66 +33,39 @@ impl Component for Video {
         false
     }
 
-    fn change(&mut self, props: Self::Properties) -> bool {
+    fn change(&mut self, _props: Self::Properties) -> bool {
         // TODO fix the PartialEq hack
-        if format!("{:#?}", self.props) != format!("{:#?}", props) {
+        /*if format!("{:?}", self.props) != format!("{:?}", props) {
             self.props = props;
             true
         } else {
             false
-        }
+        }*/
+        true
     }
 
     //noinspection RsTypeCheck
     fn view(&self) -> Html {
-        let new_user = is_new_user(
-            self.props.prev_event.clone(),
-            self.props.event.clone().unwrap(),
-        );
+        let new_user = self.props.event.is_new_user(self.props.prev_event.as_ref());
         let sender_displayname = if new_user {
-            get_sender_displayname(
-                self.props.room.clone().unwrap(),
-                self.props.event.clone().unwrap(),
-            )
+            self.props.room.get_sender_displayname(&self.props.event)
         } else {
-            "".to_string()
+            ""
         };
 
-        let _caption = format!(
-            "{}: {}",
-            sender_displayname,
-            self.props.video_event.as_ref().unwrap().body
-        );
-        if self
-            .props
-            .video_event
-            .as_ref()
-            .unwrap()
-            .url
-            .clone()
-            .is_some()
-        {
-            let video_url = self
+        let _caption = format!("{}: {}", sender_displayname, self.props.video_event.body);
+
+        if let Some(video_url) = self.props.video_event.url.as_ref() {
+            let thumbnail = self
                 .props
                 .video_event
-                .as_ref()
-                .unwrap()
-                .url
-                .clone()
-                .unwrap();
-            let thumbnail = match self
-                .props
-                .video_event
-                .as_ref()
-                .unwrap()
                 .info
-                .clone()
+                .as_ref()
                 .unwrap()
                 .thumbnail_url
-            {
-                None => video_url.clone(),
-                Some(v) => v,
-            };
+                .as_ref()
+                .unwrap_or(video_url);
+
             let lightbox_id: u8 = random();
             let lightbox_id_full = format!("video_{}", lightbox_id);
             let lightbox_href_full = format!("#video_{}", lightbox_id);
@@ -101,8 +73,8 @@ impl Component for Video {
                 html! {
                     <div>
                         <p><displayname>{sender_displayname}{": "}</displayname></p>
-                        <a href={lightbox_href_full.clone()}><img src=thumbnail/></a>
-                        <div class="lightbox short-animate" id={lightbox_id_full.clone()}>
+                        <a href={lightbox_href_full}><img src=thumbnail/></a>
+                        <div class="lightbox short-animate" id={lightbox_id_full}>
                             <video class="long-animate" controls=true>
                               <source src=video_url type="video/mp4"/>
                             {"Your browser does not support the video tag."}
@@ -116,8 +88,8 @@ impl Component for Video {
             } else {
                 html! {
                     <div>
-                        <a href={lightbox_href_full.clone()}><img src=thumbnail/></a>
-                        <div class="lightbox short-animate" id={lightbox_id_full.clone()}>
+                        <a href={lightbox_href_full}><img src=thumbnail/></a>
+                        <div class="lightbox short-animate" id={lightbox_id_full}>
                             <video class="long-animate" controls=true>
                               <source src=video_url type="video/mp4"/>
                             {"Your browser does not support the video tag."}

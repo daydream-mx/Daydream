@@ -1,7 +1,9 @@
 .toggleWrapper {
-  position: relative;
-  left: 25%;
 
+  div {
+    z-index: -100;
+    display: inline-block;
+  }
   input {
     position: absolute;
     left: -99em;

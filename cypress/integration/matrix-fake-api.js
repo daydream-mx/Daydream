@@ -1,11 +1,13 @@
 const fake_matrix_api_handler = (arg, fetch, win) => {
     if (typeof arg === "string") {
         console.log("REQUESTED: " + arg);
-        if (arg == 'daydream.wasm') {
+        if (arg.includes('daydream_bg.wasm') || arg.includes('worker_bg.wasm')) {
+            console.log("doing fetch");
             return fetch(arg);
         }
     } else if (typeof arg === "object") {
         console.log("REQUESTED: ", arg);
+        console.log("Special mode");
         if (arg["url"] === "http://localhost:8448/_matrix/client/r0/login") {
             console.log("handling login");
             return new Promise((resolve, reject) => {

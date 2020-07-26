@@ -1,11 +1,13 @@
+use std::{collections::HashMap, rc::Rc};
+
+use crate::utils::ruma::AnyMessageEventExt;
 use log::*;
 use matrix_sdk::{
-    events::room::message::{MessageEvent, MessageEventContent},
+    events::{room::message::MessageEventContent, AnyMessageEventContent, AnySyncMessageEvent},
     identifiers::RoomId,
     Room,
 };
-use std::collections::HashMap;
-use yew::prelude::*;
+use yew::{prelude::*, virtual_dom::VList};
 
 use crate::app::components::{
     events::{image::Image, notice::Notice, text::Text, video::Video},
@@ -23,7 +25,7 @@ pub struct EventList {
 #[derive(Default)]
 pub struct State {
     // TODO handle all events
-    pub events: HashMap<RoomId, Vec<MessageEvent>>,
+    pub events: HashMap<RoomId, Vec<AnySyncMessageEvent>>,
 }
 
 #[allow(clippy::large_enum_variant)]
@@ -35,8 +37,7 @@ pub enum Msg {
 
 #[derive(Clone, PartialEq, Properties, Debug)]
 pub struct Props {
-    #[prop_or_default]
-    pub current_room: Option<Room>,
+    pub current_room: Rc<Room>,
 }
 
 impl Component for EventList {
@@ -51,11 +52,9 @@ impl Component for EventList {
             events: Default::default(),
         };
 
-        if props.current_room.is_some() {
-            let room_id = props.current_room.clone().unwrap().room_id;
-            if !state.events.contains_key(&room_id) {
-                matrix_agent.send(Request::GetOldMessages((room_id, None)));
-            }
+        let room_id = props.current_room.room_id.clone();
+        if !state.events.contains_key(&room_id) {
+            matrix_agent.send(Request::GetOldMessages((room_id, None)));
         }
 
         EventList {
@@ -68,51 +67,54 @@ impl Component for EventList {
 
     fn update(&mut self, msg: Self::Message) -> bool {
         match msg {
-            Msg::NewMessage(response) => {
-                match response {
-                    Response::Sync((room_id, msg)) => {
-                        // TODO handle all events
-                        if self.state.events.contains_key(&room_id) {
-                            if !(self.state.events[&room_id]
-                                .iter()
-                                .map(|x| x.event_id.clone())
-                                .any(|x| x == msg.event_id))
-                            {
-                                self.state.events.get_mut(&room_id).unwrap().push(msg);
-                                room_id == self.props.current_room.clone().unwrap().room_id
-                            } else {
-                                false
-                            }
+            Msg::NewMessage(Response::Sync((room_id, raw_msg))) => {
+                // TODO handle all events
+                if let Ok(msg) = raw_msg.deserialize() {
+                    if self.state.events.contains_key(&room_id) {
+                        if !(self.state.events[&room_id]
+                            .iter()
+                            .any(|x| x.event_id() == msg.event_id()))
+                        {
+                            self.state.events.get_mut(&room_id).unwrap().push(msg);
+                            room_id == self.props.current_room.room_id
                         } else {
-                            let mut msgs = Vec::new();
-                            msgs.push(msg);
-                            self.state.events.insert(room_id.clone(), msgs);
-                            room_id == self.props.current_room.clone().unwrap().room_id
+                            false
                         }
+                    } else {
+                        let msgs = vec![msg];
+                        self.state.events.insert(room_id.clone(), msgs);
+                        room_id == self.props.current_room.room_id
                     }
-                    Response::OldMessages((room_id, mut messages)) => {
-                        // This is a clippy false positive
-                        #[allow(clippy::map_entry)]
-                        if self.state.events.contains_key(&room_id) {
-                            self.state
-                                .events
-                                .get_mut(&room_id)
-                                .unwrap()
-                                .append(messages.as_mut());
-                            true
-                        } else {
-                            self.state.events.insert(room_id, messages);
-                            true
-                        }
-                    }
-
-                    _ => false,
+                } else {
+                    false
                 }
             }
+            Msg::NewMessage(Response::OldMessages((room_id, messages))) => {
+                let mut deserialized_messages: Vec<AnySyncMessageEvent> = messages
+                    .iter()
+                    .map(|x| x.deserialize())
+                    .filter_map(Result::ok)
+                    .map(|x| x.without_room_id())
+                    .collect();
+                // This is a clippy false positive
+                #[allow(clippy::map_entry)]
+                if self.state.events.contains_key(&room_id) {
+                    self.state
+                        .events
+                        .get_mut(&room_id)
+                        .unwrap()
+                        .append(deserialized_messages.as_mut());
+                    true
+                } else {
+                    self.state.events.insert(room_id, deserialized_messages);
+                    true
+                }
+            }
+            Msg::NewMessage(_) => false,
             Msg::SendMessage(message) => {
                 info!("Sending Message");
                 self.matrix_agent.send(Request::SendMessage((
-                    self.props.current_room.clone().unwrap().room_id,
+                    self.props.current_room.room_id.clone(),
                     message,
                 )));
                 false
@@ -123,13 +125,12 @@ impl Component for EventList {
 
     fn change(&mut self, props: Self::Properties) -> bool {
         if self.props != props {
-            if props.current_room.is_some() {
-                let room_id = props.clone().current_room.unwrap().room_id;
-                if !self.state.events.contains_key(&room_id) {
-                    self.matrix_agent
-                        .send(Request::GetOldMessages((room_id, None)));
-                }
+            let room_id = props.current_room.room_id.clone();
+            if !self.state.events.contains_key(&room_id) {
+                self.matrix_agent
+                    .send(Request::GetOldMessages((room_id, None)));
             }
+
             self.props = props;
             true
         } else {
@@ -138,86 +139,98 @@ impl Component for EventList {
     }
 
     fn view(&self) -> Html {
-        return html! {
-            <div class="event-list container uk-flex uk-flex-column uk-width-5-6">
-                <div class="room-title"><div><h1>{ self.props.current_room.as_ref().unwrap().display_name() }</h1></div></div>
-                <div class="scrollable" style="height: 100%">
-                    {
-                        if self.state.events.contains_key(&self.props.current_room.as_ref().unwrap().room_id) {
-                            let events = self.state.events[&self.props.current_room.as_ref().unwrap().room_id].clone();
-                            let mut elements: Vec<Html> = Vec::new();
-                            for (pos, event) in self.state.events[&self.props.current_room.as_ref().unwrap().room_id].iter().enumerate() {
-                                if pos == 0 {
-                                    elements.push(self.get_event(None, event));
-                                } else {
-                                    elements.push(self.get_event(Some(events[pos - 1].clone()), event));
-                                }
-                            }
-                            elements.into_iter().collect::<Html>()
-                        } else {
-                            html! {}
-                        }
-                    }
-                    <div id="anchor"></div>
-                </div>
-                <div class="uk-margin">
-                    <Input on_submit=&self.on_submit/>
-                </div>
-            </div>
+        let events = if self
+            .state
+            .events
+            .contains_key(&self.props.current_room.room_id)
+        {
+            let events = &self.state.events[&self.props.current_room.room_id];
+
+            let mut html_nodes = VList::new();
+            if let Some(event) = events.first() {
+                html_nodes.add_child(self.get_event(None, event));
+            }
+            html_nodes.add_children(
+                events
+                    .windows(2)
+                    .map(|e| self.get_event(Some(&e[0]), &e[1])),
+            );
+
+            html_nodes.into()
+        } else {
+            html! {}
         };
+
+        html! {
+            <div class="event-list">
+                <div class="room-title"><div><h1>{ self.props.current_room.display_name() }</h1></div></div>
+                <div class="scrollable message-scrollarea">
+                    <div class="message-container">
+                        { events }
+                        <div id="anchor"></div>
+                    </div>
+                </div>
+                <Input on_submit=&self.on_submit/>
+            </div>
+        }
     }
 }
 
 impl EventList {
     // Typeinspection of IDEA breaks with this :D
     //noinspection RsTypeCheck
-    fn get_event(&self, prev_event: Option<MessageEvent>, event: &MessageEvent) -> Html {
+    fn get_event(
+        &self,
+        prev_event: Option<&AnySyncMessageEvent>,
+        event: &AnySyncMessageEvent,
+    ) -> Html {
         // TODO make encryption supported
 
-        match &event.content {
-            MessageEventContent::Text(text_event) => {
-                html! {
-                    <Text
-                        prev_event=prev_event.clone()
-                        event=Some(event.clone())
-                        room=Some(self.props.current_room.clone().unwrap())
-                        text_event=Some(text_event.clone())
-                    />
+        match &event.content() {
+            AnyMessageEventContent::RoomMessage(room_message) => match room_message {
+                MessageEventContent::Text(text_event) => {
+                    html! {
+                        <Text
+                            prev_event=prev_event.cloned()
+                            event=event.clone()
+                            room=self.props.current_room.clone()
+                            text_event=text_event.clone()
+                        />
+                    }
                 }
-            }
-            MessageEventContent::Notice(notice_event) => {
-                html! {
-                    <Notice
-                        prev_event=prev_event.clone()
-                        event=Some(event.clone())
-                        room=Some(self.props.current_room.clone().unwrap())
-                        notice_event=Some(notice_event.clone())
-                    />
+                MessageEventContent::Notice(notice_event) => {
+                    html! {
+                        <Notice
+                            prev_event=prev_event.cloned()
+                            event=event.clone()
+                            room=self.props.current_room.clone()
+                            notice_event=notice_event.clone()
+                        />
+                    }
                 }
-            }
-            MessageEventContent::Image(image_event) => {
-                html! {
-                    <Image
-                        prev_event=prev_event.clone()
-                        event=Some(event.clone())
-                        room=Some(self.props.current_room.clone().unwrap())
-                        image_event=Some(image_event.clone())
-                    />
+                MessageEventContent::Image(image_event) => {
+                    html! {
+                        <Image
+                            prev_event=prev_event.cloned()
+                            event=event.clone()
+                            room=self.props.current_room.clone()
+                            image_event=image_event.clone()
+                        />
+                    }
                 }
-            }
-            MessageEventContent::Video(video_event) => {
-                html! {
-                    <Video
-                        prev_event=prev_event.clone()
-                        event=Some(event.clone())
-                        room=Some(self.props.current_room.clone().unwrap())
-                        video_event=Some(video_event.clone())
-                    />
+                MessageEventContent::Video(video_event) => {
+                    html! {
+                        <Video
+                            prev_event=prev_event.cloned()
+                            event=event.clone()
+                            room=self.props.current_room.clone()
+                            video_event=video_event.clone()
+                        />
+                    }
                 }
-            }
-            _ => {
-                html! {}
-            }
+                _ => html! {},
+            },
+            _ => html! {},
         }
     }
 }

@@ -1,29 +1,21 @@
+use url::Url;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
-use web_sys::{window, Notification, NotificationOptions, NotificationPermission};
+use web_sys::{Notification, NotificationOptions, NotificationPermission};
 
 #[derive(Clone)]
 pub(crate) struct Notifications {
-    avatar: Option<String>,
+    avatar: Option<Url>,
     displayname: String,
     content: String,
 }
 
 impl Notifications {
-    pub fn new(avatar: Option<String>, displayname: String, content: String) -> Self {
+    pub fn new(avatar: Option<Url>, displayname: String, content: String) -> Self {
         Notifications {
             avatar,
             displayname,
             content,
-        }
-    }
-    pub fn browser_support() -> bool {
-        match window() {
-            Some(v) => match v.get("Notification") {
-                Some(_) => true,
-                _ => false,
-            },
-            _ => false,
         }
     }
 
@@ -43,7 +35,11 @@ impl Notifications {
                 }
             }) as Box<dyn FnMut()>);
 
-            Notification::request_permission_with_permission_callback(cb.as_ref().unchecked_ref());
+            if let Err(_e) = Notification::request_permission_with_permission_callback(
+                cb.as_ref().unchecked_ref(),
+            ) {
+                // Noop to please clippy/rust compiler
+            }
             cb.forget();
         } else {
             self.show_actual();
@@ -51,13 +47,18 @@ impl Notifications {
     }
 
     fn show_actual(&self) {
-        let mut options = NotificationOptions::new() as NotificationOptions;
-        let options = options.body(&self.content).tag("daydream") as &mut NotificationOptions;
-        let options = if self.avatar.is_some() {
-            options.icon(self.avatar.as_ref().unwrap())
-        } else {
-            options
+        let mut options_0 = NotificationOptions::new() as NotificationOptions;
+        let options_1 = options_0.body(&self.content).tag("daydream") as &mut NotificationOptions;
+        let options = match self.clone().avatar {
+            None => options_1,
+            Some(avatar) => {
+                let url = avatar.to_string();
+                options_1.icon(&url)
+            }
         };
-        Notification::new_with_options(&self.displayname, &options);
+        if let Err(_e) = Notification::new_with_options(&self.displayname, &options) {
+            // Noop to please clippy/rust compiler
+            // TODO check if we in this case should stop showing notifications
+        }
     }
 }

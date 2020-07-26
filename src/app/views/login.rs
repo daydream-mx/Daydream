@@ -87,42 +87,37 @@ impl Component for Login {
                 self.state.loading = true;
                 true
             }
-            Msg::NewMessage(response) => {
-                match response {
-                    Response::Error(error) => {
-                        match error.clone() {
-                            MatrixError::MissingFields(field) => {
-                                self.state.loading = false;
-                                self.state.error = Some(error.to_string());
-                                self.state.error_field = Some(field);
-                                true
-                            }
-                            MatrixError::LoginTimeout => {
-                                // If we had less than 10 tries try again
-                                if self.state.retries < 10 {
-                                    self.state.retries += 1;
-                                    info!("Trying login again in 5 seconds");
-                                    sleep(Duration::from_secs(5));
-                                    self.link.send_message(Msg::Login);
-                                    false
-                                } else {
-                                    self.state.loading = false;
-                                    self.state.error =
-                                        Some("Login failed after 10 tries.".to_string());
-                                    true
-                                }
-                            }
-                            MatrixError::SDKError(e) => {
-                                // TODO handle login error != timeout better
-                                error!("SDK Error: {}", e);
-                                false
-                            }
-                            _ => false,
+            Msg::NewMessage(Response::Error(error)) => {
+                match &error {
+                    MatrixError::MissingFields(field) => {
+                        self.state.loading = false;
+                        self.state.error = Some(error.to_string());
+                        self.state.error_field = Some(field.clone());
+                        true
+                    }
+                    MatrixError::LoginTimeout => {
+                        // If we had less than 10 tries try again
+                        if self.state.retries < 10 {
+                            self.state.retries += 1;
+                            info!("Trying login again in 5 seconds");
+                            sleep(Duration::from_secs(5));
+                            self.link.send_message(Msg::Login);
+                            false
+                        } else {
+                            self.state.loading = false;
+                            self.state.error = Some("Login failed after 10 tries.".to_string());
+                            true
                         }
+                    }
+                    MatrixError::SDKError(e) => {
+                        // TODO handle login error != timeout better
+                        error!("SDK Error: {}", e);
+                        false
                     }
                     _ => false,
                 }
             }
+            Msg::NewMessage(_) => false,
         }
     }
 
@@ -146,19 +141,35 @@ impl Component for Login {
         if self.state.loading {
             html! {
                 <div class="container">
-                    <div class="uk-position-center uk-padding">
+                    <div class="uk-position-center uk-padding sun-animation">
                         <RawHTML inner_html=include_str!("../svgs/loading_animation.svg")/>
                     </div>
                 </div>
             }
         } else {
+            let error = match &self.state.error {
+                Some(v) => html! {
+                    <h4 class="error">
+                        {
+                            tr!(
+                                // {0} is the Error that happened on login
+                                // The error message of the Login page
+                                "Error: {0}",
+                                v
+                            )
+                        }
+                    </h4>
+                },
+                None => html! {},
+            };
+
             html! {
                 <>
                     <div class="login-page-bg"></div>
                     <div class="scrollable" style="width:100vw; padding:2px;">
                         <div>
-                            <p class="daydream-title">{"Daydream"}</p>
                             <div class="login-bg">
+                                <div class="daydream-title"><RawHTML inner_html=include_str!("../svgs/DaydreamLogo_v0_light.svg")/></div>
                                 <div class="login-content">
                                     <h1 class="login-title">
                                         {
@@ -168,29 +179,9 @@ impl Component for Login {
                                             )
                                         }
                                     </h1>
-                                    {
-                                        match &self.state.error {
-                                            Some(v) => {
-                                                html! {
-                                                    <h4 class="error">
-                                                        {
-                                                            tr!(
-                                                                // {0} is the Error that happened on login
-                                                                // The error message of the Login page
-                                                                "Error: {0}",
-                                                                v
-                                                            )
-                                                        }
-                                                    </h4>
-                                                }
-                                            }
-                                            None => {
-                                                html!{}
-                                            }
-                                        }
-                                    }
+                                    { error }
 
-                                    <form id="login_form" onsubmit=self.link.callback(|e: FocusEvent| {e.prevent_default();  Msg::Login})>
+                                    <form id="login_form" onsubmit=self.link.callback(|e: FocusEvent| { e.prevent_default(); Msg::Login })>
                                         <div class="login-inline login-input-first">
                                            <span class="material-icons login-icons" id="ma-icon" style="font-size: 28px !important;">{"http"}</span>
                                             <input
