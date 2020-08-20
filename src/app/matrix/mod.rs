@@ -3,16 +3,20 @@ use std::sync::Arc;
 
 use log::*;
 use matrix_sdk::{
-    api::r0::{filter::RoomEventFilter, message::get_message_events::Direction},
-    events::{
-        room::message::{
-            FormattedBody, MessageEventContent, TextMessageEventContent,
+    api::r0::{
+        filter::RoomEventFilter,
+        message::{
+            get_message_events::Direction, get_message_events::Request as GetMessagesRequest,
         },
-        AnyMessageEvent, AnyRoomEvent, AnySyncMessageEvent, EventJson,
+    },
+    events::{
+        room::message::{FormattedBody, MessageEventContent, TextMessageEventContent},
+        AnyMessageEvent, AnyRoomEvent, AnySyncMessageEvent,
     },
     identifiers::RoomId,
+    js_int::uint,
     locks::RwLock,
-    Client, MessagesRequestBuilder, Room,
+    Client, Raw, Room,
 };
 use pulldown_cmark::{html, Options, Parser};
 use serde::{Deserialize, Serialize};
@@ -64,10 +68,10 @@ pub enum Response {
     Error(MatrixError),
     LoggedIn(bool),
     // TODO properly handle sync events
-    Sync((RoomId, EventJson<AnySyncMessageEvent>)),
+    Sync((RoomId, Raw<AnySyncMessageEvent>)),
     JoinedRoomSync(RoomId),
     SyncPing,
-    OldMessages((RoomId, Vec<EventJson<AnyMessageEvent>>)),
+    OldMessages((RoomId, Vec<Raw<AnyMessageEvent>>)),
     JoinedRoom((RoomId, Room)),
     SaveSession(SessionStore),
 }
@@ -140,11 +144,12 @@ impl Agent for MatrixAgent {
                         let agent = self.clone();
                         spawn_local(async move {
                             // FIXME gracefully handle login errors
+                            // TODO make the String to &str conversion smarter if possible
                             let login_response = agent
                                 .matrix_client
                                 .as_ref()
                                 .unwrap()
-                                .login(username, password, None, Some("Daydream".to_string()))
+                                .login(&username, &password, None, Some("Daydream"))
                                 .await;
                             match login_response {
                                 Ok(login_response) => {
@@ -252,42 +257,38 @@ impl Agent for MatrixAgent {
             Request::GetOldMessages((room_id, from)) => {
                 let agent = self.clone();
                 spawn_local(async move {
-                    let mut builder = match from {
-                        Some(from) => MessagesRequestBuilder::new(room_id.clone(), from),
-                        None => MessagesRequestBuilder::new(
-                            room_id.clone(),
-                            agent
-                                .matrix_client
-                                .as_ref()
-                                .unwrap()
-                                .sync_token()
-                                .await
-                                .unwrap(),
-                        ),
+                    let sync_token = match from {
+                        Some(from) => from,
+                        None => agent
+                            .matrix_client
+                            .as_ref()
+                            .unwrap()
+                            .sync_token()
+                            .await
+                            .unwrap(),
                     };
+                    let mut req =
+                        GetMessagesRequest::new(&room_id, &sync_token, Direction::Backward);
                     let filter = RoomEventFilter {
                         types: Some(vec!["m.room.message".to_string()]),
                         ..Default::default()
                     };
                     // TODO find better way than cloning
-                    builder = (*builder
-                        .filter(filter)
-                        .direction(Direction::Backward)
-                        .limit(30))
-                    .clone();
+                    req.filter = Some(filter);
+                    req.limit = uint!(30);
 
                     // TODO handle error gracefully
                     let messsages = agent
                         .matrix_client
                         .clone()
                         .unwrap()
-                        .room_messages(builder.clone())
+                        .room_messages(req)
                         .await
                         .unwrap();
                     // TODO save end point for future loading
 
-                    let mut wrapped_messages: Vec<EventJson<AnyMessageEvent>> = Vec::new();
-                    let chunk_iter: Vec<EventJson<AnyRoomEvent>> = messsages.chunk;
+                    let mut wrapped_messages: Vec<Raw<AnyMessageEvent>> = Vec::new();
+                    let chunk_iter: Vec<Raw<AnyRoomEvent>> = messsages.chunk;
                     let (oks, _): (Vec<_>, Vec<_>) = chunk_iter
                         .iter()
                         .map(|event| event.deserialize())
@@ -346,7 +347,7 @@ impl Agent for MatrixAgent {
                             }
 
                             let serialized_event =
-                                EventJson::from(AnyMessageEvent::RoomMessage(event.clone()));
+                                Raw::from(AnyMessageEvent::RoomMessage(event.clone()));
                             wrapped_messages.push(serialized_event);
                         }
                     }

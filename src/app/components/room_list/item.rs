@@ -54,7 +54,7 @@ impl Component for RoomItem {
         let room = self.props.room.clone();
 
         // TODO placeholder for encrypted rooms
-        let last_message = match room.messages.iter().last().map(|m| &**m) {
+        let last_message = match room.messages.iter().last() {
             Some(AnyPossiblyRedactedSyncMessageEvent::Regular(
                 AnySyncMessageEvent::RoomMessage(SyncMessageEvent {
                     content: MessageEventContent::Text(text_event),
