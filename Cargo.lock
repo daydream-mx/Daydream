@@ -1190,7 +1190,7 @@ dependencies = [
 [[package]]
 name = "reqwest"
 version = "0.10.7"
-source = "git+https://github.com/seanmonstar/reqwest?rev=cff487ff58630cf0ac59f3e46cbf20cf50a28b3f#cff487ff58630cf0ac59f3e46cbf20cf50a28b3f"
+source = "git+https://github.com/jplatte/reqwest.git?branch=wasm-fix-get-via-http-req#28d9ece4bbc70f3ea02a0343e583d971119e0845"
 dependencies = [
  "base64",
  "bytes",

@@ -69,6 +69,9 @@ features = [
 olm-sys = { git = "https://gitlab.gnome.org/stoically/olm-sys", branch = "wasm-target" }
 cjson = { git = "https://github.com/engineerd/cjson" }
 
+[patch.'https://github.com/seanmonstar/reqwest']
+reqwest = { git = "https://github.com/jplatte/reqwest.git", branch = "wasm-fix-get-via-http-req"}
+
 [profile.release]
 # less code to include into binary
 panic = 'abort'
