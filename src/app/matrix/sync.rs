@@ -10,11 +10,11 @@ use matrix_sdk::{
     api::r0::sync::sync_events::Response as SyncResponse,
     events::{
         room::message::MessageEventContent, AnySyncMessageEvent, AnySyncRoomEvent,
-        AnySyncStateEvent, EventJson,
+        AnySyncStateEvent,
     },
     identifiers::RoomId,
     locks::RwLock,
-    Client, Room, SyncSettings,
+    Client, Raw, Room, SyncSettings,
 };
 use wasm_bindgen_futures::spawn_local;
 use yew::Callback;
@@ -192,7 +192,7 @@ impl Sync {
                 }
             }
 
-            let serialized_event = EventJson::from(AnySyncMessageEvent::RoomMessage(event));
+            let serialized_event = Raw::from(AnySyncMessageEvent::RoomMessage(event));
             let resp = Response::Sync((room_id.clone(), serialized_event));
             self.callback.emit(resp);
         }
