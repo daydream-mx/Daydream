@@ -1,4 +1,5 @@
 {
+  "name": "daydream",
   "private": true,
   "scripts": {
     "test": "start-server-and-test 'cargo install cargo-make && cargo make run' http-get://localhost:8000 cy:run:ci",
