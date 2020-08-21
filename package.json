@@ -3,11 +3,13 @@
   "scripts": {
     "test": "start-server-and-test 'cargo install cargo-make && cargo make run' http-get://localhost:8000 cy:run:ci",
     "cy:open": "cypress open",
-    "cy:run:ci": "cypress run --browser chrome --record --key 99194b81-775d-4e98-9bac-8f2cc12bc62e --ci-build-id \"${GITHUB_SHA}-${GITHUB_WORKFLOW}-${GITHUB_EVENT_NAME}\" --group github-action-e2e --parallel"
+    "cy:run:ci": "cypress run --browser chrome --record --key 99194b81-775d-4e98-9bac-8f2cc12bc62e --ci-build-id \"${GITHUB_SHA}-${GITHUB_WORKFLOW}-${GITHUB_EVENT_NAME}\" --group github-action-e2e --parallel",
+    "deploy": "push-dir --dir=dist --branch=gh-pages --cleanup"
   },
   "devDependencies": {
     "cross-env": "^7.0.2",
     "cypress": "^4.9.0",
+    "push-dir": "^0.4.1",
     "start-server-and-test": "^1.11.0"
   },
   "dependencies": {
