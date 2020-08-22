@@ -2119,13 +2119,3 @@ name = "zeroize"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3cbac2ed2ba24cc90f5e06485ac8c7c1e5449fe8911aef4d8877218af021a5b8"
-
-[[patch.unused]]
-name = "cjson"
-version = "0.1.1"
-source = "git+https://github.com/engineerd/cjson#ccb9a6336f8279d35561a6ec189aa7e175e032a6"
-
-[[patch.unused]]
-name = "olm-sys"
-version = "0.1.5"
-source = "git+https://gitlab.gnome.org/stoically/olm-sys?branch=wasm-target#19e18932a122dca32ead57660711327126c78432"

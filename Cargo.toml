@@ -65,10 +65,6 @@ features = [
   'Window'
 ]
 
-[patch.crates-io]
-olm-sys = { git = "https://gitlab.gnome.org/stoically/olm-sys", branch = "wasm-target" }
-cjson = { git = "https://github.com/engineerd/cjson" }
-
 [patch.'https://github.com/seanmonstar/reqwest']
 reqwest = { git = "https://github.com/seanmonstar//reqwest", rev = "d42385e7f2cc364efa5e16a7154e7e0cebdd1b57"}
 
