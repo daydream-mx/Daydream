@@ -35,9 +35,8 @@ jobs:
       - name: Build
         run: source emsdk-master/emsdk_env.sh && cargo install cargo-make && cargo make dist
 
-      - name: Publish
-        run: |
-          git config --global user.name 'Github CI'
-          git config --global user.email 'info@nordgedanken.de'
-          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
-          npm run deploy
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./public
