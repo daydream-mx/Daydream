@@ -70,7 +70,7 @@ olm-sys = { git = "https://gitlab.gnome.org/stoically/olm-sys", branch = "wasm-t
 cjson = { git = "https://github.com/engineerd/cjson" }
 
 [patch.'https://github.com/seanmonstar/reqwest']
-reqwest = { git = "https://github.com/jplatte/reqwest.git", branch = "wasm-fix-get-via-http-req"}
+reqwest = { git = "https://github.com/seanmonstar//reqwest", rev = "d42385e7f2cc364efa5e16a7154e7e0cebdd1b57"}
 
 [profile.release]
 # less code to include into binary
