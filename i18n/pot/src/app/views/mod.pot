@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: daydream 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-06-07 12:39+0000\n"
+"POT-Creation-Date: 2020-08-22 14:52+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,29 +17,29 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#. The Login Button of the Login page
-#: ./src/app/views/login.rs:169 ./src/app/views/login.rs:280
-msgid "Login"
-msgstr ""
-
 #. {0} is the Error that happened on login
 #. The error message of the Login page
-#: ./src/app/views/login.rs:182
+#: ./src/app/views/login.rs:157
 msgid "Error: {0}"
 msgstr ""
 
+#. The Login Button of the Login page
+#: ./src/app/views/login.rs:178 ./src/app/views/login.rs:248
+msgid "Login"
+msgstr ""
+
 #. The URL Field of the Login page
-#: ./src/app/views/login.rs:201 ./src/app/views/login.rs:214
+#: ./src/app/views/login.rs:198
 msgid "Homeserver URL"
 msgstr ""
 
 #. The Matrix ID Field of the Login page
-#: ./src/app/views/login.rs:227 ./src/app/views/login.rs:239
+#: ./src/app/views/login.rs:217
 msgid "MXID"
 msgstr ""
 
 #. The Password Field of the Login page
-#: ./src/app/views/login.rs:252 ./src/app/views/login.rs:265
+#: ./src/app/views/login.rs:236
 msgid "Password"
 msgstr ""
 

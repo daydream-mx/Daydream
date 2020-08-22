@@ -51,7 +51,7 @@ script_runner = "@shell"
 script = [
 '''
 cd dist
-python -m http.server
+python3 -m http.server
 '''
 ]
 
