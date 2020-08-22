@@ -34,7 +34,7 @@ yewtil = { git = "https://github.com/daydream-mx/yew.git", branch = "MTRNord/day
 
 # Matrix
 #, branch = "daydream"
-matrix-sdk = { version = "0.1.0", git = "https://github.com/matrix-org/matrix-rust-sdk", default-features = false, features = ["messages"], rev = "89c9e311408d2c57245f4ec5af7bbd4daa0046d3"}# features = ["encryption"]}
+matrix-sdk = { version = "0.1.0", git = "https://github.com/DevinR528/matrix-rust-sdk", default-features = false, features = ["messages"], branch = "power-ev-overflow"}# rev = "89c9e311408d2c57245f4ec5af7bbd4daa0046d3" # features = ["encryption"]}
 url = "2.1.1"
 thiserror = "1.0"
 futures-locks = { git = "https://github.com/asomers/futures-locks", default-features = false }

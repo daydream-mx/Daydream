@@ -825,7 +825,7 @@ checksum = "7ffc5c5338469d4d3ea17d269fa8ea3512ad247247c30bd2df69e68309ed0a08"
 [[package]]
 name = "matrix-sdk"
 version = "0.1.0"
-source = "git+https://github.com/matrix-org/matrix-rust-sdk?rev=89c9e311408d2c57245f4ec5af7bbd4daa0046d3#89c9e311408d2c57245f4ec5af7bbd4daa0046d3"
+source = "git+https://github.com/DevinR528/matrix-rust-sdk?branch=power-ev-overflow#72614e4252f488d023871f3536c6c69b0c2456bf"
 dependencies = [
  "async-trait",
  "futures-timer",
@@ -844,7 +844,7 @@ dependencies = [
 [[package]]
 name = "matrix-sdk-base"
 version = "0.1.0"
-source = "git+https://github.com/matrix-org/matrix-rust-sdk?rev=89c9e311408d2c57245f4ec5af7bbd4daa0046d3#89c9e311408d2c57245f4ec5af7bbd4daa0046d3"
+source = "git+https://github.com/DevinR528/matrix-rust-sdk?branch=power-ev-overflow#72614e4252f488d023871f3536c6c69b0c2456bf"
 dependencies = [
  "async-trait",
  "matrix-sdk-common",
@@ -860,7 +860,7 @@ dependencies = [
 [[package]]
 name = "matrix-sdk-common"
 version = "0.1.0"
-source = "git+https://github.com/matrix-org/matrix-rust-sdk?rev=89c9e311408d2c57245f4ec5af7bbd4daa0046d3#89c9e311408d2c57245f4ec5af7bbd4daa0046d3"
+source = "git+https://github.com/DevinR528/matrix-rust-sdk?branch=power-ev-overflow#72614e4252f488d023871f3536c6c69b0c2456bf"
 dependencies = [
  "assign",
  "futures-locks",
@@ -874,7 +874,7 @@ dependencies = [
 [[package]]
 name = "matrix-sdk-common-macros"
 version = "0.1.0"
-source = "git+https://github.com/matrix-org/matrix-rust-sdk?rev=89c9e311408d2c57245f4ec5af7bbd4daa0046d3#89c9e311408d2c57245f4ec5af7bbd4daa0046d3"
+source = "git+https://github.com/DevinR528/matrix-rust-sdk?branch=power-ev-overflow#72614e4252f488d023871f3536c6c69b0c2456bf"
 dependencies = [
  "quote 1.0.7",
  "syn 1.0.39",
