@@ -26,6 +26,7 @@ wasm-bindgen-futures = "0.4"
 wasm-logger = "0.2"
 #wee_alloc = "0.4"
 lazy_static = "1.4.0"
+gh-emoji = "1.0.3"
 
 # Yew
 yew = { git = "https://github.com/daydream-mx/yew.git", branch = "MTRNord/daydream-no-bincode" }

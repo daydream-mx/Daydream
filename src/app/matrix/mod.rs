@@ -376,12 +376,15 @@ impl Agent for MatrixAgent {
                     }
                 });
             }
-            Request::SendMessage((room_id, message)) => {
+            Request::SendMessage((room_id, raw_message)) => {
                 let client = self.matrix_client.clone().unwrap();
                 spawn_local(async move {
+                    let replacer = gh_emoji::Replacer::new();
+                    let message = replacer.replace_all(raw_message.as_str());
+
                     let mut options = Options::empty();
                     options.insert(Options::ENABLE_STRIKETHROUGH);
-                    let parser = Parser::new_ext(message.as_str(), options);
+                    let parser = Parser::new_ext(message.as_ref(), options);
 
                     let mut formatted_message: String =
                         String::with_capacity(message.len() * 3 / 2);
@@ -393,7 +396,7 @@ impl Agent for MatrixAgent {
                         MessageEventContent::Text(TextMessageEventContent::plain(message))
                     } else {
                         MessageEventContent::Text(TextMessageEventContent {
-                            body: message,
+                            body: message.to_string(),
                             relates_to: None,
                             formatted: Some(FormattedBody::html(formatted_message)),
                         })
