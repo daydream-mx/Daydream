@@ -20,10 +20,7 @@ impl Notifications {
     }
 
     fn notifications_allowed(&self) -> bool {
-        match Notification::permission() {
-            NotificationPermission::Granted => true,
-            _ => false,
-        }
+        matches!(Notification::permission(), NotificationPermission::Granted)
     }
 
     pub fn show(&self) {

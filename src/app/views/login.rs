@@ -9,8 +9,8 @@ use yew::prelude::*;
 use tr::tr;
 
 use crate::app::components::raw_html::RawHTML;
-use crate::app::matrix::{MatrixAgent, Request, Response};
 use crate::errors::{Field, MatrixError};
+use crate::matrix::{MatrixAgent, Request, Response};
 
 pub struct Login {
     link: ComponentLink<Self>,

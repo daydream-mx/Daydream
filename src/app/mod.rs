@@ -2,9 +2,9 @@ use yew::{prelude::*, virtual_dom::VNode};
 use yew_router::agent::RouteRequest::ChangeRoute;
 use yew_router::{prelude::*, Switch};
 
-use crate::app::matrix::{login::SessionStore, MatrixAgent, Response};
 use crate::app::views::{login::Login, main_view::MainView};
 use crate::constants::AUTH_KEY;
+use crate::matrix::{login::SessionStore, MatrixAgent, Response};
 use log::*;
 use std::sync::{Arc, Mutex};
 use yew::format::Json;
@@ -12,7 +12,6 @@ use yew::services::storage::Area;
 use yew::services::StorageService;
 
 pub mod components;
-pub mod matrix;
 mod views;
 
 #[derive(Switch, Clone)]
@@ -57,9 +56,9 @@ impl Component for App {
         let route_agent = RouteAgent::bridge(link.callback(Msg::RouteChanged));
         let mut matrix_agent = MatrixAgent::bridge(link.callback(Msg::NewMessage));
         if let Some(session) = session {
-            matrix_agent.send(matrix::Request::SetSession(session));
+            matrix_agent.send(crate::matrix::Request::SetSession(session));
         }
-        matrix_agent.send(matrix::Request::GetLoggedIn);
+        matrix_agent.send(crate::matrix::Request::GetLoggedIn);
         App {
             _matrix_agent: matrix_agent,
             route_agent,

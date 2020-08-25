@@ -14,7 +14,7 @@ use tr::tr;
 
 use crate::app::components::raw_html::RawHTML;
 use crate::app::components::room_list::item::RoomItem;
-use crate::app::matrix::{MatrixAgent, Request, Response};
+use crate::matrix::{MatrixAgent, Request, Response};
 
 mod item;
 
@@ -189,7 +189,7 @@ impl Component for RoomList {
                     <div class="bottom-bar">
                         <div class="toggleWrapper">
                             <div>
-                                <input type="checkbox" class="dn" id="dn" checked=self.state.dark_theme value=self.state.dark_theme onclick=self.link.callback(|e: MouseEvent| {Msg::ToggleTheme})/>
+                                <input type="checkbox" class="dn" id="dn" checked=self.state.dark_theme value=self.state.dark_theme onclick=self.link.callback(|_e: MouseEvent| {Msg::ToggleTheme})/>
                                 <label for="dn" class="toggle">
                                     <span class="toggle__handler">
                                         <span class="crater crater--1"></span>
@@ -216,7 +216,7 @@ impl RoomList {
     fn get_room(&self, matrix_room: &Rc<Room>) -> Html {
         let room = matrix_room.clone();
         html! {
-            <RoomItem change_room_callback=self.link.callback(Msg::ChangeRoom) room=room.clone() />
+            <RoomItem change_room_callback=self.link.callback(Msg::ChangeRoom) room=room />
         }
     }
 }

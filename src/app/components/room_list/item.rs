@@ -69,7 +69,7 @@ impl Component for RoomItem {
 
         html! {
             <div class="room-list-item">
-                <a onclick=self.link.callback(move |e: MouseEvent| Msg::ChangeRoom(room.clone()))>
+                <a onclick=self.link.callback(move |_e: MouseEvent| Msg::ChangeRoom(room.clone()))>
                     <div class="content">
                         // TODO remove placeholder
                         <img class="avatar" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAoCAYAAACM/rhtAAAARUlEQVRYhe3OMQ0AIADAMBKUowmBoIKMo0f/jrnX+dmoA4KCdUBQsA4ICtYBQcE6IChYBwQF64CgYB0QFKwDgoJ1QPC1C8gY0kSgNLTWAAAAAElFTkSuQmCC"/>

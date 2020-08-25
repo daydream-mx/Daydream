@@ -14,6 +14,7 @@ language_loader!(DaydreamLanguageLoader);
 //#[global_allocator]
 //static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 
+#[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
 fn main() {
     // If the `console_error_panic_hook` feature is enabled this will set a panic hook, otherwise
     // it will do nothing.

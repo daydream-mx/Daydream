@@ -12,7 +12,7 @@ name = "daydream_app"
 path = "src/bin/app.rs"
 
 [[bin]]
-name = "daydream_worker"
+name = "worker"
 path = "src/bin/native_worker.rs"
 
 [dependencies]
@@ -32,6 +32,8 @@ gh-emoji = "1.0.3"
 yew = { git = "https://github.com/daydream-mx/yew.git", branch = "MTRNord/daydream-no-bincode" }
 yew-router = { git = "https://github.com/daydream-mx/yew.git", branch = "MTRNord/daydream-no-bincode" }
 yewtil = { git = "https://github.com/daydream-mx/yew.git", branch = "MTRNord/daydream-no-bincode" }
+wasi-worker-yew = { git = "https://github.com/daydream-mx/wasi-worker.git", branch = "yew-fork"}
+wasi-worker = { git = "https://github.com/daydream-mx/wasi-worker.git", branch = "yew-fork"}
 
 # Matrix
 #, branch = "daydream"
@@ -68,6 +70,9 @@ features = [
 
 [patch.'https://github.com/seanmonstar/reqwest']
 reqwest = { git = "https://github.com/seanmonstar//reqwest", rev = "d42385e7f2cc364efa5e16a7154e7e0cebdd1b57"}
+
+[patch.crates-io]
+instant = {git = "https://github.com/coolreader18/instant", branch = "fix-wasi"}
 
 [profile.release]
 # less code to include into binary

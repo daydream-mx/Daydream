@@ -1,6 +1,6 @@
 use std::rc::Rc;
 
-use crate::app::components::events::{EventExt, RoomExt};
+use crate::utils::extensions::{EventExt, RoomExt};
 use linkify::LinkFinder;
 use matrix_sdk::{
     events::{room::message::TextMessageEventContent, AnySyncMessageEvent},

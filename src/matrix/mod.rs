@@ -23,8 +23,8 @@ use serde::{Deserialize, Serialize};
 use wasm_bindgen_futures::spawn_local;
 use yew::worker::*;
 
-use crate::app::matrix::types::{get_media_download_url, get_video_media_download_url};
 use crate::errors::MatrixError;
+use crate::matrix::types::{get_media_download_url, get_video_media_download_url};
 use login::{login, SessionStore};
 
 pub mod login;

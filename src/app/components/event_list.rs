@@ -13,7 +13,7 @@ use crate::app::components::{
     events::{image::Image, notice::Notice, text::Text, video::Video},
     input::Input,
 };
-use crate::app::matrix::{MatrixAgent, Request, Response};
+use crate::matrix::{MatrixAgent, Request, Response};
 
 pub struct EventList {
     on_submit: Callback<String>,

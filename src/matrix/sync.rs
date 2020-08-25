@@ -22,9 +22,9 @@ use yew::Callback;
 use lazy_static::lazy_static;
 use matrix_sdk::js_int::UInt;
 
-use crate::app::components::events::RoomExt;
-use crate::app::matrix::types::{get_media_download_url, get_video_media_download_url};
-use crate::app::matrix::Response;
+use crate::matrix::types::{get_media_download_url, get_video_media_download_url};
+use crate::matrix::Response;
+use crate::utils::extensions::RoomExt;
 use crate::utils::notifications::Notifications;
 
 lazy_static! {

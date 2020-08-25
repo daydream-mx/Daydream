@@ -9,7 +9,7 @@ use yew::ComponentLink;
 use tr::tr;
 
 use crate::app::components::{event_list::EventList, room_list::RoomList};
-use crate::app::matrix::{MatrixAgent, Request};
+use crate::matrix::{MatrixAgent, Request};
 
 pub struct MainView {
     link: ComponentLink<Self>,
